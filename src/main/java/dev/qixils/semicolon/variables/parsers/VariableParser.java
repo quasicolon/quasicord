@@ -4,7 +4,6 @@ import com.mongodb.client.model.Filters;
 import dev.qixils.semicolon.Semicolon;
 import dev.qixils.semicolon.variables.Variable;
 import lombok.AllArgsConstructor;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,7 +29,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object, or null if unavailable
 	 */
 	@NotNull
-	public Mono<R> fromDatabase(long guild, String variable) {
+	public Mono<@Nullable R> fromDatabase(long guild, @NotNull String variable) {
 		return bot.getDatabase().getAllBy(Filters.and(Filters.eq("guildId", guild), Filters.eq("name", variable)), Variable.class).next().map(var -> {
 			if (var == null)
 				return null;
@@ -53,7 +52,7 @@ public abstract class VariableParser<R> {
 	 * @return database value
 	 */
 	@NotNull
-	public abstract String toDatabase(R r);
+	public abstract String toDatabase(@NotNull R r);
 
 	/**
 	 * Parses human text into a converted object.
@@ -63,7 +62,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object
 	 */
 	@NotNull
-	public abstract CompletableFuture<R> parseText(@NotNull Message context, @NotNull String humanText);
+	public abstract CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText);
 
 	/**
 	 * Parses human text into a converted object.
@@ -73,7 +72,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object
 	 */
 	@NotNull
-	public Mono<R> parseTextAsMono(@NotNull Message context, @NotNull String humanText) {
+	public final Mono<@Nullable R> parseTextAsMono(@NotNull Message context, @NotNull String humanText) {
 		return Mono.fromFuture(parseText(context, humanText));
 	}
 }

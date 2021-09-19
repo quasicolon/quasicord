@@ -1,7 +1,7 @@
 package dev.qixils.semicolon.variables.parsers.snowflakes;
 
-import dev.qixils.semicolon.Localizer.Context;
 import dev.qixils.semicolon.Semicolon;
+import dev.qixils.semicolon.locale.Context;
 import dev.qixils.semicolon.utils.FakeCollection;
 import dev.qixils.semicolon.variables.parsers.VariableParser;
 import net.dv8tion.jda.api.entities.IMentionable;
@@ -22,12 +22,12 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 
 	@Override
 	@NotNull
-	public String toDatabase(R snowflake) {
+	public String toDatabase(@NotNull R snowflake) {
 		return snowflake.getId();
 	}
 
 	@Override
-	public @NotNull CompletableFuture<R> parseText(@NotNull Message context, @NotNull String humanText) {
+	public @NotNull CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText) {
 		CompletableFuture<R> future = new CompletableFuture<>();
 		String group = SNOWFLAKE_PATTERN.matcher(humanText).group(1);
 		if (group != null) {
@@ -47,13 +47,13 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 	}
 
 	@Contract(mutates = "param3")
-	protected boolean ask(@NotNull Message context, @Nullable IMentionable mentionable, @NotNull Collection<Long> attemptedUsers) {
+	protected boolean ask(@NotNull Message context, @Nullable IMentionable mentionable, @NotNull Collection<Long> attemptedObjects) {
 		if (mentionable == null) return false;
 
 		long id = mentionable.getIdLong();
-		if (attemptedUsers.contains(id))
+		if (attemptedObjects.contains(id))
 			return false;
-		attemptedUsers.add(id);
+		attemptedObjects.add(id);
 
 		context.reply(bot.getLocalizer().localize("snowflake_confirm", Context.fromMessage(context))) // TODO: format
 				.queue(message -> {

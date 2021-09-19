@@ -2,7 +2,6 @@ package dev.qixils.semicolon.variables.parsers.snowflakes;
 
 import dev.qixils.semicolon.Semicolon;
 import dev.qixils.semicolon.utils.CollectionUtil;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -10,13 +9,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class UserParser extends SnowflakeParser<User> {
+public final class UserParser extends SnowflakeParser<User> {
 	public UserParser(Semicolon bot) {
 		super(bot);
 	}

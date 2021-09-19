@@ -36,7 +36,7 @@ public class ListParser<R> extends VariableParser<List<R>> {
     }
 
     @Override
-    public @NotNull String toDatabase(List<R> listR) {
+    public @NotNull String toDatabase(@NotNull List<R> listR) {
         StringBuilder output = new StringBuilder();
         Iterator<R> items = listR.iterator();
         while (items.hasNext()) {

@@ -1,9 +1,7 @@
 package dev.qixils.semicolon;
 
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.reactivestreams.client.MongoDatabase;
 import dev.qixils.semicolon.db.DatabaseManager;
+import dev.qixils.semicolon.locale.Localizer;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
