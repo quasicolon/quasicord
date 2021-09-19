@@ -37,7 +37,7 @@ public class Semicolon {
 
 	public Semicolon(String[] args) throws ConfigurateException, LoginException {
 		rootNode = loader.load();
-		environment = Environment.valueOf(rootNode.node("environment").getString("PRODUCTION").toLowerCase(Locale.ENGLISH));
+		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toLowerCase(Locale.ENGLISH));
 		database = new DatabaseManager(environment);
 
 		final String token;
