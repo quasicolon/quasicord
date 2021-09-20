@@ -2,11 +2,13 @@ package dev.qixils.semicolon.variables.parsers.snowflakes;
 
 import dev.qixils.semicolon.Semicolon;
 import dev.qixils.semicolon.locale.Context;
+import dev.qixils.semicolon.utils.ContextualEmoji;
 import dev.qixils.semicolon.utils.FakeCollection;
 import dev.qixils.semicolon.variables.parsers.VariableParser;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -55,11 +57,14 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 			return false;
 		attemptedObjects.add(id);
 
+		MessageChannel channel = context.getChannel();
 		context.reply(bot.getLocalizer().localize("snowflake_confirm", Context.fromMessage(context))) // TODO: format
 				.queue(message -> {
-					message.addReaction().queue();
-					message.addReaction().queue();
+					message.addReaction(ContextualEmoji.YES.getEmojiString(channel)).queue();
+					message.addReaction(ContextualEmoji.NO.getEmojiString(channel)).queue();
 				});
+
+		// TODO: listen to reactions
 	}
 
 	protected static final Pattern SNOWFLAKE_PATTERN = Pattern.compile(".*(\\d{17,19})");

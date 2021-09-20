@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @Getter
-public record ContextualEmoji(@NotNull String unicode, long emojiId) {
+public final record ContextualEmoji(@NotNull String unicode, long emojiId) {
 	@Nullable
 	public Emote getEmote(@NotNull Semicolon bot) {
 		return getEmote(bot.getJda());
@@ -33,6 +33,15 @@ public record ContextualEmoji(@NotNull String unicode, long emojiId) {
 		return PermissionUtil.canInteract(context.getJDA().getSelfUser(), emote, context)
 				? discEmoji
 				: uniEmoji;
+	}
+
+	@NotNull
+	public String getEmojiString(@NotNull MessageChannel context) {
+		Emoji emoji = getEmoji(context);
+		String name = emoji.getName();
+		if (emoji.isCustom())
+			name += ":" + emoji.getId();
+		return name;
 	}
 
 	public static ContextualEmoji YES = new ContextualEmoji("\u2705", 328630479886614529L);
