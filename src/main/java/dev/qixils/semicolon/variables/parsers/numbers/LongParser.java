@@ -5,7 +5,11 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LongParser extends NumberParser<Long> {
 	public LongParser(@NotNull Semicolon bot) {
-		super(bot);
+		super(bot, null);
+	}
+
+	public LongParser(@NotNull Semicolon bot, @NotNull ParserFilter filter) {
+		super(bot, filter);
 	}
 
 	@Override

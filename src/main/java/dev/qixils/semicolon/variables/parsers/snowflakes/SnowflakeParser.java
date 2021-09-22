@@ -30,16 +30,15 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 
 	@Override
 	public @NotNull CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText) {
-		CompletableFuture<R> future = new CompletableFuture<>();
-		String group = SNOWFLAKE_PATTERN.matcher(humanText).group(1);
-		if (group != null) {
-			try {
-				R result = fromDatabase(group);
-				if (result != null)
-					future.complete(result);
-			} catch (Exception ignored) {}
-		}
-		return future;
+		return CompletableFuture.supplyAsync(() -> {
+			String group = SNOWFLAKE_PATTERN.matcher(humanText).group(1);
+			if (group != null) {
+				try {
+					return fromDatabase(group);
+				} catch (Exception ignored) {}
+			}
+			return null;
+		});
 	}
 
 	private static final Collection<Long> EMPTY_COLLECTION = new FakeCollection<>();

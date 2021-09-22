@@ -2,6 +2,7 @@ package dev.qixils.semicolon;
 
 import dev.qixils.semicolon.db.DatabaseManager;
 import dev.qixils.semicolon.locale.Localizer;
+import dev.qixils.semicolon.variables.Variables;
 import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -31,9 +32,11 @@ public class Semicolon {
 	private final YamlConfigurationLoader loader = YamlConfigurationLoader.builder().build(); // TODO: configure?
 	private final ConfigurationNode rootNode;
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+
 	private final Environment environment;
 	private final DatabaseManager database;
 	private final Localizer localizer = new Localizer();
+	private final Variables variables = new Variables(this);
 
 	public Semicolon(String[] args) throws ConfigurateException, LoginException {
 		rootNode = loader.load();

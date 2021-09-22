@@ -22,11 +22,10 @@ public final class RoleParser extends SnowflakeParser<Role> {
 
 	@Override
 	public @NotNull CompletableFuture<@Nullable Role> parseText(@NotNull Message context, @NotNull String humanText) {
-		CompletableFuture<Role> future = super.parseText(context, humanText);
-		if (future.isDone())
-			return future;
+		return super.parseText(context, humanText).thenApply(superRole -> {
+			if (superRole != null)
+				return superRole;
 
-		return future.completeAsync(() -> {
 			List<Role> roles = context.getGuild().getRoles();
 			List<Long> attempted = new ArrayList<>();
 
@@ -38,6 +37,11 @@ public final class RoleParser extends SnowflakeParser<Role> {
 			final String lowerText = humanText.toLowerCase();
 			for (Role role : roles) {
 				if (role.getName().toLowerCase().startsWith(lowerText) && ask(context, role, attempted))
+					return role;
+			}
+
+			for (Role role : roles) {
+				if (role.getName().toLowerCase().contains(lowerText) && ask(context, role, attempted))
 					return role;
 			}
 

@@ -26,10 +26,9 @@ public final class UserParser extends SnowflakeParser<User> {
 
 	@Override
 	public @NotNull CompletableFuture<User> parseText(@NotNull Message context, @NotNull String humanText) {
-		CompletableFuture<User> future = super.parseText(context, humanText);
-		if (future.isDone())
-			return future;
-		return future.completeAsync(() -> {
+		return super.parseText(context, humanText).thenApply(superUser -> {
+			if (superUser != null)
+				return superUser;
 			String text = humanText;
 			Matcher matcher = TAG_PATTERN.matcher(text);
 			String username = matcher.group(1);

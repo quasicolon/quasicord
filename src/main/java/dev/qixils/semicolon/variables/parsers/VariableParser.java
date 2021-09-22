@@ -3,21 +3,23 @@ package dev.qixils.semicolon.variables.parsers;
 import com.mongodb.client.model.Filters;
 import dev.qixils.semicolon.Semicolon;
 import dev.qixils.semicolon.variables.Variable;
-import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * A type of variable that may be set via {@code ;config}.
  * @param <R> the output class
  */
-@AllArgsConstructor
 public abstract class VariableParser<R> {
 	protected final @NotNull Semicolon bot;
+	public VariableParser(final @NotNull Semicolon bot) {
+		this.bot = Objects.requireNonNull(bot, "bot cannot be null");
+	}
 
 	/**
 	 * Fetches a value from the database and converts it to the resulting class.

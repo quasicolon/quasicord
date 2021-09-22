@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
-public class StringParser extends VariableParser<String> {
+public final class StringParser extends VariableParser<String> {
 	public StringParser(@NotNull Semicolon bot) {
 		super(bot);
 	}

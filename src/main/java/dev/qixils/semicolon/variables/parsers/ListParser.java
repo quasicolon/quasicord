@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
-public class ListParser<R> extends VariableParser<List<R>> {
+public final class ListParser<R> extends VariableParser<List<R>> {
     private static final char JOINER = '\u2603';
     private static final String JOINER_STR = String.valueOf(JOINER);
     private static final String ESC_JOINER = "\\" + JOINER;
