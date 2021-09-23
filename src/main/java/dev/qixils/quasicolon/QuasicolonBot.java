@@ -37,12 +37,13 @@ public class QuasicolonBot {
 	private final DatabaseManager database;
 	private final LocaleManager localeManager = new LocaleManager();
 	private final AbstractVariables variables;
+	private final TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
 
 	protected QuasicolonBot(@NotNull AbstractVariables variables) throws ConfigurateException, LoginException {
 		this.variables = Objects.requireNonNull(variables, "variables cannot be null");
 
 		loader = YamlConfigurationLoader.builder()
-				.path() // TODO: load config file
+				//.path() // TODO: load config file
 				// TODO: default config options
 				.build();
 		rootNode = loader.load();
@@ -65,6 +66,7 @@ public class QuasicolonBot {
 				.disableCache(CacheFlag.ACTIVITY);
 		AllowedMentions.setDefaultMentions(Collections.emptySet());
 		jda = builder.build();
+		jda.addEventListener(tempListenerExecutor);
 	}
 
 	/**
@@ -121,6 +123,15 @@ public class QuasicolonBot {
 	 */
 	public @NotNull AbstractVariables getVariables() {
 		return variables;
+	}
+
+	/**
+	 * Registers a temporary listener.
+	 * @param listener temporary listener to register
+	 */
+	// we don't expose the raw executor in a getter because of the #onEvent method
+	public void register(@NotNull TemporaryListener<?> listener) {
+		tempListenerExecutor.register(Objects.requireNonNull(listener, "listener cannot be null"));
 	}
 
 	/**

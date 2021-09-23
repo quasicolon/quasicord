@@ -31,7 +31,7 @@ public abstract class AbstractVariables {
         Objects.requireNonNull(parser, "parser cannot be null");
 
         if (REGISTRY.containsKey(variable))
-            throw new IllegalArgumentException("Variable '%s' has already been registered".formatted(variable));
+            throw new IllegalArgumentException("Variable '" + variable + "' has already been registered");
 
         REGISTRY.put(variable, parser);
         return parser;

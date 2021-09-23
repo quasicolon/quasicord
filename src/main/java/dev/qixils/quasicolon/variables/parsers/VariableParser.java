@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
@@ -31,6 +32,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object, or null if unavailable
 	 */
 	@NotNull
+	@CheckReturnValue
 	public Mono<@Nullable R> fromDatabase(long guild, @NotNull String variable) {
 		return bot.getDatabaseManager().getAllBy(Filters.and(Filters.eq("guildId", guild), Filters.eq("name", variable)), Variable.class).next().map(var -> {
 			if (var == null)
@@ -46,6 +48,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object, or null if unavailable
 	 */
 	@Nullable
+	@CheckReturnValue
 	public abstract R fromDatabase(@NotNull String value);
 
 	/**
@@ -54,6 +57,7 @@ public abstract class VariableParser<R> {
 	 * @return database value
 	 */
 	@NotNull
+	@CheckReturnValue
 	public abstract String toDatabase(@NotNull R r);
 
 	/**
@@ -64,6 +68,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object
 	 */
 	@NotNull
+	@CheckReturnValue
 	public abstract CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText);
 
 	/**
@@ -74,6 +79,7 @@ public abstract class VariableParser<R> {
 	 * @return converted object
 	 */
 	@NotNull
+	@CheckReturnValue
 	public final Mono<@Nullable R> parseTextAsMono(@NotNull Message context, @NotNull String humanText) {
 		return Mono.fromFuture(parseText(context, humanText));
 	}

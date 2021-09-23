@@ -37,11 +37,7 @@ public final record ContextualEmoji(@NotNull String unicode, long emojiId) {
 
 	@NotNull
 	public String getEmojiString(@NotNull MessageChannel context) {
-		Emoji emoji = getEmoji(context);
-		String name = emoji.getName();
-		if (emoji.isCustom())
-			name += ":" + emoji.getId();
-		return name;
+		return EmoteUtil.asString(getEmoji(context));
 	}
 
 	public static ContextualEmoji YES = new ContextualEmoji("\u2705", 328630479886614529L);

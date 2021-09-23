@@ -2,8 +2,8 @@ package dev.qixils.quasicolon.variables.parsers.snowflakes;
 
 import dev.qixils.quasicolon.QuasicolonBot;
 import dev.qixils.quasicolon.locale.Context;
-import dev.qixils.quasicolon.utils.ContextualEmoji;
 import dev.qixils.quasicolon.utils.FakeCollection;
+import dev.qixils.quasicolon.utils.MessageUtil;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.ISnowflake;
@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
@@ -43,10 +44,12 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 
 	private static final Collection<Long> EMPTY_COLLECTION = new FakeCollection<>();
 
+	@CheckReturnValue
 	protected boolean ask(@NotNull Message context, @Nullable IMentionable mentionable) {
 		return ask(context, mentionable, EMPTY_COLLECTION);
 	}
 
+	@CheckReturnValue
 	@Contract(mutates = "param3")
 	protected boolean ask(@NotNull Message context, @Nullable IMentionable mentionable, @NotNull Collection<Long> attemptedObjects) {
 		if (mentionable == null) return false;
@@ -57,13 +60,14 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 		attemptedObjects.add(id);
 
 		MessageChannel channel = context.getChannel();
+		// TODO perm check
+		CompletableFuture<@NotNull Boolean> future = new CompletableFuture<>();
 		context.reply(bot.getLocaleManager().localize("snowflake_confirm", Context.fromMessage(context))) // TODO: format
-				.queue(message -> {
-					message.addReaction(ContextualEmoji.YES.getEmojiString(channel)).queue();
-					message.addReaction(ContextualEmoji.NO.getEmojiString(channel)).queue();
-				});
-
-		// TODO: listen to reactions
+				.queue(reply -> MessageUtil.setupYesNoReactionMenu(context.getAuthor().getIdLong(), reply, bool -> {
+					reply.delete().queue();
+					future.complete(bool != null && bool);
+				}).register(bot));
+		return future.join(); // TODO: this is bad :(
 	}
 
 	protected static final Pattern SNOWFLAKE_PATTERN = Pattern.compile(".*(\\d{17,19})");

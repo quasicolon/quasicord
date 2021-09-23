@@ -13,6 +13,7 @@ import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
+import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -39,9 +40,10 @@ public class DatabaseManager implements Closeable {
 		this(dbPrefix, Objects.requireNonNull(environment, "environment cannot be null").name().toLowerCase(Locale.ENGLISH));
 	}
 
-	public DatabaseManager(String dbPrefix, String dbSuffix) {
-		this.database = mongoClient.getDatabase("%s-%s".formatted(Objects.requireNonNull(dbPrefix, "dbPrefix cannot be null"),
-																  Objects.requireNonNull(dbSuffix, "dbSuffix cannot be null")));
+	public DatabaseManager(@NotNull String dbPrefix, @NotNull String dbSuffix) {
+		Objects.requireNonNull(dbPrefix, "dbPrefix cannot be null");
+		Objects.requireNonNull(dbSuffix, "dbSuffix cannot be null");
+		this.database = mongoClient.getDatabase(dbPrefix + "-" + dbSuffix);
 	}
 
 	// collectionNameOf
