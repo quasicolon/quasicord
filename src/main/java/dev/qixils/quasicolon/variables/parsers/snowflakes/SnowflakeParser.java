@@ -25,17 +25,17 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 
 	@Override
 	@NotNull
-	public String toDatabase(@NotNull R snowflake) {
+	public String encode(@NotNull R snowflake) {
 		return snowflake.getId();
 	}
 
 	@Override
-	public @NotNull CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText) {
+	public @NotNull CompletableFuture<@Nullable R> parseText(@Nullable Message context, @NotNull String humanText) {
 		return CompletableFuture.supplyAsync(() -> {
 			String group = SNOWFLAKE_PATTERN.matcher(humanText).group(1);
 			if (group != null) {
 				try {
-					return fromDatabase(group);
+					return decode(group);
 				} catch (Exception ignored) {}
 			}
 			return null;

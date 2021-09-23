@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 public final class ListParser<R> extends VariableParser<List<R>> {
-    private static final char JOINER = '\u2603';
+    private static final char JOINER = '\u2603'; // snowman! :)
     private static final String JOINER_STR = String.valueOf(JOINER);
     private static final String ESC_JOINER = "\\" + JOINER;
     private static final Pattern SPLITTER = Pattern.compile("(?<!\\\\)" + JOINER);
@@ -28,19 +28,19 @@ public final class ListParser<R> extends VariableParser<List<R>> {
     }
 
     @Override
-    public @NotNull List<@Nullable R> fromDatabase(@NotNull String value) {
+    public @NotNull List<@Nullable R> decode(@NotNull String value) {
         List<R> items = new ArrayList<>();
         for (String element : SPLITTER.split(value))
-            items.add(parser.fromDatabase(element.replace(ESC_JOINER, JOINER_STR)));
+            items.add(parser.decode(element.replace(ESC_JOINER, JOINER_STR)));
         return items;
     }
 
     @Override
-    public @NotNull String toDatabase(@NotNull List<R> listR) {
+    public @NotNull String encode(@NotNull List<R> listR) {
         StringBuilder output = new StringBuilder();
         Iterator<R> items = listR.iterator();
         while (items.hasNext()) {
-            output.append(parser.toDatabase(items.next()).replace(JOINER_STR, ESC_JOINER));
+            output.append(parser.encode(items.next()).replace(JOINER_STR, ESC_JOINER));
             if (items.hasNext())
                 output.append(JOINER);
         }
@@ -48,7 +48,7 @@ public final class ListParser<R> extends VariableParser<List<R>> {
     }
 
     @Override
-    public @NotNull CompletableFuture<List<@NotNull R>> parseText(@NotNull Message context, @NotNull String humanText) {
+    public @NotNull CompletableFuture<List<@NotNull R>> parseText(@Nullable Message context, @NotNull String humanText) {
         List<R> items = new ArrayList<>();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (String text : humanText.split(separator)) {

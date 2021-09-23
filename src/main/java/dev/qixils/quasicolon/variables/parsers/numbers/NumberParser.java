@@ -12,23 +12,27 @@ import java.util.function.Predicate;
 public abstract class NumberParser<R extends Number> extends NonNullParser<R> {
 	private final ParserFilter filter;
 
+	public NumberParser(@NotNull QuasicolonBot bot) {
+		this(bot, null);
+	}
+
 	public NumberParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
 		super(bot);
 		this.filter = filter == null ? ParserFilter.ALL_NUMBERS : filter;
 	}
 
 	@Override
-	public abstract @NotNull R fromDatabase(@NotNull String value) throws NumberFormatException;
+	public abstract @NotNull R decode(@NotNull String value) throws NumberFormatException;
 
 	@Override
-	public @NotNull String toDatabase(@NotNull R r) {
+	public @NotNull String encode(@NotNull R r) {
 		return r.toString();
 	}
 
 	@Override
 	public @NotNull CompletableFuture<@Nullable R> parseText(@Nullable Message context, @NotNull String humanText) {
 		try {
-			R value = fromDatabase(humanText);
+			R value = this.decode(humanText);
 			if (!filter.test(value))
 				value = null; // TODO: display error
 			return CompletableFuture.completedFuture(value);
@@ -40,7 +44,7 @@ public abstract class NumberParser<R extends Number> extends NonNullParser<R> {
 
 	/**
 	 * Determines what types of numbers users are allowed to input for a given variable.
-	 * Does not affect the output of {@link #fromDatabase(String)}.
+	 * Does not affect the output of {@link #decode(String)}.
 	 */
 	public enum ParserFilter implements Predicate<Number> {
 		/**
@@ -69,6 +73,6 @@ public abstract class NumberParser<R extends Number> extends NonNullParser<R> {
 			public boolean test(Number number) {
 				return number.doubleValue() > 0;
 			}
-		};
+		}
 	}
 }

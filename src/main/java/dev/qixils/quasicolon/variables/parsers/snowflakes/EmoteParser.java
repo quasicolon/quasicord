@@ -16,14 +16,14 @@ public final class EmoteParser extends SnowflakeParser<Emote> {
     }
 
     @Override
-    public @Nullable Emote fromDatabase(@NotNull String value) {
+    public @Nullable Emote decode(@NotNull String value) {
         return bot.getJDA().getEmoteById(value);
     }
 
     @Override
-    public @NotNull CompletableFuture<@Nullable Emote> parseText(@NotNull Message context, @NotNull String humanText) {
+    public @NotNull CompletableFuture<@Nullable Emote> parseText(@Nullable Message context, @NotNull String humanText) {
         return super.parseText(context, humanText).thenApply(superEmote -> {
-            if (superEmote != null)
+            if (superEmote != null || context == null)
                 return superEmote;
 
             List<Emote> emotes = context.getGuild().getEmotes();

@@ -2,18 +2,19 @@ package dev.qixils.quasicolon.variables.parsers.numbers;
 
 import dev.qixils.quasicolon.QuasicolonBot;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ShortParser extends NumberParser<Short> {
 	public ShortParser(@NotNull QuasicolonBot bot) {
-		super(bot, null);
+		this(bot, null);
 	}
 
-	public ShortParser(@NotNull QuasicolonBot bot, @NotNull ParserFilter filter) {
+	public ShortParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
 		super(bot, filter);
 	}
 
 	@Override
-	public @NotNull Short fromDatabase(@NotNull String value) throws NumberFormatException {
+	public @NotNull Short decode(@NotNull String value) throws NumberFormatException {
 		return Short.parseShort(value);
 	}
 }

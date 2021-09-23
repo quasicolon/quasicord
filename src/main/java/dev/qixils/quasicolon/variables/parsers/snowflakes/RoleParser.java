@@ -16,14 +16,14 @@ public final class RoleParser extends SnowflakeParser<Role> {
 	}
 
 	@Override
-	public @Nullable Role fromDatabase(@NotNull String value) {
+	public @Nullable Role decode(@NotNull String value) {
 		return bot.getJDA().getRoleById(value);
 	}
 
 	@Override
-	public @NotNull CompletableFuture<@Nullable Role> parseText(@NotNull Message context, @NotNull String humanText) {
+	public @NotNull CompletableFuture<@Nullable Role> parseText(@Nullable Message context, @NotNull String humanText) {
 		return super.parseText(context, humanText).thenApply(superRole -> {
-			if (superRole != null)
+			if (superRole != null || context == null)
 				return superRole;
 
 			List<Role> roles = context.getGuild().getRoles();

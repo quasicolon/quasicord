@@ -37,7 +37,7 @@ public abstract class VariableParser<R> {
 		return bot.getDatabaseManager().getAllBy(Filters.and(Filters.eq("guildId", guild), Filters.eq("name", variable)), Variable.class).next().map(var -> {
 			if (var == null)
 				return null;
-			return fromDatabase(var.getData());
+			return decode(var.getData());
 		});
 	}
 
@@ -49,7 +49,7 @@ public abstract class VariableParser<R> {
 	 */
 	@Nullable
 	@CheckReturnValue
-	public abstract R fromDatabase(@NotNull String value);
+	public abstract R decode(@NotNull String value);
 
 	/**
 	 * Converts a class to database value.
@@ -58,7 +58,7 @@ public abstract class VariableParser<R> {
 	 */
 	@NotNull
 	@CheckReturnValue
-	public abstract String toDatabase(@NotNull R r);
+	public abstract String encode(@NotNull R r);
 
 	/**
 	 * Parses human text into a converted object.
@@ -69,7 +69,7 @@ public abstract class VariableParser<R> {
 	 */
 	@NotNull
 	@CheckReturnValue
-	public abstract CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText);
+	public abstract CompletableFuture<@Nullable R> parseText(@Nullable Message context, @NotNull String humanText);
 
 	/**
 	 * Parses human text into a converted object.
@@ -80,7 +80,7 @@ public abstract class VariableParser<R> {
 	 */
 	@NotNull
 	@CheckReturnValue
-	public final Mono<@Nullable R> parseTextAsMono(@NotNull Message context, @NotNull String humanText) {
+	public Mono<@Nullable R> parseTextAsMono(@Nullable Message context, @NotNull String humanText) {
 		return Mono.fromFuture(parseText(context, humanText));
 	}
 }

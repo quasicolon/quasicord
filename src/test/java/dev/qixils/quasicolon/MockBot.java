@@ -2,7 +2,6 @@ package dev.qixils.quasicolon;
 
 import dev.qixils.quasicolon.variables.AbstractVariables;
 import net.dv8tion.jda.api.JDA;
-import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.ConfigurateException;
 
 import javax.security.auth.login.LoginException;
@@ -12,9 +11,8 @@ public class MockBot extends QuasicolonBot {
         super(new AbstractVariables(){});
     }
 
-    @SuppressWarnings("ConstantConditions")
+    @SuppressWarnings({"ConstantConditions", "NullableProblems"})
     @Override
-    @NotNull
     protected JDA initJDA() {
         return null;
     }

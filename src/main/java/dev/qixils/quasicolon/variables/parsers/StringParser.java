@@ -13,17 +13,17 @@ public final class StringParser extends VariableParser<String> {
 	}
 
 	@Override
-	public @Nullable String fromDatabase(@NotNull String value) {
+	public @NotNull String decode(@NotNull String value) {
 		return value;
 	}
 
 	@Override
-	public @NotNull String toDatabase(@NotNull String string) {
+	public @NotNull String encode(@NotNull String string) {
 		return string;
 	}
 
 	@Override
-	public @NotNull CompletableFuture<@Nullable String> parseText(@NotNull Message context, @NotNull String humanText) {
+	public @NotNull CompletableFuture<@Nullable String> parseText(@Nullable Message context, @NotNull String humanText) {
 		return CompletableFuture.completedFuture(humanText);
 	}
 }

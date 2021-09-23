@@ -18,14 +18,14 @@ public final class ChannelParser<R extends GuildChannel> extends SnowflakeParser
     }
 
     @Override
-    public @Nullable R fromDatabase(@NotNull String value) {
+    public @Nullable R decode(@NotNull String value) {
         return (R) bot.getJDA().getGuildChannelById(value);
     }
 
     @Override
-    public @NotNull CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText) {
+    public @NotNull CompletableFuture<@Nullable R> parseText(@Nullable Message context, @NotNull String humanText) {
         return super.parseText(context, humanText).thenApply(superRole -> {
-            if (superRole != null)
+            if (superRole != null || context == null)
                 return superRole;
 
             List<GuildChannel> allChannels = context.getGuild().getChannels();
