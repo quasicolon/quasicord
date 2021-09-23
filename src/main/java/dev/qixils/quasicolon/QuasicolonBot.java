@@ -19,6 +19,8 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.security.auth.login.LoginException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Objects;
@@ -40,19 +42,25 @@ public class QuasicolonBot {
 	private final TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
 
 	protected QuasicolonBot(@NotNull AbstractVariables variables) throws ConfigurateException, LoginException {
+		this(variables, Paths.get(".").toAbsolutePath());
+	}
+
+	protected QuasicolonBot(@NotNull AbstractVariables variables, @NotNull Path configRoot) throws ConfigurateException, LoginException {
 		this.variables = Objects.requireNonNull(variables, "variables cannot be null");
 
 		loader = YamlConfigurationLoader.builder()
-				//.path() // TODO: load config file
+				.path(configRoot.resolve("config.yml"))
 				// TODO: default config options
 				.build();
 		rootNode = loader.load();
 		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
 		database = new DatabaseManager("semicolon", environment);
+		jda = initJDA(); // should be executed last
+	}
 
-		final String token = rootNode.node("token").getString();
-
-		JDABuilder builder = JDABuilder.createDefault(token)
+	@NotNull
+	protected JDA initJDA() throws LoginException {
+		JDABuilder builder = JDABuilder.createDefault(rootNode.node("token").getString())
 				.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING,
 						GatewayIntent.GUILD_MESSAGE_TYPING,
 						// GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
@@ -63,10 +71,11 @@ public class QuasicolonBot {
 				.setMemberCachePolicy(MemberCachePolicy.ALL)
 				.setActivity(Activity.watching("semicolon.qixils.dev"))
 				.setEventManager(new AnnotatedEventManager())
-				.disableCache(CacheFlag.ACTIVITY);
+				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE);
 		AllowedMentions.setDefaultMentions(Collections.emptySet());
-		jda = builder.build();
+		JDA jda = builder.build();
 		jda.addEventListener(tempListenerExecutor);
+		return jda;
 	}
 
 	/**

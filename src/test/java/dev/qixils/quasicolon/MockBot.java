@@ -1,11 +1,30 @@
 package dev.qixils.quasicolon;
 
 import dev.qixils.quasicolon.variables.AbstractVariables;
-import lombok.SneakyThrows;
+import net.dv8tion.jda.api.JDA;
+import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.ConfigurateException;
+
+import javax.security.auth.login.LoginException;
 
 public class MockBot extends QuasicolonBot {
-    @SneakyThrows
-    public MockBot() {
+    public MockBot() throws LoginException, ConfigurateException {
         super(new AbstractVariables(){});
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    @Override
+    @NotNull
+    protected JDA initJDA() {
+        return null;
+    }
+
+    public static MockBot INSTANCE;
+    static {
+        try {
+            INSTANCE = new MockBot();
+        } catch (Throwable exc) {
+            throw new RuntimeException(exc);
+        }
     }
 }
