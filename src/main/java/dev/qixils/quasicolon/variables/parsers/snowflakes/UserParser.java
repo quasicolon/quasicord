@@ -20,23 +20,27 @@ public final class UserParser extends SnowflakeParser<User> {
 	}
 
 	@Override
-	public @Nullable User fromDatabase(@NotNull String value) {
+	public @Nullable User decode(@NotNull String value) {
 		return bot.getJDA().getUserById(value);
 	}
 
 	@Override
-	public @NotNull CompletableFuture<User> parseText(@NotNull Message context, @NotNull String humanText) {
+	public @NotNull CompletableFuture<User> parseText(@Nullable Message context, @NotNull String humanText) {
 		return super.parseText(context, humanText).thenApply(superUser -> {
 			if (superUser != null)
 				return superUser;
+
 			String text = humanText;
 			Matcher matcher = TAG_PATTERN.matcher(text);
 			String username = matcher.group(1);
 			String discrim = matcher.group(2);
+
 			User user;
 			if (username != null && discrim != null) {
 				user = bot.getJDA().getUserByTag(username, discrim);
 				return user;
+			} else if (context == null) {
+				return null;
 			} else if (text.startsWith("@"))
 				text = text.substring(1);
 

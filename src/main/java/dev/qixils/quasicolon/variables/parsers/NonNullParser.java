@@ -20,5 +20,5 @@ public abstract class NonNullParser<R> extends VariableParser<R> {
 	}
 
 	@Override
-	public abstract @NotNull R fromDatabase(@NotNull String value);
+	public abstract @NotNull R decode(@NotNull String value);
 }

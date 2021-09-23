@@ -2,18 +2,19 @@ package dev.qixils.quasicolon.variables.parsers.numbers;
 
 import dev.qixils.quasicolon.QuasicolonBot;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class IntegerParser extends NumberParser<Integer> {
 	public IntegerParser(@NotNull QuasicolonBot bot) {
-		super(bot, null);
+		this(bot, null);
 	}
 
-	public IntegerParser(@NotNull QuasicolonBot bot, @NotNull ParserFilter filter) {
+	public IntegerParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
 		super(bot, filter);
 	}
 
 	@Override
-	public @NotNull Integer fromDatabase(@NotNull String value) throws NumberFormatException {
+	public @NotNull Integer decode(@NotNull String value) throws NumberFormatException {
 		return Integer.parseInt(value);
 	}
 }

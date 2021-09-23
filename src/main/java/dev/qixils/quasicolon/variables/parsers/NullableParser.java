@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 public final class NullableParser<R> extends VariableParser<R> {
     private final VariableParser<R> parser;
-    private static final String NULL_VALUE = "null";
+    private static final String NULL_VALUE = "$\u2603"; // snowman! :)
 
     public NullableParser(@NotNull QuasicolonBot bot, @NotNull VariableParser<R> parser) {
         super(bot);
@@ -18,16 +18,16 @@ public final class NullableParser<R> extends VariableParser<R> {
     }
 
     @Override
-    public @Nullable R fromDatabase(@NotNull String value) {
-        return value.equals(NULL_VALUE) ? null : parser.fromDatabase(value);
+    public @Nullable R decode(@NotNull String value) {
+        return value.equals(NULL_VALUE) ? null : parser.decode(value);
     }
 
     @Override
-    public @NotNull String toDatabase(@Nullable R r) {
+    public @NotNull String encode(@Nullable R r) {
         if (r == null)
             return NULL_VALUE;
 
-        String val = parser.toDatabase(r);
+        String val = parser.encode(r);
         if (val.equals(NULL_VALUE))
             throw new IllegalStateException("Supplied value resolved to the reserved keyword '" + NULL_VALUE + "'");
 
@@ -35,7 +35,7 @@ public final class NullableParser<R> extends VariableParser<R> {
     }
 
     @Override
-    public @NotNull CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText) {
+    public @NotNull CompletableFuture<@Nullable R> parseText(@Nullable Message context, @NotNull String humanText) {
         if (humanText.equals(NULL_VALUE))
             return CompletableFuture.completedFuture(null);
         return parser.parseText(context, humanText);
