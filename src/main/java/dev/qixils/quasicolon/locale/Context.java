@@ -58,5 +58,5 @@ public interface Context {
 		return new ImmutableContextImpl(message.getAuthor().getIdLong(), message.getTextChannel().getIdLong(), message.getGuild().getIdLong());
 	}
 
-	Context EMPTY = new ImmutableContextImpl();
+	Context EMPTY = new ImmutableContextImpl(0, 0, 0);
 }

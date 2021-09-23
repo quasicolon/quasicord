@@ -1,14 +1,12 @@
 package dev.qixils.quasicolon.locale.impl;
 
 import dev.qixils.quasicolon.locale.Context;
-import lombok.Data;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
 @Accessors(fluent = true)
-@Data
 public record ImmutableContextImpl(long user, long channel, long guild) implements Context {
 
 	@Override

@@ -5,12 +5,12 @@ import org.jetbrains.annotations.NotNull;
 public final class LocaleManager {
 	@NotNull
 	public String localize(@NotNull String key, @NotNull Context context) {
-		// TODO
+		return ""; // TODO
 	}
 
 	@NotNull
 	public String localize(@NotNull String key, @NotNull Context context, int amount) {
-		// TODO
+		return ""; // TODO
 	}
 
 	@NotNull

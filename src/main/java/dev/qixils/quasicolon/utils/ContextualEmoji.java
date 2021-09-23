@@ -1,7 +1,6 @@
 package dev.qixils.quasicolon.utils;
 
 import dev.qixils.quasicolon.QuasicolonBot;
-import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.entities.Emote;
@@ -10,7 +9,6 @@ import net.dv8tion.jda.internal.utils.PermissionUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@Getter
 public final record ContextualEmoji(@NotNull String unicode, long emojiId) {
 	@Nullable
 	public Emote getEmote(@NotNull QuasicolonBot bot) {

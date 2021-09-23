@@ -26,7 +26,7 @@ public abstract class NumberParser<R extends Number> extends NonNullParser<R> {
 	}
 
 	@Override
-	public @NotNull CompletableFuture<@Nullable R> parseText(@NotNull Message context, @NotNull String humanText) {
+	public @NotNull CompletableFuture<@Nullable R> parseText(@Nullable Message context, @NotNull String humanText) {
 		try {
 			R value = fromDatabase(humanText);
 			if (!filter.test(value))
