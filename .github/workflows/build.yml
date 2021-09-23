@@ -9,26 +9,9 @@ on:
       - README.md
       - .gitignore
       - LICENSE
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  skip:
-    runs-on: ubuntu-latest
-    # Map a step output to a job output
-    outputs:
-      should_skip: ${{ steps.skip_check.outputs.should_skip }}
-    steps:
-      - id: skip_check
-        uses: fkirc/skip-duplicate-actions@master
-        with:
-          skip_after_successful_duplicate: 'true'
-          concurrent_skipping: 'same_content_newer'
-
   build:
-    needs: skip
-    if: ${{ needs.skip.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
 
     steps:
