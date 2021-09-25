@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class UserParser extends SnowflakeParser<User> {
+public class UserParser extends SnowflakeParser<User> {
 	public UserParser(QuasicolonBot bot) {
 		super(bot);
 	}

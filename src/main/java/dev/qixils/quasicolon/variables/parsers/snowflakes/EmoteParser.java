@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class EmoteParser extends SnowflakeParser<Emote> {
+public class EmoteParser extends SnowflakeParser<Emote> {
     public EmoteParser(QuasicolonBot bot) {
         super(bot);
     }

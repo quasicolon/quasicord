@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class RoleParser extends SnowflakeParser<Role> {
+public class RoleParser extends SnowflakeParser<Role> {
 	public RoleParser(QuasicolonBot bot) {
 		super(bot);
 	}

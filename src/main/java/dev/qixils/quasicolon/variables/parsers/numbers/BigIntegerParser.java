@@ -6,7 +6,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 
-public final class BigIntegerParser extends NumberParser<BigInteger> {
+public class BigIntegerParser extends NumberParser<BigInteger> {
     public BigIntegerParser(@NotNull QuasicolonBot bot) {
         super(bot, null);
     }

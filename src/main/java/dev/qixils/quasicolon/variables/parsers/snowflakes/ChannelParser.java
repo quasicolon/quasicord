@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-public final class ChannelParser<R extends GuildChannel> extends SnowflakeParser<R> {
+public class ChannelParser<R extends GuildChannel> extends SnowflakeParser<R> {
     private final Class<R> channelClass;
     public ChannelParser(QuasicolonBot bot, Class<R> channelClass) {
         super(bot);

@@ -4,7 +4,7 @@ import dev.qixils.quasicolon.QuasicolonBot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ByteParser extends NumberParser<Byte> {
+public class ByteParser extends NumberParser<Byte> {
 	public ByteParser(@NotNull QuasicolonBot bot) {
 		this(bot, null);
 	}

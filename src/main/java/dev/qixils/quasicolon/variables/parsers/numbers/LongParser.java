@@ -4,7 +4,7 @@ import dev.qixils.quasicolon.QuasicolonBot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class LongParser extends NumberParser<Long> {
+public class LongParser extends NumberParser<Long> {
 	public LongParser(@NotNull QuasicolonBot bot) {
 		this(bot, null);
 	}

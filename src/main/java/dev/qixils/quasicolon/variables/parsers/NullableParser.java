@@ -8,9 +8,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
-public final class NullableParser<R> extends VariableParser<R> {
-    private final VariableParser<R> parser;
-    private static final String NULL_VALUE = "$\u2603"; // snowman! :)
+public class NullableParser<R> extends VariableParser<R> {
+    protected final VariableParser<R> parser;
+    protected static final String NULL_VALUE = "$\u2603"; // snowman! :)
 
     public NullableParser(@NotNull QuasicolonBot bot, @NotNull VariableParser<R> parser) {
         super(bot);

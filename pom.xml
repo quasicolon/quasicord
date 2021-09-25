@@ -83,6 +83,11 @@
             <artifactId>de.huxhorn.sulky.ulid</artifactId>
             <version>8.2.0</version>
         </dependency>
+        <dependency>
+            <groupId>cloud.commandframework</groupId>
+            <artifactId>cloud-jda</artifactId>
+            <version>1.5.0</version>
+        </dependency>
     </dependencies>
 
     <build>

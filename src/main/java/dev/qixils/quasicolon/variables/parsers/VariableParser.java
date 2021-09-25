@@ -34,11 +34,9 @@ public abstract class VariableParser<R> {
 	@NotNull
 	@CheckReturnValue
 	public Mono<@Nullable R> fromDatabase(long guild, @NotNull String variable) {
-		return bot.getDatabaseManager().getAllBy(Filters.and(Filters.eq("guildId", guild), Filters.eq("name", variable)), Variable.class).next().map(var -> {
-			if (var == null)
-				return null;
-			return decode(var.getData());
-		});
+		return bot.getDatabaseManager()
+				.getAllBy(Filters.and(Filters.eq("guildId", guild), Filters.eq("name", variable)), Variable.class)
+				.next().map(var -> var == null ? null : decode(var.getData()));
 	}
 
 	/**

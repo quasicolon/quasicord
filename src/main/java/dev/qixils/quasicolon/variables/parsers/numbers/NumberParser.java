@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 
 public abstract class NumberParser<R extends Number> extends NonNullParser<R> {
-	private final ParserFilter filter;
+	protected final ParserFilter filter;
 
 	public NumberParser(@NotNull QuasicolonBot bot) {
 		this(bot, null);
