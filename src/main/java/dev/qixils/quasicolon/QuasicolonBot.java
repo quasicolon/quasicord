@@ -5,15 +5,22 @@ import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.jda.JDA4CommandManager;
 import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.jda.JDAGuildSender;
+import cloud.commandframework.jda.JDAPrivateSender;
 import dev.qixils.quasicolon.db.DatabaseManager;
+import dev.qixils.quasicolon.error.permissions.DMOnlyException;
+import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
+import dev.qixils.quasicolon.error.permissions.NoPermissionException;
+import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
 import dev.qixils.quasicolon.locale.LocaleManager;
 import dev.qixils.quasicolon.utils.CollectionUtil;
+import dev.qixils.quasicolon.utils.PermissionUtil;
 import dev.qixils.quasicolon.variables.AbstractVariables;
 import dev.qixils.quasicolon.variables.parsers.PrefixParser;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import io.leangen.geantyref.TypeFactory;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -36,6 +43,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Abstract <a href="https://discord.com/">Discord</a> bot which utilizes a <a href="https://mongodb.com/">MongoDB</a>
@@ -195,9 +203,12 @@ public abstract class QuasicolonBot {
 	}
 
 	public boolean hasPermission(@NotNull JDACommandSender sender, @NotNull String permission) {
-		if (sender.getEvent().isEmpty()) return false; // idk what would cause this but ignore it
-
-		return true; // temp obv
+		try {
+			verifyPermissions(sender, permission);
+			return true;
+		} catch (NoPermissionException exc) {
+			return false;
+		}
 
 		// TODO: custom permission parsing
 		// - separated by spaces or \n
@@ -207,6 +218,56 @@ public abstract class QuasicolonBot {
 		//  - `perms:x,y,z` indicates that the user must have effective permissions x,y,z
 		//  - `botperms:x,y,z` indicates that the bot must have effective permissions
 		// - unfortunately cannot reply to messages with failure here, may have to do in a command preprocessor?
+	}
+
+	protected static final Pattern NEWLINE_SPLIT = Pattern.compile("\n");
+	protected static final Pattern COLON_SPLIT = Pattern.compile(":");
+	protected static final Pattern COMMA_SPLIT = Pattern.compile(",");
+	protected void verifyPermissions(@NotNull JDACommandSender sender, @NotNull String permission) throws NoPermissionException {
+		if (sender.getEvent().isEmpty()) return;
+		String[] nodes = NEWLINE_SPLIT.split(permission);
+		for (String node : nodes) {
+			if (node.isBlank())
+				throw new IllegalArgumentException("Invalid permission node (must not be blank)");
+
+			String[] params = COLON_SPLIT.split(node);
+			if (params.length == 0 || params.length > 2)
+				throw new IllegalArgumentException("Invalid permission node '" + node + "' (expected 1-2 params, received " + params.length + ")");
+
+			String type = params[0];
+			if (type.isBlank())
+				throw new IllegalArgumentException("Invalid permission node '" + node + "' (empty 'type' parameter)");
+
+			if (params.length == 1) {
+				switch (type) {
+					case "guild":
+						if (!(sender instanceof JDAGuildSender))
+							throw new GuildOnlyException();
+						break;
+					case "dm":
+						if (!(sender instanceof JDAPrivateSender))
+							throw new DMOnlyException();
+						break;
+					case "owner":
+						if (sender.getUser().getIdLong() != ownerId)
+							throw new OwnerOnlyException();
+						break;
+					default:
+						throw new IllegalStateException("Unexpected key for node '" + type + "'");
+				}
+			} else {
+				if (type.equals("perms") || type.equals("botperms")) {
+					for (String permText : COMMA_SPLIT.split(params[1])) {
+						Permission perm = Permission.valueOf(permText.toLowerCase(Locale.ENGLISH));
+						if (PermissionUtil.checkPermission(sender, perm)) {
+							// TODO
+						}
+					}
+				} else {
+					throw new IllegalStateException("Unexpected key for node '" + node + "'");
+				}
+			}
+		}
 	}
 
 	/**
