@@ -84,6 +84,7 @@ public abstract class QuasicolonBot {
 		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
 		database = new DatabaseManager("semicolon", environment);
 		jda = initJDA(); // should be executed last-ish
+		jda.setRequiredScopes("applications.commands");
 		botId = jda.getSelfUser().getIdLong();
 		ownerId = jda.retrieveApplicationInfo().complete().getOwner().getIdLong();
 

@@ -1,6 +1,6 @@
-package dev.qixils.quasicolon.variables;
+package dev.qixils.quasicolon.test.variables;
 
-import dev.qixils.quasicolon.MockBot;
+import dev.qixils.quasicolon.test.MockBot;
 import dev.qixils.quasicolon.variables.parsers.numbers.BigIntegerParser;
 import dev.qixils.quasicolon.variables.parsers.numbers.ByteParser;
 import dev.qixils.quasicolon.variables.parsers.numbers.DoubleParser;
