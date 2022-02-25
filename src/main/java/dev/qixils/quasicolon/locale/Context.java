@@ -8,6 +8,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -23,7 +24,7 @@ public interface Context {
 	 *
 	 * @return the locale to use for localizing a response message
 	 */
-	default @NonNull Locale locale(@NonNull LocaleProvider localeProvider) {
+	default @NonNull Mono<Locale> locale(@NonNull LocaleProvider localeProvider) {
 		return localeProvider.forContext(this);
 	}
 

@@ -5,6 +5,7 @@ import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import net.xyzsd.plurals.PluralRuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 
@@ -14,21 +15,26 @@ import java.util.Locale;
 public interface Text {
 
 	/**
-	 * Fetches the default localized string for this text.
+	 * Fetches the default localized string for this text. Usage of this method is generally
+	 * discouraged, except when logging information for the bot's host.
 	 *
 	 * @return default localized string for this text
 	 */
 	default @NonNull String asString() {
-		return asString(Context.EMPTY);
+		return asString(LocaleProvider.getInstance().defaultLocale());
 	}
 
 	/**
 	 * Fetches the localized string for this text according to the provided {@link Context}.
+	 * <p>
+	 * This uses the {@link LocaleProvider#getInstance() default} {@link LocaleProvider} to fetch
+	 * the context's {@link Locale}.
 	 *
 	 * @param context the {@link Context} to fetch the {@link Locale} from
-	 * @return localized string for this text
+	 * @return a {@link Mono} that will emit the localized string for this text
+	 * @see #asString(Context, LocaleProvider)
 	 */
-	default @NonNull String asString(@NonNull Context context) {
+	default @NonNull Mono<String> asString(@NonNull Context context) {
 		return asString(context, LocaleProvider.getInstance());
 	}
 
@@ -37,10 +43,10 @@ public interface Text {
 	 *
 	 * @param context        the {@link Context} to fetch the {@link Locale} from
 	 * @param localeProvider the {@link LocaleProvider} to fetch the context's {@link Locale} from
-	 * @return localized string for this text
+	 * @return a {@link Mono} that will emit the localized string for this text
 	 */
-	default @NonNull String asString(@NonNull Context context, @NonNull LocaleProvider localeProvider) {
-		return asString(context.locale(localeProvider));
+	default @NonNull Mono<String> asString(@NonNull Context context, @NonNull LocaleProvider localeProvider) {
+		return context.locale(localeProvider).map(this::asString);
 	}
 
 	/**
