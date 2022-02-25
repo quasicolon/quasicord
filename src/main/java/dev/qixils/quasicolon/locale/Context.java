@@ -5,58 +5,167 @@ import dev.qixils.quasicolon.locale.impl.MutableContextImpl;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.util.Locale;
 import java.util.Objects;
 
+/**
+ * Stores information about the author and location of a message to determine the {@link Locale}
+ * to use for localizing response messages.
+ */
 public interface Context {
+
+	/**
+	 * Computes the locale to use for localizing a response message.
+	 *
+	 * @return the locale to use for localizing a response message
+	 */
+	default @NonNull Locale locale(@NonNull LocaleProvider localeProvider) {
+		return localeProvider.forContext(this);
+	}
+
+	/**
+	 * Determines if this context is mutable.
+	 *
+	 * @return true if this context is mutable
+	 */
+	boolean isMutable();
+
+	// getters
+
+	/**
+	 * Gets the ID of the user associated with this context.
+	 *
+	 * @return discord snowflake or 0 if unspecified
+	 */
 	long user();
+
+	/**
+	 * Gets the ID of the channel associated with this context.
+	 *
+	 * @return discord snowflake or 0 if unspecified
+	 */
 	long channel();
+
+	/**
+	 * Gets the ID of the guild associated with this context.
+	 *
+	 * @return discord snowflake or 0 if unspecified
+	 */
 	long guild();
 
 	// user setter
 
-	@NotNull Context user(long user);
+	/**
+	 * Sets the user ID of this context.
+	 *
+	 * @param user the user ID
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	@NonNull Context user(long user);
 
-	default @NotNull Context user(@NotNull User user) {
+	/**
+	 * Sets the user ID of this context.
+	 *
+	 * @param user the user
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	default @NonNull Context user(@NonNull User user) {
 		return user(Objects.requireNonNull(user, "user").getIdLong());
 	}
 
-	default @NotNull Context user(@NotNull Member member) {
+	/**
+	 * Sets the user ID of this context.
+	 *
+	 * @param member the member
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	default @NonNull Context user(@NonNull Member member) {
 		return user(Objects.requireNonNull(member, "member").getIdLong());
 	}
 
 	// channel setter
 
-	@NotNull Context channel(long channel);
+	/**
+	 * Sets the channel ID of this context.
+	 *
+	 * @param channel the channel ID
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	@NonNull Context channel(long channel);
 
-	default @NotNull Context channel(@NotNull TextChannel channel) {
+	/**
+	 * Sets the channel ID of this context.
+	 *
+	 * @param channel the channel
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	default @NonNull Context channel(@NonNull MessageChannel channel) {
 		return channel(Objects.requireNonNull(channel, "channel").getIdLong());
 	}
 
 	// guild setter
 
-	@NotNull Context guild(long guild);
+	/**
+	 * Sets the guild ID of this context.
+	 *
+	 * @param guild the guild ID
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	@NonNull Context guild(long guild);
 
-	default @NotNull Context guild(@NotNull Guild guild) {
+	/**
+	 * Sets the guild ID of this context.
+	 *
+	 * @param guild the guild
+	 * @return this context
+	 * @throws UnsupportedOperationException if this context is immutable
+	 */
+	default @NonNull Context guild(@NonNull Guild guild) {
 		return guild(Objects.requireNonNull(guild, "guild").getIdLong());
 	}
 
 	// copy
 
-	default @NotNull Context mutableCopy() {
+	/**
+	 * Creates a mutable copy of this context.
+	 *
+	 * @return a mutable copy of this context
+	 */
+	default @NonNull Context mutableCopy() {
 		return new MutableContextImpl(user(), channel(), guild());
 	}
 
-	default @NotNull Context immutableCopy() {
+	/**
+	 * Creates an immutable copy of this context.
+	 *
+	 * @return an immutable copy of this context
+	 */
+	default @NonNull Context immutableCopy() {
 		return new ImmutableContextImpl(user(), channel(), guild());
 	}
 
-	static Context fromMessage(Message message) {
+	/**
+	 * Creates a context from a {@link Message message}.
+	 *
+	 * @param message the message
+	 * @return a context
+	 */
+	static @NonNull Context fromMessage(@NonNull Message message) {
 		return new ImmutableContextImpl(message.getAuthor().getIdLong(), message.getTextChannel().getIdLong(), message.getGuild().getIdLong());
 	}
 
-	Context EMPTY = new ImmutableContextImpl(0, 0, 0);
+	/**
+	 * An empty context.
+	 */
+	@NonNull Context EMPTY = new ImmutableContextImpl(0, 0, 0);
 }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
 
@@ -18,11 +19,16 @@ public final class MutableContextImpl implements Context {
 	private long guild;
 
 	@Override
+	public boolean isMutable() {
+		return true;
+	}
+
+	@Override
 	public int hashCode() {
 		return Objects.hash(user, channel, guild);
 	}
 
-	public boolean equals(Object obj) {
+	public boolean equals(@Nullable Object obj) {
 		if (obj == null) return false;
 		if (!(obj instanceof Context other)) return false;
 		if (user != other.user()) return false;

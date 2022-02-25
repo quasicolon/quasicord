@@ -11,7 +11,9 @@ import dev.qixils.quasicolon.error.permissions.DMOnlyException;
 import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
 import dev.qixils.quasicolon.error.permissions.NoPermissionException;
 import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
-import dev.qixils.quasicolon.locale.LocaleManager;
+import dev.qixils.quasicolon.locale.TranslationProvider;
+import dev.qixils.quasicolon.locale.TranslationProvider.Type;
+import dev.qixils.quasicolon.processors.WritePermissionChecker;
 import dev.qixils.quasicolon.utils.CollectionUtil;
 import dev.qixils.quasicolon.utils.PermissionUtil;
 import dev.qixils.quasicolon.variables.AbstractVariables;
@@ -27,7 +29,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.AllowedMentions;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurateException;
@@ -50,30 +52,43 @@ import java.util.regex.Pattern;
  * {@link #getDatabaseManager() database}.
  */
 public abstract class QuasicolonBot {
+	protected static final Pattern NEWLINE_SPLIT = Pattern.compile("\n");
+	protected static final Pattern COLON_SPLIT = Pattern.compile(":");
+	protected static final Pattern COMMA_SPLIT = Pattern.compile(",");
 	/**
 	 * A command prefix that is impossible to type.
 	 * Uses an obscure unicode character to make {@link String#startsWith(String)} calls terminate faster.
 	 */
 	private static final String UNKNOWN_PREFIX = "\u2603".repeat(4001);
-
 	protected final JDA jda;
 	protected final ConfigurationNode rootNode;
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
-
 	protected final Environment environment;
 	protected final DatabaseManager database;
-	protected final LocaleManager localeManager = new LocaleManager();
 	protected final AbstractVariables variables;
 	protected final TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
 	protected final CommandManager<JDACommandSender> commandManager;
 	protected final long ownerId;
 	protected final long botId;
+	protected final TranslationProvider translationProvider;
+	private final TranslationProvider internalTranslationProvider;
+	protected Set<String> prefixes = null;
+	/**
+	 * Whether the bot developer has been warned about not having a `prefix` variable.
+	 */
+	private boolean prefixWarned = false;
 
-	protected QuasicolonBot(@NotNull AbstractVariables variables) throws ConfigurateException, LoginException, InterruptedException {
-		this(variables, Paths.get(".").toAbsolutePath());
+	protected QuasicolonBot(@NonNull Class<?> botClass, @NonNull AbstractVariables variables) throws ConfigurateException, LoginException, InterruptedException {
+		this(botClass, variables, Paths.get(".").toAbsolutePath());
 	}
 
-	protected QuasicolonBot(@NotNull AbstractVariables variables, @NotNull Path configRoot) throws ConfigurateException, LoginException, InterruptedException {
+	protected QuasicolonBot(@NonNull Class<?> botClass, @NonNull AbstractVariables variables, @NonNull Path configRoot) throws ConfigurateException, LoginException, InterruptedException {
+		// register translation providers
+		this.internalTranslationProvider = new TranslationProvider(getClass(), Locale.ENGLISH);
+		TranslationProvider.registerInstance(Type.LIBRARY, this.internalTranslationProvider);
+		this.translationProvider = new TranslationProvider(botClass, Locale.ENGLISH);
+		TranslationProvider.registerInstance(Type.BOT, this.translationProvider);
+
 		this.variables = Objects.requireNonNull(variables, "variables cannot be null");
 
 		YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
@@ -91,10 +106,12 @@ public abstract class QuasicolonBot {
 		commandManager = new JDA4CommandManager<>(jda, this::getPrefix, this::hasPermission,
 				AsynchronousCommandExecutionCoordinator.<JDACommandSender>newBuilder().withAsynchronousParsing().build(),
 				Function.identity(), Function.identity());
+
+		commandManager.registerCommandPostProcessor(new WritePermissionChecker());
 		// TODO: register custom exception handlers
 	}
 
-	@NotNull
+	@NonNull
 	protected JDA initJDA() throws LoginException {
 		JDABuilder builder = JDABuilder.createDefault(rootNode.node("token").getString())
 				.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING,
@@ -113,22 +130,19 @@ public abstract class QuasicolonBot {
 		jda.addEventListener(tempListenerExecutor);
 		try {
 			jda.awaitReady();
-		} catch (InterruptedException ignored) {}
+		} catch (InterruptedException ignored) {
+		}
 		return jda;
 	}
 
 	/**
-	 * Whether or not the bot developer has been warned about not having a `prefix` variable.
-	 */
-	private boolean prefixWarned = false;
-
-	/**
 	 * Gets the prefix for a given message event.
+	 *
 	 * @param cmdSender wrapper of a message event
 	 * @return command prefix
 	 */
 	// TODO: briefly cache output (to reduce DB calls)
-	public @NotNull String getPrefix(@NotNull JDACommandSender cmdSender) {
+	public @NonNull String getPrefix(@NonNull JDACommandSender cmdSender) {
 		// if this is a custom command event(?) then no prefix is applicable
 		if (cmdSender.getEvent().isEmpty())
 			return UNKNOWN_PREFIX;
@@ -161,15 +175,14 @@ public abstract class QuasicolonBot {
 						.blockOptional().orElse(getDefaultPrefixes())); // or else use default prefixes
 	}
 
-	protected Set<String> prefixes = null;
-
 	/**
 	 * Gets this bot's default prefixes.
 	 * <p>
 	 * By default, this fetches the {@code prefixes} config option from the bot's {@code config.yml}.
+	 *
 	 * @return default command prefixes
 	 */
-	public @NotNull Set<@NotNull String> getDefaultPrefixes() {
+	public @NonNull Set<@NonNull String> getDefaultPrefixes() {
 		if (this.prefixes == null) {
 			Set<String> prefixes;
 			try {
@@ -191,11 +204,12 @@ public abstract class QuasicolonBot {
 
 	/**
 	 * Finds the prefix used in a message.
+	 *
 	 * @param messageContent message to check
-	 * @param prefixes available prefixes to search for
+	 * @param prefixes       available prefixes to search for
 	 * @return prefix used in the message
 	 */
-	protected @NotNull String findPrefix(@NotNull String messageContent, @NotNull Set<@NotNull String> prefixes) {
+	protected @NonNull String findPrefix(@NonNull String messageContent, @NonNull Set<@NonNull String> prefixes) {
 		if (prefixes.isEmpty()) {
 			logger.error("No prefixes were supplied to #findPrefix!");
 			return UNKNOWN_PREFIX;
@@ -203,7 +217,7 @@ public abstract class QuasicolonBot {
 		return Objects.requireNonNullElse(CollectionUtil.first(prefixes, messageContent::startsWith), UNKNOWN_PREFIX);
 	}
 
-	public boolean hasPermission(@NotNull JDACommandSender sender, @NotNull String permission) {
+	public boolean hasPermission(@NonNull JDACommandSender sender, @NonNull String permission) {
 		try {
 			verifyPermissions(sender, permission);
 			return true;
@@ -221,10 +235,7 @@ public abstract class QuasicolonBot {
 		// - unfortunately cannot reply to messages with failure here, may have to do in a command preprocessor?
 	}
 
-	protected static final Pattern NEWLINE_SPLIT = Pattern.compile("\n");
-	protected static final Pattern COLON_SPLIT = Pattern.compile(":");
-	protected static final Pattern COMMA_SPLIT = Pattern.compile(",");
-	protected void verifyPermissions(@NotNull JDACommandSender sender, @NotNull String permission) throws NoPermissionException {
+	protected void verifyPermissions(@NonNull JDACommandSender sender, @NonNull String permission) throws NoPermissionException {
 		if (sender.getEvent().isEmpty()) return;
 		String[] nodes = NEWLINE_SPLIT.split(permission);
 		for (String node : nodes) {
@@ -273,10 +284,11 @@ public abstract class QuasicolonBot {
 
 	/**
 	 * Registers a temporary listener.
+	 *
 	 * @param listener temporary listener to register
 	 */
 	// we don't expose the raw executor in a getter because objects could abuse the #onEvent method
-	public void register(@NotNull TemporaryListener<?> listener) {
+	public void register(@NonNull TemporaryListener<?> listener) {
 		tempListenerExecutor.register(Objects.requireNonNull(listener, "listener cannot be null"));
 	}
 
@@ -298,57 +310,64 @@ public abstract class QuasicolonBot {
 
 	/**
 	 * Returns the {@link JDA} API for interacting with Discord.
+	 *
 	 * @return the JDA API
 	 */
-	public @NotNull JDA getJDA() {
+	public @NonNull JDA getJDA() {
 		return jda;
 	}
 
 	/**
 	 * Returns the root {@link ConfigurationNode} representing the options set in {@code config.yml}.
+	 *
 	 * @return root configuration node
 	 */
-	public @NotNull ConfigurationNode getRootConfigNode() {
+	public @NonNull ConfigurationNode getRootConfigNode() {
 		return rootNode;
 	}
 
 	/**
 	 * Returns the {@link Logger} for this bot.
+	 *
 	 * @return bot's logger
 	 */
-	public @NotNull Logger getLogger() {
+	public @NonNull Logger getLogger() {
 		return logger;
 	}
 
 	/**
 	 * Returns the {@link Environment} that the bot is currently running in.
+	 *
 	 * @return execution environment
 	 */
-	public @NotNull Environment getEnvironment() {
+	public @NonNull Environment getEnvironment() {
 		return environment;
 	}
 
 	/**
 	 * Returns the {@link DatabaseManager} which facilitates communication with the MongoDB database owned by this bot.
+	 *
 	 * @return database manager
 	 */
-	public @NotNull DatabaseManager getDatabaseManager() {
+	public @NonNull DatabaseManager getDatabaseManager() {
 		return database;
 	}
 
 	/**
-	 * Returns the {@link LocaleManager} which is used to obtain translated strings.
+	 * Returns the {@link TranslationProvider} which is used to obtain translated strings.
+	 *
 	 * @return locale manager
 	 */
-	public @NotNull LocaleManager getLocaleManager() {
-		return localeManager;
+	public @NonNull TranslationProvider getTranslationProvider() {
+		return translationProvider;
 	}
 
 	/**
 	 * Returns the variable registry which maps the names of variables to their parsers.
+	 *
 	 * @return variable registry
 	 */
-	public @NotNull AbstractVariables getVariables() {
+	public @NonNull AbstractVariables getVariables() {
 		return variables;
 	}
 }

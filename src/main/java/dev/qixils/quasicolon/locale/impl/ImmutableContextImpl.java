@@ -4,10 +4,12 @@ import dev.qixils.quasicolon.locale.Context;
 import lombok.experimental.Accessors;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
-
 @Accessors(fluent = true)
 public record ImmutableContextImpl(long user, long channel, long guild) implements Context {
+	@Override
+	public boolean isMutable() {
+		return false;
+	}
 
 	@Override
 	public @NotNull Context user(long user) {
@@ -22,19 +24,6 @@ public record ImmutableContextImpl(long user, long channel, long guild) implemen
 	@Override
 	public @NotNull Context guild(long guild) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(user, channel, guild);
-	}
-
-	public boolean equals(Object obj) {
-		if (obj == null) return false;
-		if (!(obj instanceof Context other)) return false;
-		if (user != other.user()) return false;
-		if (channel != other.channel()) return false;
-		return guild == other.guild();
 	}
 }
 
