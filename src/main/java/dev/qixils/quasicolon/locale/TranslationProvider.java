@@ -13,11 +13,9 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Provides the translation for a given key.
@@ -121,50 +119,39 @@ public final class TranslationProvider {
 		throw new IllegalArgumentException("Translation for key " + key + " is not a plural map");
 	}
 
-	/**
-	 * A type of translation provider.
-	 */
-	public enum Type {
-		/**
-		 * Indicates that a translation is expected to come from the quasicolon library.
-		 */
-		LIBRARY,
-		/**
-		 * Indicates that a translation is expected to come from a bot building upon this library.
-		 */
-		BOT,
-		/**
-		 * Indicates that a translation is expected to come from an unknown third party.
-		 */
-		OTHER;
+	// static instance management
 
-		public @NonNull TranslationProvider getInstance() {
-			return TranslationProvider.getInstance(this);
-		}
-	}
-
-	private static final @NonNull Map<Type, TranslationProvider> INSTANCES = new EnumMap<>(Type.class);
+	private static final @NonNull Map<String, TranslationProvider> INSTANCES = new HashMap<>(2);
 
 	/**
-	 * Gets the translation provider for the given type.
+	 * Gets the registered translation provider for the provided namespace.
+	 * <p>
+	 * Note that the namespace is case-insensitive.
 	 *
-	 * @param type the type of translation provider
+	 * @param namespace the namespace to get the translation provider for
 	 * @return the translation provider
+	 * @throws IllegalStateException if no translation provider is registered for the given namespace
 	 */
-	public static @NonNull TranslationProvider getInstance(@NonNull Type type) {
-		return Objects.requireNonNull(INSTANCES.get(type), () -> "No translation provider registered for type " + type);
+	public static @NonNull TranslationProvider getInstance(@NonNull String namespace) throws IllegalStateException {
+		namespace = namespace.toLowerCase(Locale.ENGLISH);
+		if (!INSTANCES.containsKey(namespace))
+			throw new IllegalStateException("No translation provider registered for namespace " + namespace);
+		return INSTANCES.get(namespace);
 	}
 
 	/**
-	 * Registers the translation provider for the given type.
+	 * Registers the translation provider for the provided namespace.
+	 * <p>
+	 * Note that the namespace is case-insensitive.
 	 *
-	 * @param type     the type of translation provider
-	 * @param provider the translation provider
-	 * @throws IllegalArgumentException if a translation provider has already been registered for the given type
+	 * @param namespace the namespace to register the translation provider for
+	 * @param provider  the translation provider
+	 * @throws IllegalStateException if a translation provider has already been registered for the given type
 	 */
-	public static void registerInstance(@NonNull Type type, @NonNull TranslationProvider provider) throws IllegalArgumentException {
-		if (INSTANCES.containsKey(type))
-			throw new IllegalArgumentException("Translation provider already registered for type " + type);
-		INSTANCES.put(type, provider);
+	public static void registerInstance(@NonNull String namespace, @NonNull TranslationProvider provider) throws IllegalArgumentException {
+		namespace = namespace.toLowerCase(Locale.ENGLISH);
+		if (INSTANCES.containsKey(namespace))
+			throw new IllegalStateException("Translation provider already registered for namespace " + namespace);
+		INSTANCES.put(namespace, provider);
 	}
 }

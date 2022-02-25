@@ -1,7 +1,6 @@
 package dev.qixils.quasicolon.text;
 
-import dev.qixils.quasicolon.locale.TranslationProvider;
-import dev.qixils.quasicolon.locale.TranslationProvider.Type;
+import dev.qixils.quasicolon.Key;
 import lombok.Getter;
 import net.xyzsd.plurals.PluralRuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -18,28 +17,59 @@ public class PluralLocalizableText extends AbstractLocalizableText {
 	private final int quantity;
 	private final @NonNull PluralRuleType ruleType;
 
-	public PluralLocalizableText(@NonNull TranslationProvider translationProvider,
-								 int quantity,
-								 @NonNull PluralRuleType ruleType,
-								 @NonNull String key,
-								 String @Nullable ... args) {
-		super(translationProvider, key, args);
-		this.quantity = quantity;
-		this.ruleType = ruleType;
-	}
-
-	public PluralLocalizableText(@NonNull Type translationProviderType,
-								 int quantity,
-								 @NonNull PluralRuleType ruleType,
-								 @NonNull String key,
-								 String @Nullable ... args) {
-		super(translationProviderType, key, args);
+	PluralLocalizableText(int quantity, @NonNull PluralRuleType ruleType, @NonNull Key key, Object @Nullable ... args) {
+		super(key, args);
 		this.quantity = quantity;
 		this.ruleType = ruleType;
 	}
 
 	@Override
 	public @NonNull String asString(@NonNull Locale locale) {
-		return new MessageFormat(translationProvider.getPlural(key, locale).get(quantity, ruleType), locale).format(args);
+		return new MessageFormat(key.getPlural(locale).get(quantity, ruleType), locale).format(Text.localizeArgs(args, locale));
+	}
+
+	/**
+	 * Builder for {@link PluralLocalizableText}.
+	 * @see Text#plural() Text.plural() to create a new builder.
+	 */
+	public static final class Builder extends LocalizableTextBuilder<Builder, PluralLocalizableText> {
+		private @Nullable Integer quantity;
+		private @Nullable PluralRuleType ruleType;
+
+		Builder() {
+		}
+
+		/**
+		 * Sets the quantity used to determine the plural form.
+		 *
+		 * @param quantity integer quantity
+		 * @return this builder
+		 */
+		public @NonNull Builder quantity(int quantity) {
+			this.quantity = quantity;
+			return this;
+		}
+
+		/**
+		 * Sets the rule type used to determine the plural form.
+		 *
+		 * @param ruleType rule type
+		 * @return this builder
+		 */
+		public @NonNull Builder ruleType(@NonNull PluralRuleType ruleType) {
+			this.ruleType = ruleType;
+			return this;
+		}
+
+		@Override
+		public @NonNull PluralLocalizableText build() throws IllegalStateException {
+			if (key == null)
+				throw new IllegalStateException("Translation key is not set");
+			if (quantity == null)
+				throw new IllegalStateException("Quantity is not set");
+			if (ruleType == null)
+				throw new IllegalStateException("Rule type is not set");
+			return new PluralLocalizableText(quantity, ruleType, key, args);
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package dev.qixils.quasicolon.locale;
 
+import dev.qixils.quasicolon.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -9,7 +10,8 @@ public interface Localizable {
 
 	/**
 	 * Translation key corresponding to this object.
+	 *
 	 * @return translation key
 	 */
-	@NonNull String getKey();
+	@NonNull Key getKey();
 }

@@ -11,8 +11,8 @@ import dev.qixils.quasicolon.error.permissions.DMOnlyException;
 import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
 import dev.qixils.quasicolon.error.permissions.NoPermissionException;
 import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
+import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.locale.TranslationProvider;
-import dev.qixils.quasicolon.locale.TranslationProvider.Type;
 import dev.qixils.quasicolon.processors.WritePermissionChecker;
 import dev.qixils.quasicolon.utils.CollectionUtil;
 import dev.qixils.quasicolon.utils.PermissionUtil;
@@ -29,6 +29,7 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.AllowedMentions;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,42 +53,45 @@ import java.util.regex.Pattern;
  * {@link #getDatabaseManager() database}.
  */
 public abstract class QuasicolonBot {
-	protected static final Pattern NEWLINE_SPLIT = Pattern.compile("\n");
-	protected static final Pattern COLON_SPLIT = Pattern.compile(":");
-	protected static final Pattern COMMA_SPLIT = Pattern.compile(",");
+	protected static final @NonNull Pattern NEWLINE_SPLIT = Pattern.compile("\n");
+	protected static final @NonNull Pattern COLON_SPLIT = Pattern.compile(":");
+	protected static final @NonNull Pattern COMMA_SPLIT = Pattern.compile(",");
 	/**
 	 * A command prefix that is impossible to type.
 	 * Uses an obscure unicode character to make {@link String#startsWith(String)} calls terminate faster.
 	 */
-	private static final String UNKNOWN_PREFIX = "\u2603".repeat(4001);
-	protected final JDA jda;
-	protected final ConfigurationNode rootNode;
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	protected final Environment environment;
-	protected final DatabaseManager database;
-	protected final AbstractVariables variables;
-	protected final TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
-	protected final CommandManager<JDACommandSender> commandManager;
+	private static final @NonNull String UNKNOWN_PREFIX = "\u2603".repeat(4001);
+	protected final @NonNull JDA jda;
+	protected final @NonNull ConfigurationNode rootNode;
+	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
+	protected final @NonNull Environment environment;
+	protected final @NonNull DatabaseManager database;
+	protected final @NonNull AbstractVariables variables;
+	protected final @NonNull TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
+	protected final @NonNull CommandManager<JDACommandSender> commandManager;
+	protected final @NonNull String namespace;
 	protected final long ownerId;
 	protected final long botId;
-	protected final TranslationProvider translationProvider;
-	private final TranslationProvider internalTranslationProvider;
-	protected Set<String> prefixes = null;
+	protected final @NonNull TranslationProvider translationProvider;
+	protected final @NonNull LocaleProvider localeProvider;
+	@SuppressWarnings("NullabilityAnnotations") // ffs intellij
+	protected @MonotonicNonNull Set<String> prefixes = null;
 	/**
 	 * Whether the bot developer has been warned about not having a `prefix` variable.
 	 */
 	private boolean prefixWarned = false;
 
-	protected QuasicolonBot(@NonNull Class<?> botClass, @NonNull AbstractVariables variables) throws ConfigurateException, LoginException, InterruptedException {
-		this(botClass, variables, Paths.get(".").toAbsolutePath());
+	protected QuasicolonBot(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull AbstractVariables variables) throws ConfigurateException, LoginException, InterruptedException {
+		this(namespace, defaultLocale, variables, Paths.get(".").toAbsolutePath());
 	}
 
-	protected QuasicolonBot(@NonNull Class<?> botClass, @NonNull AbstractVariables variables, @NonNull Path configRoot) throws ConfigurateException, LoginException, InterruptedException {
+	protected QuasicolonBot(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull AbstractVariables variables, @NonNull Path configRoot) throws ConfigurateException, LoginException, InterruptedException {
 		// register translation providers
-		this.internalTranslationProvider = new TranslationProvider(getClass(), Locale.ENGLISH);
-		TranslationProvider.registerInstance(Type.LIBRARY, this.internalTranslationProvider);
-		this.translationProvider = new TranslationProvider(botClass, Locale.ENGLISH);
-		TranslationProvider.registerInstance(Type.BOT, this.translationProvider);
+		this.namespace = namespace;
+		TranslationProvider internalTranslationProvider = new TranslationProvider(QuasicolonBot.class, defaultLocale);
+		TranslationProvider.registerInstance(Key.LIBRARY_NAMESPACE, internalTranslationProvider);
+		this.translationProvider = new TranslationProvider(getClass(), defaultLocale);
+		TranslationProvider.registerInstance(namespace, this.translationProvider);
 
 		this.variables = Objects.requireNonNull(variables, "variables cannot be null");
 
@@ -98,6 +102,7 @@ public abstract class QuasicolonBot {
 		rootNode = loader.load();
 		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
 		database = new DatabaseManager("semicolon", environment);
+		localeProvider = new LocaleProvider(defaultLocale, database);
 		jda = initJDA(); // should be executed last-ish
 		jda.setRequiredScopes("applications.commands");
 		botId = jda.getSelfUser().getIdLong();
@@ -363,11 +368,29 @@ public abstract class QuasicolonBot {
 	}
 
 	/**
+	 * Returns the {@link LocaleProvider} which is used to obtain an object's locale.
+	 *
+	 * @return locale provider
+	 */
+	public @NonNull LocaleProvider getLocaleProvider() {
+		return localeProvider;
+	}
+
+	/**
 	 * Returns the variable registry which maps the names of variables to their parsers.
 	 *
 	 * @return variable registry
 	 */
 	public @NonNull AbstractVariables getVariables() {
 		return variables;
+	}
+
+	/**
+	 * Returns the bot's namespace which is used for fetching translation strings.
+	 *
+	 * @return bot's namespace
+	 */
+	public @NonNull String getNamespace() {
+		return namespace;
 	}
 }

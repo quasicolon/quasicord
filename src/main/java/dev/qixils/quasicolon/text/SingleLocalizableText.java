@@ -1,7 +1,6 @@
 package dev.qixils.quasicolon.text;
 
-import dev.qixils.quasicolon.locale.TranslationProvider;
-import dev.qixils.quasicolon.locale.TranslationProvider.Type;
+import dev.qixils.quasicolon.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -11,17 +10,28 @@ import java.util.Locale;
 /**
  * Localizable text that has no plural forms.
  */
-public class SingleLocalizableText extends AbstractLocalizableText {
-	public SingleLocalizableText(@NonNull TranslationProvider translationProvider, @NonNull String key, String @Nullable [] args) {
-		super(translationProvider, key, args);
-	}
-
-	public SingleLocalizableText(@NonNull Type translationProviderType, @NonNull String key, String @Nullable [] args) {
-		super(translationProviderType, key, args);
+public final class SingleLocalizableText extends AbstractLocalizableText {
+	SingleLocalizableText(@NonNull Key key, Object @Nullable [] args) {
+		super(key, args);
 	}
 
 	@Override
 	public @NonNull String asString(@NonNull Locale locale) {
-		return new MessageFormat(translationProvider.getSingle(key, locale).get(), locale).format(args);
+		return new MessageFormat(key.getSingle(locale).get(), locale).format(Text.localizeArgs(args, locale));
+	}
+
+	/**
+	 * Builder for {@link SingleLocalizableText}.
+	 */
+	public static final class Builder extends LocalizableTextBuilder<Builder, SingleLocalizableText> {
+		Builder() {
+		}
+
+		@Override
+		public @NonNull SingleLocalizableText build() throws IllegalStateException {
+			if (key == null)
+				throw new IllegalStateException("Translation key is not set");
+			return new SingleLocalizableText(key, args);
+		}
 	}
 }

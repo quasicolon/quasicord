@@ -13,5 +13,5 @@ public interface LocalizableText extends Localizable, Text {
 	 *
 	 * @return the formatting arguments
 	 */
-	String @NonNull [] getArgs();
+	Object @NonNull [] getArgs();
 }
