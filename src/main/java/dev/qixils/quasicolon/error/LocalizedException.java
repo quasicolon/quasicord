@@ -1,7 +1,7 @@
 package dev.qixils.quasicolon.error;
 
 import dev.qixils.quasicolon.locale.TranslationProvider;
-import dev.qixils.quasicolon.locale.text.LocalizableText;
+import dev.qixils.quasicolon.text.LocalizableText;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;

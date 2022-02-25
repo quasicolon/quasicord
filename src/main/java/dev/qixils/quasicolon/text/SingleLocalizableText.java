@@ -1,4 +1,4 @@
-package dev.qixils.quasicolon.locale.text;
+package dev.qixils.quasicolon.text;
 
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.locale.TranslationProvider.Type;

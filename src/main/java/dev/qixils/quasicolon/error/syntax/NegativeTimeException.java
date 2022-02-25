@@ -2,7 +2,7 @@ package dev.qixils.quasicolon.error.syntax;
 
 import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.context.CommandContext;
-import dev.qixils.quasicolon.locale.text.Text;
+import dev.qixils.quasicolon.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
