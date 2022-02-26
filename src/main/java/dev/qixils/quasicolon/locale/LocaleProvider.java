@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public class LocaleProvider {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(LocaleProvider.class);
-	private static final @NonNull LocaleProvider DUMMY_INSTANCE = new DummyLocaleProvider(Locale.ENGLISH);
+	private static final @NonNull LocaleProvider DUMMY_INSTANCE = new DummyLocaleProvider(Locale.ROOT);
 	private static @NonNull LocaleProvider INSTANCE = DUMMY_INSTANCE;
 
 	private final @NonNull Locale defaultLocale;

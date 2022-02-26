@@ -18,32 +18,48 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Provides the translation for a given key.
+ * Provides the translation(s) for a key inside the configured namespace.
+ * @see TranslationProvider#TranslationProvider(String, Locale)  TranslationProvider constructor
  */
 public final class TranslationProvider {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(TranslationProvider.class);
-	private final @NonNull Class<?> resourceSource;
+	private final @NonNull String namespace;
 	private final @NonNull Locale defaultLocale;
 	private final @NonNull Map<Locale, Map<String, ?>> translations = new HashMap<>(1);
 
 	/**
-	 * Creates a new translation provider given the class whose module will be used as the source
-	 * for loading translations. This is generally the main class of your bot or library.
+	 * Creates a new translation provider for the given resource source and default locale.
+	 * <p>
+	 * Your bot or plugin should store its language files inside the directory
+	 * {@code src/main/resources/langs/&lt;namespace&gt;}, where {@code &lt;namespace&gt;} is the
+	 * same as the string you pass in to the {@code namespace} parameter.
+	 * </p>
+	 * <b>Note:</b> The {@code namespace} parameter is converted to lowercase. Usage of
+	 * non-alphanumeric characters is discouraged, though not explicitly forbidden.
 	 *
-	 * @param resourceSource the class whose module will be used as the source for loading
-	 *                       translations
+	 * @param namespace     the directory in which the translations are stored
+	 * @param defaultLocale the default locale to use if no translation is found for the current locale
 	 */
-	public TranslationProvider(@NonNull Class<?> resourceSource, @NonNull Locale defaultLocale) {
-		this.resourceSource = resourceSource;
+	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale) {
+		this.namespace = namespace.toLowerCase(Locale.ROOT);
 		this.defaultLocale = defaultLocale;
+	}
+
+	/**
+	 * Gets the namespace of this translation provider.
+	 *
+	 * @return the namespace
+	 */
+	public @NonNull String getNamespace() {
+		return namespace;
 	}
 
 	private @NonNull Translation getTranslation(@NonNull String key, @NonNull Locale locale, @NonNull Locale requestedLocale) {
 		if (!translations.containsKey(locale)) {
 			// load the translations for the given locale
 			Yaml yaml = new Yaml();
-			String languageCode = locale.getLanguage().toLowerCase(Locale.ENGLISH); // TODO: try variants as well (i.e. en_US)
-			InputStream inputStream = resourceSource.getResourceAsStream("langs/" + languageCode + ".yaml");
+			String languageCode = locale.getLanguage().toLowerCase(Locale.ROOT); // TODO: try variants as well (i.e. en_US)
+			InputStream inputStream = ClassLoader.getSystemResourceAsStream("langs/" + namespace + '/' + languageCode + ".yaml"); // TODO: test this
 
 			if (inputStream == null) {
 				logger.warn("No translation file for locale " + languageCode + " found");
@@ -133,23 +149,20 @@ public final class TranslationProvider {
 	 * @throws IllegalStateException if no translation provider is registered for the given namespace
 	 */
 	public static @NonNull TranslationProvider getInstance(@NonNull String namespace) throws IllegalStateException {
-		namespace = namespace.toLowerCase(Locale.ENGLISH);
+		namespace = namespace.toLowerCase(Locale.ROOT);
 		if (!INSTANCES.containsKey(namespace))
 			throw new IllegalStateException("No translation provider registered for namespace " + namespace);
 		return INSTANCES.get(namespace);
 	}
 
 	/**
-	 * Registers the translation provider for the provided namespace.
-	 * <p>
-	 * Note that the namespace is case-insensitive.
+	 * Registers the provided translation provider with its associated namespace.
 	 *
-	 * @param namespace the namespace to register the translation provider for
-	 * @param provider  the translation provider
+	 * @param provider the translation provider
 	 * @throws IllegalStateException if a translation provider has already been registered for the given type
 	 */
-	public static void registerInstance(@NonNull String namespace, @NonNull TranslationProvider provider) throws IllegalArgumentException {
-		namespace = namespace.toLowerCase(Locale.ENGLISH);
+	public static void registerInstance(@NonNull TranslationProvider provider) throws IllegalArgumentException {
+		String namespace = provider.getNamespace();
 		if (INSTANCES.containsKey(namespace))
 			throw new IllegalStateException("Translation provider already registered for namespace " + namespace);
 		INSTANCES.put(namespace, provider);

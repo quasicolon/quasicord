@@ -23,6 +23,6 @@ public interface IToken {
 	 * @return whether the input matches the token
 	 */
 	default boolean toLowerMatches(@NonNull String input) {
-		return matches(Objects.requireNonNull(input, "input cannot be null").toLowerCase(Locale.ENGLISH));
+		return matches(Objects.requireNonNull(input, "input cannot be null").toLowerCase(Locale.ROOT));
 	}
 }

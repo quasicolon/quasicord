@@ -12,7 +12,7 @@ import java.util.Locale;
 
 public class MockBot extends QuasicolonBot {
     public MockBot() throws LoginException, ConfigurateException, InterruptedException {
-        super("mockbot", Locale.ENGLISH, new AbstractVariables(){});
+        super("mockbot", Locale.ROOT, new AbstractVariables(){});
     }
 
     @Override

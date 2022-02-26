@@ -191,14 +191,14 @@ public final class ZonedDateTimeArgument<C> extends CommandArgument<C, ZonedDate
 
 			// attempt to parse complex wording (i.e. 'thursday at 10:45 pm')
 			PartialDateTime pdt = new PartialDateTime(now);
-			input.removeIf(s -> IGNORED_TOKENS.contains(s.toLowerCase(Locale.ENGLISH)));
+			input.removeIf(s -> IGNORED_TOKENS.contains(s.toLowerCase(Locale.ROOT)));
 			String inputText = String.join(" ", input);
 			for (String token : inputText.split(" ")) {
 				if (token.isEmpty())
 					continue;
 
 				// TODO support some i18n
-				token = token.toLowerCase(Locale.ENGLISH);
+				token = token.toLowerCase(Locale.ROOT);
 				if (token.equals("tomorrow")) {
 					pdt.fromZDT(pdt.asZDT(zoneId).plusDays(1));
 					pdt.setAsMorning();
@@ -213,7 +213,7 @@ public final class ZonedDateTimeArgument<C> extends CommandArgument<C, ZonedDate
 					pdt.setYear(Integer.parseInt(token));
 				else if (!pdt.isMonthSet()) {
 					for (Month month : Month.values()) {
-						if (token.startsWith(month.name().toLowerCase(Locale.ENGLISH).substring(0, 3))) {
+						if (token.startsWith(month.name().toLowerCase(Locale.ROOT).substring(0, 3))) {
 							pdt.setMonth(month.getValue());
 							break;
 						}

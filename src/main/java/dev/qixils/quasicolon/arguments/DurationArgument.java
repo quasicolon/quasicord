@@ -62,7 +62,7 @@ public final class DurationArgument<C> extends CommandArgument<C, Duration> {
 		@Override
 		protected @NonNull ArgumentParseResult<@NonNull Duration> parse(@NonNull CommandContext<@NonNull C> ctx, @NonNull List<@NonNull String> arguments) {
 			assert !arguments.isEmpty();
-			arguments.removeIf(s -> RELATIVE_TIME_IGNORED_TOKENS.contains(s.toLowerCase(Locale.ENGLISH)));
+			arguments.removeIf(s -> RELATIVE_TIME_IGNORED_TOKENS.contains(s.toLowerCase(Locale.ROOT)));
 
 			boolean negative = false;
 			if (arguments.get(0).startsWith("-")) {

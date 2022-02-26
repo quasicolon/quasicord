@@ -42,7 +42,7 @@ public final class PluralTranslationImpl extends AbstractTranslation implements 
 													  @NonNull Map<String, String> translations) {
 		Map<PluralCategory, String> pluralTranslations = new EnumMap<>(PluralCategory.class);
 		for (Map.Entry<String, String> entry : translations.entrySet()) {
-			pluralTranslations.put(PluralCategory.valueOf(entry.getKey().toUpperCase(Locale.ENGLISH)), entry.getValue());
+			pluralTranslations.put(PluralCategory.valueOf(entry.getKey().toUpperCase(Locale.ROOT)), entry.getValue());
 		}
 		return new PluralTranslationImpl(key, locale, requestedLocale, pluralTranslations);
 	}

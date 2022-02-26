@@ -39,7 +39,7 @@ public class DatabaseManager implements Closeable {
 	protected final @NotNull MongoDatabase database;
 
 	public DatabaseManager(String dbPrefix, Environment environment) {
-		this(dbPrefix, Objects.requireNonNull(environment, "environment cannot be null").name().toLowerCase(Locale.ENGLISH));
+		this(dbPrefix, Objects.requireNonNull(environment, "environment cannot be null").name().toLowerCase(Locale.ROOT));
 	}
 
 	public DatabaseManager(@NotNull String dbPrefix, @NotNull String dbSuffix) {

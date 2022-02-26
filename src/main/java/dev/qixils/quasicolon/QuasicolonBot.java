@@ -94,10 +94,9 @@ public abstract class QuasicolonBot {
 	protected QuasicolonBot(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull AbstractVariables variables, @NonNull Path configRoot) throws ConfigurateException, LoginException, InterruptedException {
 		// register translation providers
 		this.namespace = namespace;
-		TranslationProvider internalTranslationProvider = new TranslationProvider(QuasicolonBot.class, defaultLocale);
-		TranslationProvider.registerInstance(Key.LIBRARY_NAMESPACE, internalTranslationProvider);
-		this.translationProvider = new TranslationProvider(getClass(), defaultLocale);
-		TranslationProvider.registerInstance(namespace, this.translationProvider);
+		translationProvider = new TranslationProvider(namespace, defaultLocale);
+		TranslationProvider.registerInstance(translationProvider);
+		TranslationProvider.registerInstance(new TranslationProvider(Key.LIBRARY_NAMESPACE, defaultLocale));
 
 		this.variables = Objects.requireNonNull(variables, "variables cannot be null");
 
@@ -106,7 +105,7 @@ public abstract class QuasicolonBot {
 				// TODO: default config options
 				.build();
 		rootNode = loader.load();
-		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
+		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ROOT));
 		database = new DatabaseManager("semicolon", environment);
 		localeProvider = new LocaleProvider(defaultLocale, database);
 		jda = initJDA(); // should be executed last-ish
@@ -286,7 +285,7 @@ public abstract class QuasicolonBot {
 			} else {
 				if (type.equals("perms") || type.equals("botperms")) {
 					for (String permText : COMMA_SPLIT.split(params[1])) {
-						Permission perm = Permission.valueOf(permText.toLowerCase(Locale.ENGLISH));
+						Permission perm = Permission.valueOf(permText.toLowerCase(Locale.ROOT));
 						if (PermissionUtil.checkPermission(sender, perm)) {
 							// TODO
 						}

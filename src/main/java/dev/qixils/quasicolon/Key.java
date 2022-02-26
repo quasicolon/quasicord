@@ -29,7 +29,7 @@ public class Key {
 	 * @param value     the translation key
 	 */
 	public Key(@NonNull String namespace, @NonNull String value) {
-		this.namespace = namespace.toLowerCase(Locale.ENGLISH);
+		this.namespace = namespace.toLowerCase(Locale.ROOT);
 		this.value = value;
 	}
 
