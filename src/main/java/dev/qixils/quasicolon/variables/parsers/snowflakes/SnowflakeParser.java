@@ -5,7 +5,10 @@ import dev.qixils.quasicolon.QuasicolonBot;
 import dev.qixils.quasicolon.text.Text;
 import dev.qixils.quasicolon.utils.FakeCollection;
 import dev.qixils.quasicolon.utils.MessageUtil;
+import dev.qixils.quasicolon.utils.PermissionUtil;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Message;
@@ -61,8 +64,14 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 			return false;
 		attemptedObjects.add(id);
 
+		// ensure bot can speak and add reacts in the target channel
 		MessageChannel channel = context.getChannel();
-		// TODO perm check
+		if (channel instanceof GuildChannel &&
+				!PermissionUtil.checkPermission((GuildChannel) channel, context.getGuild().getSelfMember(),
+						Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION))
+			return false;
+
+		// ask for confirmation
 		CompletableFuture<Boolean> future = new CompletableFuture<>();
 		Text.single(Key.library("snowflake_confirm"))
 				.sendAsReplyTo(context)
@@ -70,6 +79,6 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 					reply.delete().queue();
 					future.complete(input != null && input);
 				}).register(bot));
-		return future.join(); // TODO: this is bad :(
+		return future.join(); // TODO: don't .join()
 	}
 }
