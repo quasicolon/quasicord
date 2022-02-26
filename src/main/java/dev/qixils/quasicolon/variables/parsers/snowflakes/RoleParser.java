@@ -3,6 +3,7 @@ package dev.qixils.quasicolon.variables.parsers.snowflakes;
 import dev.qixils.quasicolon.QuasicolonBot;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.Role;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class RoleParser extends SnowflakeParser<Role> {
-	public RoleParser(QuasicolonBot bot) {
+	public RoleParser(@NonNull QuasicolonBot bot) {
 		super(bot);
 	}
 
@@ -22,7 +23,7 @@ public class RoleParser extends SnowflakeParser<Role> {
 
 	@Override
 	public @NotNull CompletableFuture<@Nullable Role> parseText(@Nullable Message context, @NotNull String humanText) {
-		return super.parseText(context, humanText).thenApply(superRole -> {
+		return super.parseText(context, humanText).thenApplyAsync(superRole -> {
 			if (superRole != null || context == null)
 				return superRole;
 

@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.Contract;
 
 import javax.annotation.CheckReturnValue;
@@ -49,11 +50,13 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 		});
 	}
 
+	@Blocking
 	@CheckReturnValue
 	protected boolean ask(@NonNull Message context, @Nullable IMentionable mentionable) {
 		return ask(context, mentionable, EMPTY_COLLECTION);
 	}
 
+	@Blocking
 	@CheckReturnValue
 	@Contract(mutates = "param3")
 	protected boolean ask(@NonNull Message context, @Nullable IMentionable mentionable, @NonNull Collection<Long> attemptedObjects) {
@@ -79,6 +82,8 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 					reply.delete().queue();
 					future.complete(input != null && input);
 				}).register(bot));
-		return future.join(); // TODO: don't .join()
+		// .join() isn't ideal but all the usages of this method are inside async executors,
+		// so it's alright
+		return future.join();
 	}
 }

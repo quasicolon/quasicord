@@ -1,6 +1,7 @@
 package dev.qixils.quasicolon.utils;
 
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -22,58 +23,57 @@ public class FakeCollection<E> implements Collection<E> {
 	}
 
 	@Override
-	public boolean contains(Object o) {
+	public boolean contains(@Nullable Object o) {
 		return false;
 	}
 
-	@NotNull
+	@NonNull
 	@Override
 	public Iterator<E> iterator() {
 		return Collections.emptyIterator();
 	}
 
 	@Override
-	public Object @NotNull[] toArray() {
+	public Object @NonNull [] toArray() {
 		return new Object[0];
 	}
 
 	@Override
-	public <T> T @NotNull[] toArray(T @NotNull[] a) {
+	public <T> T @NonNull [] toArray(T @NonNull [] a) {
 		return a;
 	}
 
 	@Override
-	public boolean add(E e) {
+	public boolean add(@Nullable E e) {
 		return false;
 	}
 
 	@Override
-	public boolean remove(Object o) {
+	public boolean remove(@Nullable Object o) {
 		return false;
 	}
 
 	@Override
-	public boolean containsAll(@NotNull Collection<?> c) {
+	public boolean containsAll(@NonNull Collection<?> c) {
 		return c.isEmpty();
 	}
 
 	@Override
-	public boolean addAll(@NotNull Collection<? extends E> c) {
+	public boolean addAll(@Nullable Collection<? extends E> c) {
 		return false;
 	}
 
 	@Override
-	public boolean removeAll(@NotNull Collection<?> c) {
+	public boolean removeAll(@Nullable Collection<?> c) {
 		return false;
 	}
 
 	@Override
-	public boolean retainAll(@NotNull Collection<?> c) {
+	public boolean retainAll(@Nullable Collection<?> c) {
 		return false;
 	}
 
 	@Override
 	public void clear() {
-
 	}
 }

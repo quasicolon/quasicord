@@ -8,7 +8,6 @@ import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +23,12 @@ public class MessageUtil {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(MessageUtil.class);
 
 	// TODO deprecate reaction menus and switch to ActionRow/components
+	// also support continuously editing a message with a new y/n prompt
 
 	/**
-	 * Adds a collection of emotes (unicode or custom) to a message and returns a {@link TemporaryListener.Builder}
-	 * which is configured to listen for the provided user reacting with one of the listed emotes.
+	 * Adds a collection of emotes (unicode or custom) to a message and returns a
+	 * {@link TemporaryListener.Builder} which is configured to listen for the provided user
+	 * reacting with one of the listed emotes.
 	 * <br>
 	 * You must set your own {@code callback} on the listener and may set your own {@code onTimeout} or {@code length}.
 	 *
@@ -36,9 +37,10 @@ public class MessageUtil {
 	 * @param emotes  emotes to react with
 	 * @return a temporary listener builder
 	 */
-	@NotNull
 	@CheckReturnValue
-	public static TemporaryListener.Builder<MessageReactionAddEvent> setupReactionMenu(long userID, @NotNull Message message, @NotNull Collection<String> emotes) {
+	public static TemporaryListener.@NonNull Builder<MessageReactionAddEvent> setupReactionMenu(long userID,
+																								@NonNull Message message,
+																								@NonNull Collection<String> emotes) {
 		Objects.requireNonNull(message, "message cannot be null");
 		Objects.requireNonNull(emotes, "emotes cannot be null");
 		for (String emote : emotes) {
@@ -74,9 +76,9 @@ public class MessageUtil {
 	 * @param callback callback to execute once input is received or times out
 	 * @return a temporary listener
 	 */
-	@NotNull
+	@NonNull
 	@CheckReturnValue
-	public static TemporaryListener<MessageReactionAddEvent> setupYesNoReactionMenu(long userID, @NotNull Message message, @NotNull Consumer<Boolean> callback) {
+	public static TemporaryListener<MessageReactionAddEvent> setupYesNoReactionMenu(long userID, @NonNull Message message, @NonNull Consumer<Boolean> callback) {
 		Objects.requireNonNull(message, "message cannot be null");
 		Objects.requireNonNull(callback, "callback cannot be null");
 
