@@ -8,8 +8,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class UnknownTokenException extends InvalidSyntaxException {
-	public UnknownTokenException(@NonNull String namespace, @NonNull CommandContext<?> context, @NonNull String token) {
-		super(namespace, context, getErrorText(token));
+	public UnknownTokenException(@NonNull CommandContext<?> context, @NonNull String token) {
+		super(context, getErrorText(token));
 	}
 
 	public UnknownTokenException(@NonNull String namespace, @Nullable CommandArgument<?, ?> argument, @NonNull String token) {

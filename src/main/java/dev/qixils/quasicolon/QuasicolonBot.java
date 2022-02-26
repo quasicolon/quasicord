@@ -1,11 +1,14 @@
 package dev.qixils.quasicolon;
 
 import cloud.commandframework.CommandManager;
+import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.execution.AsynchronousCommandExecutionCoordinator;
 import cloud.commandframework.jda.JDA4CommandManager;
 import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.jda.JDAGuildSender;
 import cloud.commandframework.jda.JDAPrivateSender;
+import cloud.commandframework.keys.CloudKey;
+import cloud.commandframework.keys.SimpleCloudKey;
 import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.error.permissions.DMOnlyException;
 import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
@@ -20,6 +23,7 @@ import dev.qixils.quasicolon.variables.AbstractVariables;
 import dev.qixils.quasicolon.variables.parsers.PrefixParser;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import io.leangen.geantyref.TypeFactory;
+import io.leangen.geantyref.TypeToken;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
@@ -53,6 +57,8 @@ import java.util.regex.Pattern;
  * {@link #getDatabaseManager() database}.
  */
 public abstract class QuasicolonBot {
+	public static final @NonNull CloudKey<QuasicolonBot> BOT_KEY = SimpleCloudKey.of("quasicolon.bot", TypeToken.get(QuasicolonBot.class));
+	public static final @NonNull CloudKey<String> NAMESPACE_KEY = SimpleCloudKey.of("quasicolon.namespace", TypeToken.get(String.class));
 	protected static final @NonNull Pattern NEWLINE_SPLIT = Pattern.compile("\n");
 	protected static final @NonNull Pattern COLON_SPLIT = Pattern.compile(":");
 	protected static final @NonNull Pattern COMMA_SPLIT = Pattern.compile(",");
@@ -112,6 +118,11 @@ public abstract class QuasicolonBot {
 				AsynchronousCommandExecutionCoordinator.<JDACommandSender>newBuilder().withAsynchronousParsing().build(),
 				Function.identity(), Function.identity());
 
+		commandManager.registerCommandPreProcessor(context -> {
+			CommandContext<JDACommandSender> ctx = context.getCommandContext();
+			ctx.store(BOT_KEY, this);
+			ctx.store(NAMESPACE_KEY, namespace);
+		});
 		commandManager.registerCommandPostProcessor(new WritePermissionChecker());
 		// TODO: register custom exception handlers
 	}

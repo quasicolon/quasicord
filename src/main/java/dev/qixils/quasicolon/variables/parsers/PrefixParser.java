@@ -1,7 +1,8 @@
 package dev.qixils.quasicolon.variables.parsers;
 
+import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.QuasicolonBot;
-import dev.qixils.quasicolon.locale.Context;
+import dev.qixils.quasicolon.text.Text;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +34,7 @@ public class PrefixParser extends CollectionParser<Set<String>, String> {
 					if (prefix.startsWith(processedPrefix)) {
 						if (!invalidPrefixWarning) {
 							invalidPrefixWarning = true;
-							context.reply(bot.getLocaleManager().localize("invalid_prefix_warning", Context.fromMessage(context))).queue();
+							Text.single(Key.library("invalid_prefix_warning")).sendAsReplyTo(context).queue();
 						}
 						validPrefix = false;
 						break;

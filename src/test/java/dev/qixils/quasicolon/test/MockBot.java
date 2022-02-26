@@ -8,10 +8,11 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.configurate.ConfigurateException;
 
 import javax.security.auth.login.LoginException;
+import java.util.Locale;
 
 public class MockBot extends QuasicolonBot {
     public MockBot() throws LoginException, ConfigurateException, InterruptedException {
-        super(MockBot.class, new AbstractVariables(){});
+        super("mockbot", Locale.ENGLISH, new AbstractVariables(){});
     }
 
     @Override

@@ -1,5 +1,6 @@
 package dev.qixils.quasicolon.locale.translation;
 
+import net.xyzsd.plurals.PluralRuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
@@ -14,7 +15,7 @@ public interface UnknownTranslation extends SingleTranslation, PluralTranslation
 	}
 
 	@Override
-	default @NonNull String get(int quantity) {
+	default @NonNull String get(int quantity, @NonNull PluralRuleType ruleType) {
 		return getKey();
 	}
 }

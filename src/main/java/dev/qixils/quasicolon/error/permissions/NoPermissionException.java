@@ -1,10 +1,11 @@
 package dev.qixils.quasicolon.error.permissions;
 
 import dev.qixils.quasicolon.error.LocalizedException;
-import org.jetbrains.annotations.NotNull;
+import dev.qixils.quasicolon.text.LocalizableText;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class NoPermissionException extends LocalizedException {
-	public NoPermissionException(@NotNull String key) {
-		super(key);
+	public NoPermissionException(@NonNull LocalizableText text) {
+		super(text);
 	}
 }

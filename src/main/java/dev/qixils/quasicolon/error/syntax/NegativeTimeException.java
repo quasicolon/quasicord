@@ -10,8 +10,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class NegativeTimeException extends InvalidSyntaxException {
 	private static final @NonNull Text ERROR_TEXT = Text.single(Key.library("exception.negative_time"));
 
-	public NegativeTimeException(@NonNull String namespace, @NonNull CommandContext<?> context) {
-		super(namespace, context, ERROR_TEXT);
+	public NegativeTimeException(@NonNull CommandContext<?> context) {
+		super(context, ERROR_TEXT);
 	}
 
 	public NegativeTimeException(@NonNull String namespace, @Nullable CommandArgument<?, ?> argument) {

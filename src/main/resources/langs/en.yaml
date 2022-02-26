@@ -1,10 +1,13 @@
 en:
-  arg._unknown_: "<unknown>"
-  invalid_prefix_warning: "One or more of your input prefixes contained the same starting character(s) as another prefix. These are unsupported and have been filtered out."
+  arg._unknown_: <unknown>
+  invalid_prefix_warning: One or more of your input prefixes contained the same starting
+  character(s) as another prefix. These are unsupported and have been filtered out.
   exception.invalid_syntax: "A syntax error occurred within argument {0}: {1}"
-  exception.invalid_syntax.quotations: "Quoted argument has improper quotation marks"
-  exception.owner_only: "This command can only be run by the bot owner"
-  exception.dms_only: "This command can only be run in direct messages"
-  exception.guild_only: "This command can only be run in guilds"
-  exception.negative_time: "Provided time must be from the future, not the past"
+  exception.invalid_syntax.quotations: Quoted argument has improper quotation marks
+  exception.owner_only: This command can only be run by the bot owner
+  exception.dms_only: This command can only be run in direct messages
+  exception.guild_only: This command can only be run in guilds
+  exception.negative_time: Provided time must be from the future, not the past
   exception.unknown_token: "Unable to parse token `{0}`"
+  exception.unknown_format: "Input text `{0}` is of an unknown format"
+  snowflake_confirm: "{0}: Did you mean {1}?"

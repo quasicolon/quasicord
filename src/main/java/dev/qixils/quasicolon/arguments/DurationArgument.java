@@ -4,6 +4,9 @@ import cloud.commandframework.ArgumentDescription;
 import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.arguments.parser.ArgumentParseResult;
 import cloud.commandframework.context.CommandContext;
+import dev.qixils.quasicolon.error.syntax.NegativeTimeException;
+import dev.qixils.quasicolon.error.syntax.UnknownFormatException;
+import dev.qixils.quasicolon.error.syntax.UnknownTokenException;
 import io.leangen.geantyref.TypeToken;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -19,33 +22,37 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 
 // TODO: javadocs
+// TODO: builder
 public final class DurationArgument<C> extends CommandArgument<C, Duration> {
 
 	DurationArgument(
 			final boolean required,
 			final @NonNull String name,
 			final @NonNull ParserMode mode,
+			final boolean allowNegative,
 			final @NonNull String defaultValue,
 			final @NonNull TypeToken<Duration> valueType,
 			final @Nullable BiFunction<CommandContext<C>, String, List<String>> suggestionsProvider,
 			final @NonNull ArgumentDescription defaultDescription
 	) {
-		super(required, name, new DurationParser<>(mode), defaultValue, valueType, suggestionsProvider, defaultDescription);
+		super(required, name, new DurationParser<>(mode, allowNegative), defaultValue, valueType, suggestionsProvider, defaultDescription);
 	}
 
 	public static final class DurationParser<C> extends AutomaticTypedParser<C, Duration> {
 
 		private static final @NonNull Set<String> RELATIVE_TIME_IGNORED_TOKENS = Set.of("in");
 		private static final @NonNull Pattern RELATIVE_TIME_PATTERN = Pattern.compile("^\\d+[A-Za-z]+");
+		private final boolean allowNegative;
 
-		DurationParser(@NonNull ParserMode mode) {
+		DurationParser(@NonNull ParserMode mode, boolean allowNegative) {
 			super(mode);
+			this.allowNegative = allowNegative;
 		}
 
 		@Override
-		protected @NonNull ArgumentParseResult<@NonNull Duration> parseGreedy(@NonNull CommandContext<@NonNull C> commandContext, @NonNull Queue<@NonNull String> inputQueue) {
+		protected @NonNull ArgumentParseResult<@NonNull Duration> parseGreedy(@NonNull CommandContext<@NonNull C> ctx, @NonNull Queue<@NonNull String> inputQueue) {
 			List<String> input = new ArrayList<>(inputQueue);
-			ArgumentParseResult<Duration> result = parse(commandContext, input);
+			ArgumentParseResult<Duration> result = parse(ctx, input);
 			while (input.size() != inputQueue.size()) {
 				inputQueue.remove();
 			}
@@ -53,7 +60,7 @@ public final class DurationArgument<C> extends CommandArgument<C, Duration> {
 		}
 
 		@Override
-		protected @NonNull ArgumentParseResult<@NonNull Duration> parse(@NonNull CommandContext<@NonNull C> commandContext, @NonNull List<@NonNull String> arguments) {
+		protected @NonNull ArgumentParseResult<@NonNull Duration> parse(@NonNull CommandContext<@NonNull C> ctx, @NonNull List<@NonNull String> arguments) {
 			assert !arguments.isEmpty();
 			arguments.removeIf(s -> RELATIVE_TIME_IGNORED_TOKENS.contains(s.toLowerCase(Locale.ENGLISH)));
 
@@ -67,9 +74,12 @@ public final class DurationArgument<C> extends CommandArgument<C, Duration> {
 				negative = !negative;
 			}
 
+			if (negative && !allowNegative)
+				return ArgumentParseResult.failure(new NegativeTimeException(ctx));
+
 			String fullInput = String.join("", arguments);
 			if (!RELATIVE_TIME_PATTERN.matcher(fullInput).matches()) {
-				return ArgumentParseResult.failure(); // TODO
+				return ArgumentParseResult.failure(new UnknownFormatException(ctx, String.join(" ", arguments)));
 			}
 
 			// vars for parsing the duration
@@ -105,7 +115,7 @@ public final class DurationArgument<C> extends CommandArgument<C, Duration> {
 						if (mode == ParserMode.GREEDY)
 							break;
 						else
-							return ArgumentParseResult.failure(); // TODO
+							return ArgumentParseResult.failure(new UnknownTokenException(ctx, unitToken));
 					}
 					// add relative time to current time object
 					duration = unit.addTimeTo(duration, Long.parseLong(amountToken)); // theoretically this shouldn't error
@@ -169,8 +179,8 @@ public final class DurationArgument<C> extends CommandArgument<C, Duration> {
 			return addTimeFunction.apply(originalTime, duration);
 		}
 
-		public static DurationArgument.@Nullable RelativeTimeUnit of(@NonNull String token) {
-			for (DurationArgument.RelativeTimeUnit unit : values()) {
+		public static @Nullable RelativeTimeUnit of(@NonNull String token) {
+			for (RelativeTimeUnit unit : values()) {
 				if (unit.toLowerMatches(token))
 					return unit;
 			}

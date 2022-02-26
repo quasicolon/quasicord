@@ -17,7 +17,7 @@ abstract class AutomaticTypedParser<C, T> extends AbstractTypedParser<C, T> {
 	}
 
 	@Override
-	protected @NonNull ArgumentParseResult<@NonNull T> parseQuoted(@NonNull CommandContext<@NonNull C> commandContext, @NonNull Queue<@NonNull String> inputQueue) {
+	protected @NonNull ArgumentParseResult<@NonNull T> parseQuoted(@NonNull CommandContext<@NonNull C> ctx, @NonNull Queue<@NonNull String> inputQueue) {
 		assert !inputQueue.isEmpty();
 
 		String first = inputQueue.peek();
@@ -27,7 +27,7 @@ abstract class AutomaticTypedParser<C, T> extends AbstractTypedParser<C, T> {
 		//     starts with a quotation mark, and does not have another quotation mark inside it
 		if (!first.isEmpty() && first.charAt(0) == '"' && first.indexOf("\"", 1) == -1) {
 			if (first.length() > 2 && first.indexOf("\"", 1) != -1)
-				return ArgumentParseResult.failure(new IllegalQuotationsException(commandContext.getCurrentArgument()));
+				return ArgumentParseResult.failure(new IllegalQuotationsException(ctx));
 
 			int idx = -1; // will get incremented to 0 at start of loop
 
@@ -53,17 +53,17 @@ abstract class AutomaticTypedParser<C, T> extends AbstractTypedParser<C, T> {
 						inputQueue.remove();
 					}
 					// parse
-					return parse(commandContext, inputSequence);
+					return parse(ctx, inputSequence);
 				}
 
 				// token has an invalid quotation mark in it (mid-token)
-				return ArgumentParseResult.failure(new IllegalQuotationsException(commandContext.getCurrentArgument()));
+				return ArgumentParseResult.failure(new IllegalQuotationsException(ctx));
 			}
 			// a closing quotation mark was not found
-			return ArgumentParseResult.failure(new IllegalQuotationsException(commandContext.getCurrentArgument()));
+			return ArgumentParseResult.failure(new IllegalQuotationsException(ctx));
 		}
 		// parse just the first token
-		return parse(commandContext, Collections.singletonList(inputQueue.remove()));
+		return parse(ctx, Collections.singletonList(inputQueue.remove()));
 	}
 
 	@Override
