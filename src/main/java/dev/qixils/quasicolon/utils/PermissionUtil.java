@@ -13,13 +13,16 @@ import org.jetbrains.annotations.NotNull;
  */
 public class PermissionUtil extends net.dv8tion.jda.internal.utils.PermissionUtil {
 	/**
-	 * Checks to see if the {@link JDACommandSender} has the specified {@link Permission Permissions}.
-	 * This method properly deals with {@link net.dv8tion.jda.api.entities.PermissionOverride PermissionOverrides} and Owner status.
+	 * Checks to see if the {@link JDACommandSender} has the specified {@link Permission}s.
+	 * This method properly deals with
+	 * {@link net.dv8tion.jda.api.entities.PermissionOverride PermissionOverrides} and Owner status.
 	 *
-	 * <p><b>Note:</b> this is based on effective permissions, not literal permissions. If a member has permissions that would
-	 * enable them to do something without the literal permission to do it, this will still return true.
-	 * <br>Example: If a member has the {@link net.dv8tion.jda.api.Permission#ADMINISTRATOR} permission, they will be able to
-	 * {@link net.dv8tion.jda.api.Permission#MESSAGE_WRITE MESSAGE_WRITE} in every channel.
+	 * <p><b>Note:</b> this is based on effective permissions, not literal permissions. If a member
+	 * has permissions that would enable them to do something without the literal permission to do
+	 * it, this will still return true.
+	 * <br>Example: If a member has the
+	 * {@link net.dv8tion.jda.api.Permission#ADMINISTRATOR ADMINISTRATOR} permission, they will be
+	 * able to {@link net.dv8tion.jda.api.Permission#MESSAGE_SEND MESSAGE_SEND} in every channel.
 	 *
 	 * @param  sender
 	 *         The {@link JDACommandSender} whose permissions are being checked.
@@ -55,7 +58,7 @@ public class PermissionUtil extends net.dv8tion.jda.internal.utils.PermissionUti
 
 		for (Permission permission : permissions) {
 			boolean canUse = switch (permission) {
-				case VIEW_CHANNEL, MESSAGE_READ, MESSAGE_WRITE, MESSAGE_EMBED_LINKS,
+				case VIEW_CHANNEL, MESSAGE_SEND, MESSAGE_EMBED_LINKS,
 						MESSAGE_ADD_REACTION, MESSAGE_ATTACH_FILES, MESSAGE_HISTORY,
 						MESSAGE_EXT_EMOJI, MESSAGE_EXT_STICKER, VOICE_STREAM,
 						VOICE_CONNECT, VOICE_SPEAK, VOICE_USE_VAD -> true;

@@ -8,8 +8,8 @@ import dev.qixils.quasicolon.utils.MessageUtil;
 import dev.qixils.quasicolon.utils.PermissionUtil;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.IMentionable;
+import net.dv8tion.jda.api.entities.IPermissionContainer;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
@@ -69,9 +69,9 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 
 		// ensure bot can speak and add reacts in the target channel
 		MessageChannel channel = context.getChannel();
-		if (channel instanceof GuildChannel &&
-				!PermissionUtil.checkPermission((GuildChannel) channel, context.getGuild().getSelfMember(),
-						Permission.MESSAGE_READ, Permission.MESSAGE_WRITE, Permission.MESSAGE_ADD_REACTION))
+		if (channel instanceof IPermissionContainer &&
+				!PermissionUtil.checkPermission((IPermissionContainer) channel, context.getGuild().getSelfMember(),
+						Permission.VIEW_CHANNEL, Permission.MESSAGE_SEND, Permission.MESSAGE_ADD_REACTION))
 			return false;
 
 		// ask for confirmation

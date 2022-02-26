@@ -23,7 +23,7 @@ public class MessageUtil {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(MessageUtil.class);
 
 	// TODO deprecate reaction menus and switch to ActionRow/components
-	// also support continuously editing a message with a new y/n prompt
+	// TODO support continuously editing a message with a new y/n prompt
 
 	/**
 	 * Adds a collection of emotes (unicode or custom) to a message and returns a

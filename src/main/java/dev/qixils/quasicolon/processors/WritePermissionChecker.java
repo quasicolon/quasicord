@@ -27,8 +27,8 @@ public final class WritePermissionChecker implements CommandPostprocessor<JDACom
 		TextChannel channel = guildSender.getTextChannel();
 		Member self = channel.getGuild().getSelfMember();
 
-		// if we can write images then abort this check
-		if (PermissionUtil.checkPermission(channel, self, Permission.MESSAGE_WRITE))
+		// if we can write messages then abort this check
+		if (PermissionUtil.checkPermission(channel, self, Permission.MESSAGE_SEND))
 			return;
 
 		// add SPEAK-NO-EVIL MONKEY to invoking message if possible
