@@ -7,15 +7,18 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.ApplicationInfo;
+import net.dv8tion.jda.api.entities.AudioChannel;
 import net.dv8tion.jda.api.entities.Category;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
+import net.dv8tion.jda.api.entities.NewsChannel;
 import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.entities.SelfUser;
-import net.dv8tion.jda.api.entities.StoreChannel;
+import net.dv8tion.jda.api.entities.StageChannel;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.entities.Webhook;
@@ -64,7 +67,7 @@ public class DummyJDA implements JDA {
 		}
 
 		@Override
-		public void connect(@NonNull VoiceChannel channel) {
+		public void connect(@NonNull AudioChannel audioChannel) {
 		}
 
 		@Override
@@ -72,7 +75,7 @@ public class DummyJDA implements JDA {
 		}
 
 		@Override
-		public void reconnect(@NonNull VoiceChannel channel) {
+		public void reconnect(@NonNull AudioChannel audioChannel) {
 		}
 	};
 	private final @NonNull List<Object> eventListeners = new ArrayList<>();
@@ -343,19 +346,31 @@ public class DummyJDA implements JDA {
 
 	@NonNull
 	@Override
+	public SnowflakeCacheView<StageChannel> getStageChannelCache() {
+		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
+	@NonNull
+	@Override
+	public SnowflakeCacheView<ThreadChannel> getThreadChannelCache() {
+		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
+	@NonNull
+	@Override
 	public SnowflakeCacheView<Category> getCategoryCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
 	@NonNull
 	@Override
-	public SnowflakeCacheView<StoreChannel> getStoreChannelCache() {
+	public SnowflakeCacheView<TextChannel> getTextChannelCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
 	@NonNull
 	@Override
-	public SnowflakeCacheView<TextChannel> getTextChannelCache() {
+	public SnowflakeCacheView<NewsChannel> getNewsChannelCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
