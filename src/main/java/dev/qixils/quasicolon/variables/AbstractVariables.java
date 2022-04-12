@@ -1,17 +1,31 @@
 package dev.qixils.quasicolon.variables;
 
+import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.variables.parsers.CollectionParser;
+import dev.qixils.quasicolon.variables.parsers.StringParser;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Holds variables (settings that may be configured per-server) and their corresponding {@link VariableParser}.
  */
 public abstract class AbstractVariables {
+
+	public final CollectionParser<Set<String>, String> PREFIX;
+
+	protected AbstractVariables(@NotNull QuasicolonBot bot) {
+		PREFIX = register("prefix", new CollectionParser<>(bot, new StringParser(bot), ' ', HashSet::new));
+	}
+
 	/**
 	 * The registry representing the map of variable names to their corresponding {@link VariableParser}.
 	 */
