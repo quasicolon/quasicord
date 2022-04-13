@@ -15,7 +15,6 @@ import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
 import dev.qixils.quasicolon.error.permissions.NoPermissionException;
 import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
 import dev.qixils.quasicolon.events.EventDispatcher;
-import dev.qixils.quasicolon.events.EventHandler;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.processors.WritePermissionChecker;
@@ -89,7 +88,7 @@ public class Quasicolon {
 	@SuppressWarnings("NullabilityAnnotations") // ffs intellij
 	protected @MonotonicNonNull Set<String> prefixes = null;
 
-	protected Quasicolon(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable EventHandler eventHandler) throws ConfigurateException, LoginException, InterruptedException {
+	protected Quasicolon(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws ConfigurateException, LoginException, InterruptedException {
 		if (eventHandler != null)
 			eventDispatcher.registerListeners(eventHandler);
 		// register translation providers
@@ -407,7 +406,7 @@ public class Quasicolon {
 		protected @NonNull Locale defaultLocale = Locale.ENGLISH;
 		protected @NonNull Path configRoot = Paths.get(".").toAbsolutePath();
 		protected @Nullable Activity activity;
-		protected @Nullable EventHandler eventHandler;
+		protected @Nullable Object eventHandler;
 
 		/**
 		 * Creates a new builder.
@@ -471,7 +470,7 @@ public class Quasicolon {
 		 * @return this builder
 		 */
 		@Contract("_ -> this")
-		public Builder eventHandler(@Nullable EventHandler eventHandler) {
+		public Builder eventHandler(@Nullable Object eventHandler) {
 			this.eventHandler = eventHandler;
 			return this;
 		}
