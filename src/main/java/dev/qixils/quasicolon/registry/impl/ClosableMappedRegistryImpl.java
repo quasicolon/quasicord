@@ -7,9 +7,11 @@ import java.util.Map;
 
 public abstract class ClosableMappedRegistryImpl<T> extends MappedRegistryImpl<T> implements ClosableRegistry<Map.Entry<String, T>> {
 	private boolean closed = false;
+	private final boolean shouldClose;
 
-	protected ClosableMappedRegistryImpl(@NonNull String id) {
+	protected ClosableMappedRegistryImpl(@NonNull String id, boolean shouldClose) {
 		super(id);
+		this.shouldClose = shouldClose;
 	}
 
 	@Override
@@ -22,5 +24,10 @@ public abstract class ClosableMappedRegistryImpl<T> extends MappedRegistryImpl<T
 		if (closed)
 			throw new IllegalStateException("Registry is already closed");
 		closed = true;
+	}
+
+	@Override
+	public boolean shouldClose() {
+		return shouldClose;
 	}
 }

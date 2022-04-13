@@ -1,6 +1,7 @@
 package dev.qixils.quasicolon.registry.core;
 
 import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.registry.ClosableRegistry;
 import dev.qixils.quasicolon.registry.Registry;
 import dev.qixils.quasicolon.registry.impl.ClosableMappedRegistryImpl;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -20,10 +21,11 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 
 	@Internal
 	public RegistryRegistry(@NonNull Quasicolon quasicolon) {
-		super("registries");
+		super("registries", false);
 		this.quasicolon = quasicolon;
 		register(this);
 		VARIABLE_REGISTRY = register(new VariableRegistry(quasicolon));
+		close();
 	}
 
 	/**
@@ -52,6 +54,8 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	public Registry<?> register(@NonNull String key, @NonNull Registry<?> value) throws IllegalArgumentException {
 		super.register(key, value);
 		quasicolon.getEventDispatcher().dispatchRegistryInit(value);
+		if (value instanceof ClosableRegistry<?> closable && closable.shouldClose() && !closable.isClosed())
+			closable.close();
 		return value;
 	}
 }

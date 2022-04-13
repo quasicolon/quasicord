@@ -23,4 +23,11 @@ public interface ClosableRegistry<T> extends Registry<T> {
 	 */
 	@Override
 	boolean isClosed();
+
+	/**
+	 * Checks whether the registry should be immediately closed after initialization.
+	 *
+	 * @return true if the registry should be immediately closed
+	 */
+	boolean shouldClose();
 }

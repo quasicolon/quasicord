@@ -14,7 +14,7 @@ public final class VariableRegistry extends ClosableMappedRegistryImpl<VariableP
 	public final PrefixParser PREFIX;
 
 	VariableRegistry(@NonNull Quasicolon quasicolon) {
-		super("variables");
+		super("variables", true);
 		PREFIX = typedRegister("prefix", new PrefixParser(quasicolon));
 	}
 
