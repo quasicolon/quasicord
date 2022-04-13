@@ -1,13 +1,12 @@
 package dev.qixils.quasicolon.variables;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import lombok.Data;
 import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.types.ObjectId;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
 
 @Data
 public class Variable {
@@ -18,12 +17,8 @@ public class Variable {
 	private String name; // variable name (from Variables.java)
 
 	@NotNull
-	public VariableParser<?> getVariableParser(QuasicolonBot bot) {
-		return getVariableParser(bot.getVariables());
-	}
-
-	@NotNull
-	public VariableParser<?> getVariableParser(AbstractVariables variables) {
-		return Objects.requireNonNull(variables.get(name), "VariableParser could not be found");
+	public VariableParser<?> getVariableParser(@NonNull Quasicolon bot) {
+		return bot.getRootRegistry().VARIABLE_REGISTRY.get(name)
+				.orElseThrow(() -> new IllegalStateException("VariableParser could not be found"));
 	}
 }

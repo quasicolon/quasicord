@@ -1,6 +1,6 @@
 package dev.qixils.quasicolon.variables.parsers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Mono;
 
@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono;
  * @param <R>
  */
 public abstract class NonNullParser<R> extends VariableParser<R> {
-	public NonNullParser(@NotNull QuasicolonBot bot) {
+	public NonNullParser(@NotNull Quasicolon bot) {
 		super(bot);
 	}
 

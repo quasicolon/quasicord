@@ -1,6 +1,6 @@
 package dev.qixils.quasicolon.variables.parsers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +39,7 @@ public class CollectionParser<C extends Collection<R>, R> extends VariableParser
 	 * @param separator   the character that a user's input should use to distinguish between entries
 	 * @param constructor the function used to create a new mutable collection of the specified type
 	 */
-	public CollectionParser(@NotNull QuasicolonBot bot, @NotNull VariableParser<R> parser, char separator, @NotNull Supplier<@NotNull C> constructor) {
+	public CollectionParser(@NotNull Quasicolon bot, @NotNull VariableParser<R> parser, char separator, @NotNull Supplier<@NotNull C> constructor) {
 		super(bot);
 		this.parser = Objects.requireNonNull(parser, "parser");
 		this.separator = String.valueOf(separator);

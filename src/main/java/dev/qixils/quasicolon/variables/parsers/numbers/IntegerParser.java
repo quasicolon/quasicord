@@ -1,15 +1,15 @@
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class IntegerParser extends NumberParser<Integer> {
-	public IntegerParser(@NotNull QuasicolonBot bot) {
+	public IntegerParser(@NotNull Quasicolon bot) {
 		this(bot, null);
 	}
 
-	public IntegerParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
+	public IntegerParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
 		super(bot, filter);
 	}
 

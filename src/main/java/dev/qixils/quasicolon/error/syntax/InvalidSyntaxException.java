@@ -3,7 +3,7 @@ package dev.qixils.quasicolon.error.syntax;
 import cloud.commandframework.arguments.CommandArgument;
 import cloud.commandframework.context.CommandContext;
 import dev.qixils.quasicolon.Key;
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.error.LocalizedRuntimeException;
 import dev.qixils.quasicolon.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -13,7 +13,7 @@ public class InvalidSyntaxException extends LocalizedRuntimeException {
 	private static final @NonNull Key UNKNOWN_ARGUMENT = Key.library("arg._unknown_");
 
 	public InvalidSyntaxException(@NonNull CommandContext<?> context, @NonNull Text subError) {
-		this(context.getOrDefault(QuasicolonBot.NAMESPACE_KEY, null), context.getCurrentArgument(), subError);
+		this(context.getOrDefault(Quasicolon.NAMESPACE_KEY, null), context.getCurrentArgument(), subError);
 	}
 
 	public InvalidSyntaxException(@Nullable String namespace, @Nullable CommandArgument<?, ?> argument, @NonNull Text subError) {

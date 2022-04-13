@@ -1,6 +1,6 @@
 package dev.qixils.quasicolon.variables.parsers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.variables.Variable;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NonBlocking;
@@ -19,9 +19,9 @@ import java.util.concurrent.CompletableFuture;
  * @param <R> the output class
  */
 public abstract class VariableParser<R> {
-	protected final @NotNull QuasicolonBot bot;
+	protected final @NotNull Quasicolon bot;
 
-	public VariableParser(final @NotNull QuasicolonBot bot) {
+	public VariableParser(final @NotNull Quasicolon bot) {
 		this.bot = Objects.requireNonNull(bot, "bot cannot be null");
 	}
 

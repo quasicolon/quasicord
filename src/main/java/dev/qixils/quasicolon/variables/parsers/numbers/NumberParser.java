@@ -1,6 +1,6 @@
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.variables.parsers.NonNullParser;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +12,11 @@ import java.util.function.Predicate;
 public abstract class NumberParser<R extends Number> extends NonNullParser<R> {
 	protected final ParserFilter filter;
 
-	public NumberParser(@NotNull QuasicolonBot bot) {
+	public NumberParser(@NotNull Quasicolon bot) {
 		this(bot, null);
 	}
 
-	public NumberParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
+	public NumberParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
 		super(bot);
 		this.filter = filter == null ? ParserFilter.ALL_NUMBERS : filter;
 	}

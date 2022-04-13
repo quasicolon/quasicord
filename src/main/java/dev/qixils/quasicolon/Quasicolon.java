@@ -14,14 +14,15 @@ import dev.qixils.quasicolon.error.permissions.DMOnlyException;
 import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
 import dev.qixils.quasicolon.error.permissions.NoPermissionException;
 import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
+import dev.qixils.quasicolon.events.EventDispatcher;
+import dev.qixils.quasicolon.events.EventHandler;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.processors.WritePermissionChecker;
+import dev.qixils.quasicolon.registry.core.RegistryRegistry;
 import dev.qixils.quasicolon.utils.CollectionUtil;
 import dev.qixils.quasicolon.utils.PermissionUtil;
-import dev.qixils.quasicolon.variables.AbstractVariables;
 import dev.qixils.quasicolon.variables.parsers.PrefixParser;
-import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import io.leangen.geantyref.TypeFactory;
 import io.leangen.geantyref.TypeToken;
 import net.dv8tion.jda.api.JDA;
@@ -35,6 +36,8 @@ import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurateException;
@@ -53,11 +56,13 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Abstract <a href="https://discord.com/">Discord</a> bot which utilizes a <a href="https://mongodb.com/">MongoDB</a>
- * {@link #getDatabaseManager() database}.
+ * Abstract <a href="https://discord.com/">Discord</a> bot which utilizes a
+ * <a href="https://mongodb.com/">MongoDB</a> {@link #getDatabaseManager() database}.
+ * <p>
+ * See {@link Builder} for instructions on how to create a new instance.
  */
-public abstract class QuasicolonBot {
-	public static final @NonNull CloudKey<QuasicolonBot> BOT_KEY = SimpleCloudKey.of("quasicolon.bot", TypeToken.get(QuasicolonBot.class));
+public class Quasicolon {
+	public static final @NonNull CloudKey<Quasicolon> BOT_KEY = SimpleCloudKey.of("quasicolon.bot", TypeToken.get(Quasicolon.class));
 	public static final @NonNull CloudKey<String> NAMESPACE_KEY = SimpleCloudKey.of("quasicolon.namespace", TypeToken.get(String.class));
 	protected static final @NonNull Pattern NEWLINE_SPLIT = Pattern.compile("\n");
 	protected static final @NonNull Pattern COLON_SPLIT = Pattern.compile(":");
@@ -72,7 +77,8 @@ public abstract class QuasicolonBot {
 	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
 	protected final @NonNull Environment environment;
 	protected final @NonNull DatabaseManager database;
-	protected final @NonNull AbstractVariables variables;
+	protected final @NonNull RegistryRegistry rootRegistry;
+	protected final @NonNull EventDispatcher eventDispatcher = new EventDispatcher();
 	protected final @NonNull TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
 	protected final @NonNull CommandManager<JDACommandSender> commandManager;
 	protected final @NonNull String namespace;
@@ -82,34 +88,27 @@ public abstract class QuasicolonBot {
 	protected final @NonNull LocaleProvider localeProvider;
 	@SuppressWarnings("NullabilityAnnotations") // ffs intellij
 	protected @MonotonicNonNull Set<String> prefixes = null;
-	/**
-	 * Whether the bot developer has been warned about not having a `prefix` variable.
-	 */
-	private boolean prefixWarned = false;
 
-	protected QuasicolonBot(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull AbstractVariables variables) throws ConfigurateException, LoginException, InterruptedException {
-		this(namespace, defaultLocale, variables, Paths.get(".").toAbsolutePath());
-	}
-
-	protected QuasicolonBot(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull AbstractVariables variables, @NonNull Path configRoot) throws ConfigurateException, LoginException, InterruptedException {
+	protected Quasicolon(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable EventHandler eventHandler) throws ConfigurateException, LoginException, InterruptedException {
+		if (eventHandler != null)
+			eventDispatcher.registerListeners(eventHandler);
 		// register translation providers
 		this.namespace = namespace;
 		translationProvider = new TranslationProvider(namespace, defaultLocale);
 		TranslationProvider.registerInstance(translationProvider);
 		TranslationProvider.registerInstance(new TranslationProvider(Key.LIBRARY_NAMESPACE, defaultLocale));
 
-		this.variables = Objects.requireNonNull(variables, "variables cannot be null");
+		rootRegistry = new RegistryRegistry(this);
 
 		YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
 				.path(configRoot.resolve("config.yml"))
 				// TODO: default config options
 				.build();
 		rootNode = loader.load();
-		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ROOT));
-		database = new DatabaseManager("semicolon", environment);
+		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
+		database = new DatabaseManager(namespace, environment);
 		localeProvider = new LocaleProvider(defaultLocale, database);
-		jda = initJDA(); // should be executed last-ish
-		jda.setRequiredScopes("applications.commands");
+		jda = initJDA(activity); // should be executed last-ish
 		botId = jda.getSelfUser().getIdLong();
 		ownerId = jda.retrieveApplicationInfo().complete().getOwner().getIdLong();
 
@@ -127,7 +126,7 @@ public abstract class QuasicolonBot {
 	}
 
 	@NonNull
-	protected JDA initJDA() throws LoginException {
+	protected JDA initJDA(@Nullable Activity activity) throws LoginException {
 		JDABuilder builder = JDABuilder.createDefault(rootNode.node("token").getString())
 				.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING,
 						GatewayIntent.GUILD_MESSAGE_TYPING,
@@ -137,11 +136,13 @@ public abstract class QuasicolonBot {
 						GatewayIntent.GUILD_VOICE_STATES)
 				.enableIntents(GatewayIntent.GUILD_MEMBERS)
 				.setMemberCachePolicy(MemberCachePolicy.ALL)
-				.setActivity(Activity.watching("semicolon.qixils.dev"))
 				.setEventManager(new AnnotatedEventManager())
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE);
+		if (activity != null)
+			builder.setActivity(activity);
 		AllowedMentions.setDefaultMentions(Collections.emptySet());
 		JDA jda = builder.build();
+		jda.setRequiredScopes("applications.commands");
 		jda.addEventListener(tempListenerExecutor);
 		try {
 			jda.awaitReady();
@@ -169,22 +170,7 @@ public abstract class QuasicolonBot {
 			return findPrefix(messageContent, getDefaultPrefixes());
 
 		// get server's prefix config
-		VariableParser<?> genericParser = getVariables().get("prefix");
-		if (genericParser == null) {
-			if (!prefixWarned) {
-				prefixWarned = true;
-				logger.error("'prefix' variable is unavailable, please implement this!");
-			}
-			return findPrefix(messageContent, getDefaultPrefixes()); // generic prefix
-		}
-		if (!(genericParser instanceof PrefixParser parser)) {
-			if (!prefixWarned) {
-				prefixWarned = true;
-				logger.error("'prefix' variable is misconfigured. Expected PrefixParser, received " + genericParser.getClass().getSimpleName());
-			}
-			return findPrefix(messageContent, getDefaultPrefixes()); // generic prefix
-		}
-
+		PrefixParser parser = rootRegistry.VARIABLE_REGISTRY.PREFIX;
 		return findPrefix(messageContent,
 				parser.fromDatabase(sender.getMember().getGuild().getIdLong(), "prefix") // get server's configured prefixes
 						.blockOptional().orElse(getDefaultPrefixes())); // or else use default prefixes
@@ -321,8 +307,6 @@ public abstract class QuasicolonBot {
 		jda.shutdownNow();
 	}
 
-	// boilerplate
-
 	/**
 	 * Returns the {@link JDA} API for interacting with Discord.
 	 *
@@ -331,6 +315,8 @@ public abstract class QuasicolonBot {
 	public @NonNull JDA getJDA() {
 		return jda;
 	}
+
+	// boilerplate
 
 	/**
 	 * Returns the root {@link ConfigurationNode} representing the options set in {@code config.yml}.
@@ -387,12 +373,21 @@ public abstract class QuasicolonBot {
 	}
 
 	/**
-	 * Returns the variable registry which maps the names of variables to their parsers.
+	 * Returns the {@link EventDispatcher} which is used to dispatch events to listeners.
 	 *
-	 * @return variable registry
+	 * @return event dispatcher
 	 */
-	public @NonNull AbstractVariables getVariables() {
-		return variables;
+	public @NonNull EventDispatcher getEventDispatcher() {
+		return eventDispatcher;
+	}
+
+	/**
+	 * Gets the {@link RegistryRegistry registry of registries}.
+	 *
+	 * @return root registry
+	 */
+	public @NonNull RegistryRegistry getRootRegistry() {
+		return rootRegistry;
 	}
 
 	/**
@@ -402,5 +397,98 @@ public abstract class QuasicolonBot {
 	 */
 	public @NonNull String getNamespace() {
 		return namespace;
+	}
+
+	/**
+	 * A builder for {@link Quasicolon} instances.
+	 */
+	public static class Builder {
+		protected @Nullable String namespace;
+		protected @NonNull Locale defaultLocale = Locale.ENGLISH;
+		protected @NonNull Path configRoot = Paths.get(".").toAbsolutePath();
+		protected @Nullable Activity activity;
+		protected @Nullable EventHandler eventHandler;
+
+		/**
+		 * Creates a new builder.
+		 */
+		public Builder() {
+		}
+
+		/**
+		 * Sets the namespace used for fetching translation strings.
+		 *
+		 * @param namespace your software's namespace
+		 * @return this builder
+		 */
+		@Contract("_ -> this")
+		public Builder namespace(@NonNull String namespace) {
+			this.namespace = namespace;
+			return this;
+		}
+
+		/**
+		 * Sets the default locale for the bot.
+		 *
+		 * @param locale the default locale
+		 * @return this builder
+		 */
+		@Contract("_ -> this")
+		public Builder defaultLocale(@NonNull Locale locale) {
+			this.defaultLocale = locale;
+			return this;
+		}
+
+		/**
+		 * Sets the root directory for the configuration files.
+		 *
+		 * @param configRoot the root directory
+		 * @return this builder
+		 */
+		@Contract("_ -> this")
+		public Builder configRoot(@NonNull Path configRoot) {
+			this.configRoot = configRoot;
+			return this;
+		}
+
+		/**
+		 * Sets the activity to be used for the bot.
+		 *
+		 * @param activity the activity
+		 * @return this builder
+		 */
+		@Contract("_ -> this")
+		public Builder activity(@Nullable Activity activity) {
+			this.activity = activity;
+			return this;
+		}
+
+		/**
+		 * Sets the default event handler to be used for the bot.
+		 * Other event handlers can be added later.
+		 *
+		 * @param eventHandler the event handler
+		 * @return this builder
+		 */
+		@Contract("_ -> this")
+		public Builder eventHandler(@Nullable EventHandler eventHandler) {
+			this.eventHandler = eventHandler;
+			return this;
+		}
+
+		/**
+		 * Builds a new {@link Quasicolon} instance.
+		 *
+		 * @return the new instance
+		 * @throws IllegalStateException if the namespace is not set
+		 * @throws LoginException        if the JDA login fails
+		 * @throws InterruptedException  if the JDA login is interrupted
+		 * @throws ConfigurateException  if the configuration fails
+		 */
+		public @NonNull Quasicolon build() throws IllegalStateException, LoginException, InterruptedException, ConfigurateException {
+			if (namespace == null)
+				throw new IllegalStateException("namespace must be set");
+			return new Quasicolon(namespace, defaultLocale, configRoot, activity, eventHandler);
+		}
 	}
 }

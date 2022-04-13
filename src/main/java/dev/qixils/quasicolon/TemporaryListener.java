@@ -124,7 +124,7 @@ public class TemporaryListener<T extends GenericEvent> {
 	 *
 	 * @param bot bot to register for
 	 */
-	public void register(@NonNull QuasicolonBot bot) {
+	public void register(@NonNull Quasicolon bot) {
 		Objects.requireNonNull(bot, "bot cannot be null").register(this);
 	}
 

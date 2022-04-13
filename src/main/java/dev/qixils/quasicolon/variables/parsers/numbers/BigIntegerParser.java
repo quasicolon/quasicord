@@ -1,17 +1,17 @@
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 
 public class BigIntegerParser extends NumberParser<BigInteger> {
-    public BigIntegerParser(@NotNull QuasicolonBot bot) {
+    public BigIntegerParser(@NotNull Quasicolon bot) {
         super(bot, null);
     }
 
-    public BigIntegerParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
+    public BigIntegerParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
         super(bot, filter);
     }
 

@@ -1,15 +1,15 @@
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.QuasicolonBot;
+import dev.qixils.quasicolon.Quasicolon;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class LongParser extends NumberParser<Long> {
-	public LongParser(@NotNull QuasicolonBot bot) {
+	public LongParser(@NotNull Quasicolon bot) {
 		this(bot, null);
 	}
 
-	public LongParser(@NotNull QuasicolonBot bot, @Nullable ParserFilter filter) {
+	public LongParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
 		super(bot, filter);
 	}
 
