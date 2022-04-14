@@ -9,6 +9,7 @@ import cloud.commandframework.jda.JDAGuildSender;
 import cloud.commandframework.jda.JDAPrivateSender;
 import cloud.commandframework.keys.CloudKey;
 import cloud.commandframework.keys.SimpleCloudKey;
+import cloud.commandframework.meta.CommandMeta;
 import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.error.permissions.DMOnlyException;
 import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
@@ -17,6 +18,7 @@ import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
 import dev.qixils.quasicolon.events.EventDispatcher;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.locale.TranslationProvider;
+import dev.qixils.quasicolon.processors.GuildCommandProcessor;
 import dev.qixils.quasicolon.processors.WritePermissionChecker;
 import dev.qixils.quasicolon.registry.core.RegistryRegistry;
 import dev.qixils.quasicolon.utils.CollectionUtil;
@@ -55,7 +57,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Abstract <a href="https://discord.com/">Discord</a> bot which utilizes a
+ * Managing class for a <a href="https://discord.com/">Discord</a> bot which utilizes a
  * <a href="https://mongodb.com/">MongoDB</a> {@link #getDatabaseManager() database}.
  * <p>
  * See {@link Builder} for instructions on how to create a new instance.
@@ -63,6 +65,7 @@ import java.util.regex.Pattern;
 public class Quasicolon {
 	public static final @NonNull CloudKey<Quasicolon> BOT_KEY = SimpleCloudKey.of("quasicolon.bot", TypeToken.get(Quasicolon.class));
 	public static final @NonNull CloudKey<String> NAMESPACE_KEY = SimpleCloudKey.of("quasicolon.namespace", TypeToken.get(String.class));
+	public static final CommandMeta.@NonNull Key<Long> GUILD_KEY = CommandMeta.Key.of(TypeToken.get(Long.class), "quasicolon.guild_id");
 	protected static final @NonNull Pattern NEWLINE_SPLIT = Pattern.compile("\n");
 	protected static final @NonNull Pattern COLON_SPLIT = Pattern.compile(":");
 	protected static final @NonNull Pattern COMMA_SPLIT = Pattern.compile(",");
@@ -121,6 +124,7 @@ public class Quasicolon {
 			ctx.store(NAMESPACE_KEY, namespace);
 		});
 		commandManager.registerCommandPostProcessor(new WritePermissionChecker());
+		commandManager.registerCommandPostProcessor(new GuildCommandProcessor());
 		// TODO: register custom exception handlers
 	}
 
@@ -390,12 +394,24 @@ public class Quasicolon {
 	}
 
 	/**
-	 * Returns the bot's namespace which is used for fetching translation strings.
+	 * Gets the bot's namespace which is used for fetching translation strings.
 	 *
 	 * @return bot's namespace
 	 */
 	public @NonNull String getNamespace() {
 		return namespace;
+	}
+
+	/**
+	 * Gets the bot's manager for legacy text-based commands.
+	 * <p>
+	 * <b>Note:</b> Command registration should be done through
+	 * {@link dev.qixils.quasicolon.cogs.Cog Cogs} instead of using the command manager directly.
+	 *
+	 * @return legacy command manager
+	 */
+	public @NonNull CommandManager<JDACommandSender> getCommandManager() {
+		return commandManager;
 	}
 
 	/**

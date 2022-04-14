@@ -19,12 +19,23 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	 */
 	public final VariableRegistry VARIABLE_REGISTRY;
 
+	/**
+	 * The registry of {@link dev.qixils.quasicolon.cogs.GlobalCog global cogs}.
+	 */
+	public final GlobalCogRegistry GLOBAL_COG_REGISTRY;
+
+	/**
+	 * Creates a new root registry.
+	 *
+	 * @param quasicolon the quasicolon instance
+	 */
 	@Internal
 	public RegistryRegistry(@NonNull Quasicolon quasicolon) {
 		super("registries", false);
 		this.quasicolon = quasicolon;
 		register(this);
 		VARIABLE_REGISTRY = register(new VariableRegistry(quasicolon));
+		GLOBAL_COG_REGISTRY = register(new GlobalCogRegistry(quasicolon));
 		close();
 	}
 
