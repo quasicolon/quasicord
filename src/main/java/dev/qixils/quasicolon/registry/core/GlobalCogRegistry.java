@@ -34,6 +34,6 @@ public class GlobalCogRegistry extends ClosableRegistryImpl<GlobalCog> {
 				// TODO: undo loading?
 			}
 		}
-		quasicolon.getJDA().updateCommands().addCommands(applicationCommands).queue();
+		quasicolon.getJDA().updateCommands().addCommands(applicationCommands).queue(); // TODO: only update if there are new/updated commands
 	}
 }

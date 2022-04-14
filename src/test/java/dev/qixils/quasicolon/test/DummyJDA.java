@@ -1,5 +1,6 @@
 package dev.qixils.quasicolon.test;
 
+import dev.qixils.quasicolon.test.actions.DummyCommandListUpdateAction;
 import dev.qixils.quasicolon.test.actions.DummyRestAction;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
@@ -100,7 +101,8 @@ public class DummyJDA implements JDA {
 
 		@Override
 		public void setStatus(@Nullable OnlineStatus status) {
-			this.onlineStatus = status;
+			if (status != null)
+				this.onlineStatus = status;
 		}
 
 		@Nullable
@@ -264,7 +266,7 @@ public class DummyJDA implements JDA {
 	@NonNull
 	@Override
 	public CommandListUpdateAction updateCommands() {
-		return null;
+		return new DummyCommandListUpdateAction(this);
 	}
 
 	@NonNull
