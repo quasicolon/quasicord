@@ -1,9 +1,10 @@
 package dev.qixils.quasicolon.cogs;
 
+import cloud.commandframework.Command;
 import cloud.commandframework.jda.JDACommandSender;
 import dev.qixils.quasicolon.Quasicolon;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import org.jetbrains.annotations.NotNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Collection;
 
@@ -11,6 +12,14 @@ import java.util.Collection;
  * A module which adds functionality to {@link Quasicolon Quasicolon}.
  */
 public interface Cog {
+
+	/**
+	 * Gets the instance of the {@link Quasicolon} library.
+	 *
+	 * @return library instance
+	 */
+	@NonNull
+	Quasicolon getLibrary();
 
 	/**
 	 * Called when the cog is loaded.
@@ -24,7 +33,7 @@ public interface Cog {
 	 *
 	 * @return provided application commands
 	 */
-	@NotNull
+	@NonNull
 	Collection<CommandData> getApplicationCommands();
 
 	/**
@@ -32,7 +41,7 @@ public interface Cog {
 	 *
 	 * @return provided custom commands
 	 */
-	@NotNull
-	Collection<cloud.commandframework.Command<JDACommandSender>> customCommands();
+	@NonNull
+	Collection<Command.Builder<JDACommandSender>> getCustomCommands();
 
 }
