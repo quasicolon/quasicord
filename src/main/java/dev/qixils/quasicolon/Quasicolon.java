@@ -92,32 +92,42 @@ public class Quasicolon {
 	protected @MonotonicNonNull Set<String> prefixes = null;
 
 	protected Quasicolon(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws ConfigurateException, LoginException, InterruptedException {
+		// misc initialization
+		this.namespace = namespace;
+
+		// register default event handler
 		if (eventHandler != null)
 			eventDispatcher.registerListeners(eventHandler);
+
 		// register translation providers
-		this.namespace = namespace;
 		translationProvider = new TranslationProvider(namespace, defaultLocale);
 		TranslationProvider.registerInstance(translationProvider);
 		TranslationProvider.registerInstance(new TranslationProvider(Key.LIBRARY_NAMESPACE, defaultLocale));
 
-		rootRegistry = new RegistryRegistry(this);
-
+		// load configuration
 		YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
 				.path(configRoot.resolve("config.yml"))
 				// TODO: default config options
 				.build();
 		rootNode = loader.load();
 		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
+
+		// load database and locale provider
 		database = new DatabaseManager(namespace, environment);
 		localeProvider = new LocaleProvider(defaultLocale, database);
+
+		// initialize JDA and relevant data
 		jda = initJDA(activity); // should be executed last-ish
 		botId = jda.getSelfUser().getIdLong();
 		ownerId = jda.retrieveApplicationInfo().complete().getOwner().getIdLong();
 
+		// initialize registry (depends on JDA)
+		rootRegistry = new RegistryRegistry(this);
+
+		// initialize command manager
 		commandManager = new JDA4CommandManager<>(jda, this::getPrefix, this::hasPermission,
 				AsynchronousCommandExecutionCoordinator.<JDACommandSender>newBuilder().withAsynchronousParsing().build(),
 				Function.identity(), Function.identity());
-
 		commandManager.registerCommandPreProcessor(context -> {
 			CommandContext<JDACommandSender> ctx = context.getCommandContext();
 			ctx.store(BOT_KEY, this);
