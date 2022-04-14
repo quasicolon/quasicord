@@ -14,7 +14,7 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 		onLoad();
 		// register commands
 		getGuild().ifPresentOrElse(
-				guild -> guild.updateCommands().addCommands(getApplicationCommands()).queue(),
+				guild -> guild.updateCommands().addCommands(getApplicationCommands()).queue(), // TODO: only update if there are new/updated commands
 				() -> library.getLogger().warn("Guild {} not found when loading cog {}", guildId, getClass().getSimpleName())
 		);
 		getCustomCommands().forEach(command -> library.getCommandManager().command(command.meta(Quasicolon.GUILD_KEY, guildId)));
