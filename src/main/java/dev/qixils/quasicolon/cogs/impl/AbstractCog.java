@@ -8,13 +8,13 @@ import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.cogs.Cog;
-import dev.qixils.quasicolon.cogs.impl.autosend.CloudAutoSendHandler;
+import dev.qixils.quasicolon.cogs.impl.decorators.cloud.CloudAutoSendHandler;
+import dev.qixils.quasicolon.cogs.impl.decorators.jda.JdaAnnotationParser;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,6 +28,7 @@ import java.util.List;
 public abstract class AbstractCog implements Cog {
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
+	protected final JdaAnnotationParser jdaParser;
 	protected final AnnotationParser<JDACommandSender> cloudParser;
 	protected final Quasicolon library;
 	private final @NonNull List<CommandData> applicationCommands = new ArrayList<>();
@@ -37,6 +38,7 @@ public abstract class AbstractCog implements Cog {
 
 	protected AbstractCog(@NonNull Quasicolon library) {
 		this.library = library;
+		this.jdaParser = new JdaAnnotationParser();
 		this.cloudParser = new AnnotationParser<>(library.getCommandManager(), JDACommandSender.class, this::metaMapper);
 		this.cloudParser.registerCommandExecutionMethodFactory(CloudAutoSendHandler.IS_AUTO_SEND, context -> CloudAutoSendHandler.of(library, context));
 	}
@@ -50,9 +52,7 @@ public abstract class AbstractCog implements Cog {
 	public @NonNull Collection<CommandData> getApplicationCommands() {
 		if (!annotatedApplicationCommandsRegistered) {
 			annotatedApplicationCommandsRegistered = true;
-			for (Method method : getClass().getMethods()) {
-				// TODO
-			}
+			applicationCommands.addAll(jdaParser.parse(this));
 		}
 		return applicationCommands;
 	}

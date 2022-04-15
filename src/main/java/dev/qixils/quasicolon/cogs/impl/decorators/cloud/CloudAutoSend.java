@@ -1,4 +1,4 @@
-package dev.qixils.quasicolon.cogs.impl.autosend;
+package dev.qixils.quasicolon.cogs.impl.decorators.cloud;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
