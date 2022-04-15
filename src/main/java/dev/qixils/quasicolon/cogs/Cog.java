@@ -10,6 +10,9 @@ import java.util.Collection;
 
 /**
  * A module which adds functionality to {@link Quasicolon Quasicolon}.
+ * <p>
+ * Cogs are not automatically loaded. Please see the javadocs of subclasses for more information
+ * about how to load a cog.
  */
 public interface Cog {
 

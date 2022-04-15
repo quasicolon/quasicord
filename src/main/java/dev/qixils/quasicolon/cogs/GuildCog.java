@@ -7,6 +7,9 @@ import java.util.Optional;
 
 /**
  * A {@link Cog} that applies to only one guild.
+ * <p>
+ * Guild cogs have no specific registration method. It is recommended that implementations of this
+ * interface automatically register their associated commands upon construction.
  */
 public interface GuildCog extends Cog {
 

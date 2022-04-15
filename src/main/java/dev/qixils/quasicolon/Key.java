@@ -3,6 +3,8 @@ package dev.qixils.quasicolon;
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.locale.translation.PluralTranslation;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -18,19 +20,22 @@ import java.util.Locale;
  * {@link dev.qixils.quasicolon.locale.TranslationProvider TranslationProvider}.
  * For convenience, this
  */
-public class Key {
+@EqualsAndHashCode
+@ToString
+public final class Key {
 	private final @NonNull String namespace;
 	private final @NonNull String value;
 
 	/**
 	 * Construct a new key.
+	 * All parameters are case-insensitive.
 	 *
 	 * @param namespace your bot or library's namespace
 	 * @param value     the translation key
 	 */
 	public Key(@NonNull String namespace, @NonNull String value) {
 		this.namespace = namespace.toLowerCase(Locale.ROOT);
-		this.value = value;
+		this.value = value.toLowerCase(Locale.ROOT);
 	}
 
 	// getters
@@ -63,7 +68,7 @@ public class Key {
 	 *                               stored {@link #namespace() namespace}
 	 */
 	public @NonNull TranslationProvider translationProvider() throws IllegalStateException {
-		return TranslationProvider.getInstance(namespace);
+		return TranslationProvider.getInstance(this);
 	}
 
 	/**
@@ -109,5 +114,17 @@ public class Key {
 	@Internal
 	public static @NonNull Key library(@NonNull String value) {
 		return new Key(LIBRARY_NAMESPACE, value);
+	}
+
+	/**
+	 * Constructs a new key from the given namespace and value.
+	 * All parameters are case-insensitive.
+	 *
+	 * @param namespace the namespace
+	 * @param value     the translation key
+	 * @return a new {@link Key}
+	 */
+	public static @NonNull Key of(@NonNull String namespace, @NonNull String value) {
+		return new Key(namespace, value);
 	}
 }

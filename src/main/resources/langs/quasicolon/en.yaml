@@ -10,4 +10,5 @@ en:
   exception.negative_time: Provided time must be from the future, not the past
   exception.unknown_token: "Unable to parse token `{0}`"
   exception.unknown_format: "Input text `{0}` is of an unknown format"
+  exception.no_response: Command successfully executed but returned no response
   snowflake_confirm: "{0}: Did you mean {1}?"
