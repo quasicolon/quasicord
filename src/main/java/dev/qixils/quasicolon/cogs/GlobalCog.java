@@ -9,7 +9,8 @@ import dev.qixils.quasicolon.registry.Registry;
  * {@link dev.qixils.quasicolon.registry.Registry#register(Object) #register(GlobalCog)} method
  * during the {@link dev.qixils.quasicolon.registry.core.GlobalCogRegistry global cog registry}'s
  * {@link dev.qixils.quasicolon.events.EventDispatcher#dispatchRegistryInit(Registry) initialization
- * event}.
+ * event} that is dispatched to your bot's
+ * {@link dev.qixils.quasicolon.Quasicolon.Builder#eventHandler(Object) default event handler}.
  */
 public interface GlobalCog extends Cog {
 }

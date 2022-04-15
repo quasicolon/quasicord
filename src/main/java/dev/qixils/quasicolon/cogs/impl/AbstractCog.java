@@ -8,7 +8,7 @@ import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.cogs.Cog;
-import dev.qixils.quasicolon.cogs.impl.decorators.CloudAutoSendHandler;
+import dev.qixils.quasicolon.cogs.impl.autosend.CloudAutoSendHandler;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -19,6 +19,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A basic implementation of a cog.
+ * <p>
+ * While extensions of this class are allowed, you should generally extend {@link AbstractGlobalCog}
+ * or {@link AbstractGuildCog} instead.
+ */
 public abstract class AbstractCog implements Cog {
 
 	protected final Logger logger = LoggerFactory.getLogger(getClass());

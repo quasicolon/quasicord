@@ -9,6 +9,11 @@ import dev.qixils.quasicolon.Quasicolon;
 import dev.qixils.quasicolon.cogs.GuildCog;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+/**
+ * A basic implementation of a cog that applies to only one guild.
+ * <p>
+ * All associated commands are automatically registered upon construction.
+ */
 public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 	protected final long guildId;
 

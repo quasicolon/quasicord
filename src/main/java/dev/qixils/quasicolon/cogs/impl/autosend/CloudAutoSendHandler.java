@@ -1,4 +1,4 @@
-package dev.qixils.quasicolon.cogs.impl.decorators;
+package dev.qixils.quasicolon.cogs.impl.autosend;
 
 import cloud.commandframework.annotations.MethodCommandExecutionHandler;
 import cloud.commandframework.context.CommandContext;
@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -21,9 +22,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+/**
+ * Handles methods annotated with {@link CloudAutoSend}.
+ */
 public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDACommandSender> {
-	private static final Logger LOGGER = LoggerFactory.getLogger(CloudAutoSendHandler.class);
+
+	/**
+	 * Determines whether a method should be handled by this handler.
+	 */
 	public static Predicate<Method> IS_AUTO_SEND = method -> method.isAnnotationPresent(CloudAutoSend.class);
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(CloudAutoSendHandler.class);
 	private final @NonNull LocaleProvider localeProvider;
 	private final @NonNull CloudAutoSend autoSend;
 
@@ -33,6 +42,14 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 		this.autoSend = context.method().getAnnotation(CloudAutoSend.class);
 	}
 
+	/**
+	 * Creates an instance of the handler.
+	 *
+	 * @param localeProvider locale provider
+	 * @param context        command context
+	 * @return new handler instance
+	 */
+	@Contract("_, _ -> new")
 	public static @NonNull CloudAutoSendHandler of(@NonNull LocaleProvider localeProvider, @NonNull CommandMethodContext<JDACommandSender> context) {
 		try {
 			return new CloudAutoSendHandler(localeProvider, context);
@@ -41,6 +58,14 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 		}
 	}
 
+	/**
+	 * Creates an instance of the handler.
+	 *
+	 * @param library library instance
+	 * @param context command context
+	 * @return new handler instance
+	 */
+	@Contract("_, _ -> new")
 	public static @NonNull CloudAutoSendHandler of(@NonNull Quasicolon library, @NonNull CommandMethodContext<JDACommandSender> context) {
 		return of(library.getLocaleProvider(), context);
 	}
@@ -56,10 +81,8 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 							parameters()
 					)
 			);
-			if (result == null) {
-				// TODO: throw a custom exception
-				return;
-			}
+			if (result == null)
+				throw new NoResponseException();
 
 			// get the invoking message
 			JDACommandSender sender = commandContext.getSender();
@@ -89,23 +112,28 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 		else if (result instanceof MessageAction action)
 			handleMessageAction(action);
 		else
-			throw new IllegalArgumentException("Unsupported result type: " + result.getClass().getName());
+			throw new IllegalArgumentException("Unsupported response type: " + result.getClass().getName());
 	}
 
+	@SuppressWarnings("ResultOfMethodCallIgnored") // JDA misuses this annotation
 	@NonNull
 	private Consumer<String> createMessageSender(@NonNull Message message) {
 		return content -> {
-			MessageAction action = switch (autoSend.value()) {
-				case DEFAULT -> message.getChannel().sendMessage(content);
-				case REPLY -> message.reply(content);
-				case PING_REPLY -> message.reply(content).mentionRepliedUser(true);
-			};
+			// create action
+			MessageAction action = message.getChannel().sendMessage(content);
+			// get send type
+			CloudSendType sendType = autoSend.value();
+			// add reply data if applicable
+			if (sendType.isReply())
+				action.reference(message);
+			// set whether to ping the replied user
+			action.mentionRepliedUser(sendType.isPing());
+			// send the message
 			handleMessageAction(action);
 		};
 	}
 
 	private void handleMessageAction(@NonNull MessageAction action) {
-		// TODO: error handling?
-		action.queue();
+		action.queue(null, throwable -> LOGGER.warn("Failed to send message", throwable));
 	}
 }

@@ -1,5 +1,6 @@
 package dev.qixils.quasicolon.locale;
 
+import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.locale.translation.PluralTranslation;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
 import dev.qixils.quasicolon.locale.translation.Translation;
@@ -153,6 +154,17 @@ public final class TranslationProvider {
 		if (!INSTANCES.containsKey(namespace))
 			throw new IllegalStateException("No translation provider registered for namespace " + namespace);
 		return INSTANCES.get(namespace);
+	}
+
+	/**
+	 * Gets the registered translation provider for the provided key's namespace.
+	 *
+	 * @param key the key to get the translation provider for
+	 * @return the translation provider
+	 * @throws IllegalStateException if no translation provider is registered for the key's namespace
+	 */
+	public static @NonNull TranslationProvider getInstance(@NonNull Key key) throws IllegalStateException {
+		return getInstance(key.namespace());
 	}
 
 	/**
