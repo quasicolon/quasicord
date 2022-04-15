@@ -42,6 +42,6 @@ public interface Cog {
 	 * @return provided custom commands
 	 */
 	@NonNull
-	Collection<Command.Builder<JDACommandSender>> getCustomCommands();
+	Collection<Command<JDACommandSender>> getCustomCommands();
 
 }

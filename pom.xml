@@ -12,6 +12,7 @@
         <maven.compiler.source>16</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
         <maven.compiler.release>${maven.compiler.source}</maven.compiler.release>
+        <cloud.version>1.6.1</cloud.version>
     </properties>
 
     <repositories>
@@ -86,7 +87,12 @@
         <dependency>
             <groupId>cloud.commandframework</groupId>
             <artifactId>cloud-jda</artifactId>
-            <version>1.6.1</version>
+            <version>${cloud.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>cloud.commandframework</groupId>
+            <artifactId>cloud-annotations</artifactId>
+            <version>${cloud.version}</version>
         </dependency>
         <dependency>
             <groupId>net.xyzsd.plurals</groupId>
