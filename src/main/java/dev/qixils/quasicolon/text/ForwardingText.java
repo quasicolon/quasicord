@@ -14,6 +14,7 @@ public interface ForwardingText extends Text {
 	 *
 	 * @return delegated {@link Text} instance
 	 */
+	@SuppressWarnings("EmptyMethod") // this warning is just wrong
 	@NonNull Text getText();
 
 	@Override

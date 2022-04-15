@@ -30,7 +30,7 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 	/**
 	 * Determines whether a method should be handled by this handler.
 	 */
-	public static Predicate<Method> IS_AUTO_SEND = method -> method.isAnnotationPresent(CloudAutoSend.class);
+	public static final Predicate<Method> IS_AUTO_SEND = method -> method.isAnnotationPresent(CloudAutoSend.class);
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CloudAutoSendHandler.class);
 	private final @NonNull LocaleProvider localeProvider;

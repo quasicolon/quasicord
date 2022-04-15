@@ -38,6 +38,6 @@ public record ContextualEmoji(@NotNull String unicode, long emojiId) {
 		return EmoteUtil.asString(getEmoji(context));
 	}
 
-	public static ContextualEmoji YES = new ContextualEmoji("\u2705", 328630479886614529L);
-	public static ContextualEmoji NO = new ContextualEmoji("\u274C", 328630479576104963L);
+	public static final ContextualEmoji YES = new ContextualEmoji("\u2705", 328630479886614529L);
+	public static final ContextualEmoji NO = new ContextualEmoji("\u274C", 328630479576104963L);
 }

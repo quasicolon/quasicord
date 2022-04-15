@@ -31,7 +31,7 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * Returns all of the elements from a collection that match the filter.
+	 * Returns all the elements from a collection that match the filter.
 	 *
 	 * @param items collection of items
 	 * @param filter filter that the returned items must match
@@ -52,7 +52,7 @@ public class CollectionUtil {
 	}
 
 	/**
-	 * Returns all of the elements from a collection that <b>don't</b> match the filter.
+	 * Returns all the elements from a collection that <b>don't</b> match the filter.
 	 *
 	 * @param items collection of items
 	 * @param filter filter that the returned items must match

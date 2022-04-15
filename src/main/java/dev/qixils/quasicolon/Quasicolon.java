@@ -201,6 +201,7 @@ public class Quasicolon {
 		if (this.prefixes == null) {
 			Set<String> prefixes;
 			try {
+				//noinspection unchecked
 				prefixes = (Set<String>) getRootConfigNode().node("prefixes").get(TypeFactory.parameterizedClass(Set.class, String.class));
 				if (prefixes == null) {
 					logger.error("Default prefixes could not be found");

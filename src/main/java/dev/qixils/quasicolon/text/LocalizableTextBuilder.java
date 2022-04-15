@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Contract;
  * @param <B> the type of the builder
  * @param <R> the type of the localizable text to build
  */
+@SuppressWarnings("unchecked")
 abstract class LocalizableTextBuilder<B extends LocalizableTextBuilder<B, R>, R extends LocalizableText> implements Builder<R> {
 	protected @Nullable Key key;
 	protected Object @NonNull [] args = new Object[]{};
