@@ -1,10 +1,11 @@
-package dev.qixils.quasicolon.cogs.impl.autosend;
+package dev.qixils.quasicolon.cogs.impl.decorators.cloud;
 
 import cloud.commandframework.annotations.MethodCommandExecutionHandler;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import cloud.commandframework.jda.JDACommandSender;
 import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.cogs.impl.decorators.NoResponseException;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.text.Text;

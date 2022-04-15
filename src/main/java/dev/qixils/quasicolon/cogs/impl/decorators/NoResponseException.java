@@ -1,4 +1,4 @@
-package dev.qixils.quasicolon.cogs.impl.autosend;
+package dev.qixils.quasicolon.cogs.impl.decorators;
 
 import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.error.LocalizedRuntimeException;

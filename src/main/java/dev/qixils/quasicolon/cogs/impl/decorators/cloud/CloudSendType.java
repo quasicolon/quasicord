@@ -1,4 +1,4 @@
-package dev.qixils.quasicolon.cogs.impl.autosend;
+package dev.qixils.quasicolon.cogs.impl.decorators.cloud;
 
 import lombok.RequiredArgsConstructor;
 

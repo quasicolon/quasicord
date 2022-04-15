@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.function.Consumer;
 
 /**
@@ -53,6 +54,7 @@ public final class EventDispatcher {
 	 */
 	public void registerListeners(@NonNull Object eventListeners) {
 		for (Method method : eventListeners.getClass().getMethods()) {
+			if (Modifier.isStatic(method.getModifiers())) continue;
 			if (method.getParameterCount() != 1) continue;
 			if (method.isAnnotationPresent(EventListener.class)) {
 				listeners.put(method.getParameterTypes()[0], event -> {
