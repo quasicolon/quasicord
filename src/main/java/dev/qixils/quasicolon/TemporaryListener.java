@@ -20,6 +20,7 @@ import java.util.function.Predicate;
  *
  * @param <T> event type that will be listened for
  */
+// TODO: implement expiration
 public class TemporaryListener<T extends GenericEvent> {
 	private static final @NonNull ULID ULID = new ULID();
 

@@ -21,7 +21,7 @@ public class MockBot extends Quasicolon {
         return new DummyJDA();
     }
 
-    public static @NonNull MockBot INSTANCE;
+    public static final @NonNull MockBot INSTANCE;
     static {
         try {
             INSTANCE = new MockBot();

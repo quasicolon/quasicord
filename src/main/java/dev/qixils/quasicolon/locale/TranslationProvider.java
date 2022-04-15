@@ -95,6 +95,7 @@ public final class TranslationProvider {
 		if (translation instanceof String)
 			return new SingleTranslationImpl(key, locale, requestedLocale, (String) translation);
 		else if (translation instanceof Map) {
+			//noinspection unchecked
 			Map<String, String> stringMap = (Map<String, String>) translation;
 			return PluralTranslationImpl.fromStringMap(key, locale, requestedLocale, stringMap);
 		} else {
