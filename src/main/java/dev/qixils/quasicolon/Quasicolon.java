@@ -136,6 +136,7 @@ public class Quasicolon {
 		commandManager.registerCommandPostProcessor(new WritePermissionChecker());
 		commandManager.registerCommandPostProcessor(new GuildCommandProcessor());
 		// TODO: register custom exception handlers
+		// TODO: support @Confirmation with an ephemeral message and yes/no buttons
 	}
 
 	@NonNull
