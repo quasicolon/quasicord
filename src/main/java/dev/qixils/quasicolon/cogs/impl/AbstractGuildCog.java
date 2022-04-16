@@ -37,6 +37,10 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 	}
 
 	@Override
+	public void onLoad() {
+	}
+
+	@Override
 	protected @NonNull CommandMeta metaMapper(@NonNull ParserParameters parameters) {
 		// add guild key to @CommandMethod-based commands
 		return SimpleCommandMeta.builder()

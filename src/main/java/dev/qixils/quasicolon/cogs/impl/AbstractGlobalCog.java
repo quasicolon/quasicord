@@ -25,4 +25,8 @@ public abstract class AbstractGlobalCog extends AbstractCog implements GlobalCog
 	protected AbstractGlobalCog(@NonNull Quasicolon library) {
 		super(library);
 	}
+
+	@Override
+	public void onLoad() {
+	}
 }

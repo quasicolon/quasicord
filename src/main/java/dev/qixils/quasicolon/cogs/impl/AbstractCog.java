@@ -18,6 +18,7 @@ import dev.qixils.quasicolon.cogs.impl.decorators.cloud.CloudAutoSendHandler;
 import dev.qixils.quasicolon.cogs.impl.decorators.jda.JdaAnnotationParser;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,12 @@ public abstract class AbstractCog implements Cog {
 		this.jdaParser = new JdaAnnotationParser();
 		this.cloudParser = new AnnotationParser<>(library.getCommandManager(), JDACommandSender.class, this::metaMapper);
 		this.cloudParser.registerCommandExecutionMethodFactory(CloudAutoSendHandler.IS_AUTO_SEND, context -> CloudAutoSendHandler.of(library, context));
+	}
+
+	@NotNull
+	@Override
+	public Quasicolon getLibrary() {
+		return library;
 	}
 
 	@NonNull
