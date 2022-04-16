@@ -309,7 +309,7 @@ public class Quasicolon {
 				boolean isCheckingBot = type.equals("botperms");
 
 				for (String permText : COMMA_SPLIT.split(params[1])) {
-					Permission perm = Permission.valueOf(permText.toUpperCase(Locale.ROOT));
+					Permission perm = Permission.valueOf(permText.toUpperCase(Locale.ENGLISH));
 					if (!PermissionUtil.checkPermission(senderToCheck, perm)) {
 						// missing a perm
 						if (isCheckingBot) {
@@ -322,7 +322,7 @@ public class Quasicolon {
 			}
 		}
 	}
-	
+
 	/**
 	 * Registers a temporary listener.
 	 *

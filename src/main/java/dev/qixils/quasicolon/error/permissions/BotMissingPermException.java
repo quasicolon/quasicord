@@ -9,9 +9,10 @@ package dev.qixils.quasicolon.error.permissions;
 import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.text.Text;
 import net.dv8tion.jda.api.Permission;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 public class BotMissingPermException extends NoPermissionException {
-	public BotMissingPermException(Permission perm) {
+	public BotMissingPermException(@NonNull Permission perm) {
 		super(Text.single(Key.library("exception.bot_missing_perm"), perm));
 	}
 }
