@@ -17,10 +17,12 @@ import cloud.commandframework.keys.CloudKey;
 import cloud.commandframework.keys.SimpleCloudKey;
 import cloud.commandframework.meta.CommandMeta;
 import dev.qixils.quasicolon.db.DatabaseManager;
+import dev.qixils.quasicolon.error.permissions.BotMissingPermException;
 import dev.qixils.quasicolon.error.permissions.DMOnlyException;
 import dev.qixils.quasicolon.error.permissions.GuildOnlyException;
 import dev.qixils.quasicolon.error.permissions.NoPermissionException;
 import dev.qixils.quasicolon.error.permissions.OwnerOnlyException;
+import dev.qixils.quasicolon.error.permissions.UserMissingPermException;
 import dev.qixils.quasicolon.events.EventDispatcher;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.locale.TranslationProvider;
@@ -290,20 +292,37 @@ public class Quasicolon {
 						throw new IllegalStateException("Unexpected key for node '" + type + "'");
 				}
 			} else {
-				if (type.equals("perms") || type.equals("botperms")) {
-					for (String permText : COMMA_SPLIT.split(params[1])) {
-						Permission perm = Permission.valueOf(permText.toLowerCase(Locale.ROOT));
-						if (PermissionUtil.checkPermission(sender, perm)) {
-							// TODO
+				JDACommandSender senderToCheck = switch (type) {
+					case "perms" -> sender;
+					case "botperms" -> {
+						// get bot's JDACommandSender
+						if (sender instanceof JDAGuildSender guildSender)
+							yield new JDAGuildSender(null, guildSender.getMember().getGuild().getSelfMember(), guildSender.getTextChannel());
+						else if (sender instanceof JDAPrivateSender privateSender)
+							yield new JDAPrivateSender(null, jda.getSelfUser(), privateSender.getPrivateChannel());
+						else
+							throw new IllegalArgumentException("Unknown command sender type");
+					}
+					default -> throw new IllegalStateException("Unexpected key for node '" + node + "'");
+				};
+
+				boolean isCheckingBot = type.equals("botperms");
+
+				for (String permText : COMMA_SPLIT.split(params[1])) {
+					Permission perm = Permission.valueOf(permText.toUpperCase(Locale.ROOT));
+					if (!PermissionUtil.checkPermission(senderToCheck, perm)) {
+						// missing a perm
+						if (isCheckingBot) {
+							throw new BotMissingPermException(perm);
+						} else {
+							throw new UserMissingPermException(perm);
 						}
 					}
-				} else {
-					throw new IllegalStateException("Unexpected key for node '" + node + "'");
 				}
 			}
 		}
 	}
-
+	
 	/**
 	 * Registers a temporary listener.
 	 *
