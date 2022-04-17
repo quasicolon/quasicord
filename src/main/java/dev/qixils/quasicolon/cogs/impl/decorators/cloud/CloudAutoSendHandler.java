@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
- * Handles methods annotated with {@link CloudAutoSend}.
+ * Handles methods annotated with {@link CloudAutoSend @CloudAutoSend}.
  */
 public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDACommandSender> {
 
@@ -111,9 +111,9 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 	}
 
 	private void handleResult(@NonNull Object result, @NonNull Message message) {
-		if (result instanceof QuasiMessage qm) {
+		if (result instanceof QuasiMessage qm)
 			qm.text().asString(Context.fromMessage(message), localeProvider).subscribe(createMessageSender(message, qm.modifier()));
-		} else if (result instanceof Text text)
+		else if (result instanceof Text text)
 			text.asString(Context.fromMessage(message), localeProvider).subscribe(createMessageSender(message));
 		else if (result instanceof Mono<?> mono)
 			mono.subscribe(obj -> handleResult(obj, message));
@@ -131,7 +131,6 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 		return content -> {
 			// create action
 			MessageAction action = message.getChannel().sendMessage(content);
-			if (modifier != null) modifier.accept(action);
 			// get send type
 			CloudSendType sendType = autoSend.value();
 			// add reply data if applicable
@@ -139,12 +138,13 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 				action.reference(message);
 			// set whether to ping the replied user
 			action.mentionRepliedUser(sendType.isPing());
+			// apply modifier
+			if (modifier != null) modifier.accept(action);
 			// send the message
 			handleMessageAction(action);
 		};
 	}
 
-	@SuppressWarnings("ResultOfMethodCallIgnored") // JDA misuses this annotation
 	@NonNull
 	private Consumer<String> createMessageSender(@NonNull Message message) {
 		return createMessageSender(message, null);
