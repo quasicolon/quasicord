@@ -15,10 +15,12 @@ import dev.qixils.quasicolon.cogs.impl.decorators.NoResponseException;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import dev.qixils.quasicolon.text.Text;
+import dev.qixils.quasicolon.utils.QuasiMessage;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.Contract;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,8 +111,9 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 	}
 
 	private void handleResult(@NonNull Object result, @NonNull Message message) {
-		// TODO: create a custom wrapper object which supports embeds and attachments
-		if (result instanceof Text text)
+		if (result instanceof QuasiMessage qm) {
+			qm.text().asString(Context.fromMessage(message), localeProvider).subscribe(createMessageSender(message, qm.modifier()));
+		} else if (result instanceof Text text)
 			text.asString(Context.fromMessage(message), localeProvider).subscribe(createMessageSender(message));
 		else if (result instanceof Mono<?> mono)
 			mono.subscribe(obj -> handleResult(obj, message));
@@ -124,10 +127,11 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 
 	@SuppressWarnings("ResultOfMethodCallIgnored") // JDA misuses this annotation
 	@NonNull
-	private Consumer<String> createMessageSender(@NonNull Message message) {
+	private Consumer<String> createMessageSender(@NonNull Message message, @Nullable Consumer<MessageAction> modifier) {
 		return content -> {
 			// create action
 			MessageAction action = message.getChannel().sendMessage(content);
+			if (modifier != null) modifier.accept(action);
 			// get send type
 			CloudSendType sendType = autoSend.value();
 			// add reply data if applicable
@@ -138,6 +142,12 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 			// send the message
 			handleMessageAction(action);
 		};
+	}
+
+	@SuppressWarnings("ResultOfMethodCallIgnored") // JDA misuses this annotation
+	@NonNull
+	private Consumer<String> createMessageSender(@NonNull Message message) {
+		return createMessageSender(message, null);
 	}
 
 	private void handleMessageAction(@NonNull MessageAction action) {
