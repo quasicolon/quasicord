@@ -7,9 +7,9 @@
 package dev.qixils.quasicolon.registry.core;
 
 import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.GlobalCog;
 import dev.qixils.quasicolon.registry.impl.ClosableRegistryImpl;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class GlobalCogRegistry extends ClosableRegistryImpl<GlobalCog> {
 	@Override
 	public void close() {
 		super.close();
-		List<CommandData> applicationCommands = new ArrayList<>();
+		List<ApplicationCommand<?>> applicationCommands = new ArrayList<>();
 		for (GlobalCog cog : this) {
 			try {
 				cog.onLoad();
@@ -40,6 +40,9 @@ public class GlobalCogRegistry extends ClosableRegistryImpl<GlobalCog> {
 				// TODO: undo loading?
 			}
 		}
-		quasicolon.getJDA().updateCommands().addCommands(applicationCommands).queue(); // TODO: only update if there are new/updated commands
+		quasicolon.getJDA().updateCommands()
+				.addCommands(applicationCommands.stream().map(ApplicationCommand::getCommandData).toList())
+				.queue(); // TODO: only update if there are new/updated commands
+		// TODO: process command events
 	}
 }

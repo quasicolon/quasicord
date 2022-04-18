@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,11 @@ import java.util.function.Consumer;
 @UtilityClass
 public class MessageUtil {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(MessageUtil.class);
+
+	public static void setupComponentMenu(long userId, @NonNull MessageAction message) {
+		Objects.requireNonNull(message, "message cannot be null");
+		// TODO (GH#19): Implement this
+	}
 
 	// TODO deprecate reaction menus and switch to ActionRow/components
 	// TODO support continuously editing a message with a new y/n prompt

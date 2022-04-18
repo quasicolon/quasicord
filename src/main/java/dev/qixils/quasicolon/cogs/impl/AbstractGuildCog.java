@@ -12,8 +12,11 @@ import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.GuildCog;
 import org.checkerframework.checker.nullness.qual.NonNull;
+
+import java.util.Collection;
 
 /**
  * A basic implementation of a cog that applies to only one guild.
@@ -29,8 +32,12 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 		// call load method
 		onLoad();
 		// register commands
+		Collection<ApplicationCommand<?>> applicationCommands = getApplicationCommands();
 		getGuild().ifPresentOrElse(
-				guild -> guild.updateCommands().addCommands(getApplicationCommands()).queue(), // TODO: only update if there are new/updated commands
+				guild -> guild.updateCommands()
+						.addCommands(applicationCommands.stream().map(ApplicationCommand::getCommandData).toList())
+						.queue(), // TODO: only update if there are new/updated commands
+				// TODO: process command events
 				() -> library.getLogger().warn("Guild {} not found when loading cog {}", guildId, getClass().getSimpleName())
 		);
 		getCustomCommands().forEach(command -> library.getCommandManager().command(command));

@@ -9,7 +9,6 @@ package dev.qixils.quasicolon.cogs;
 import cloud.commandframework.Command;
 import cloud.commandframework.jda.JDACommandSender;
 import dev.qixils.quasicolon.Quasicolon;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Collection;
@@ -43,7 +42,7 @@ public interface Cog {
 	 * @return provided application commands
 	 */
 	@NonNull
-	Collection<CommandData> getApplicationCommands();
+	Collection<ApplicationCommand<?>> getApplicationCommands();
 
 	/**
 	 * Gets the unmodifiable view of the custom commands this cog provides.

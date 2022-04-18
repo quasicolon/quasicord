@@ -13,10 +13,10 @@ import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
 import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.Cog;
 import dev.qixils.quasicolon.cogs.impl.decorators.cloud.CloudAutoSendHandler;
 import dev.qixils.quasicolon.cogs.impl.decorators.jda.JdaAnnotationParser;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -34,11 +34,11 @@ import java.util.List;
  */
 public abstract class AbstractCog implements Cog {
 
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
-	protected final JdaAnnotationParser jdaParser;
-	protected final AnnotationParser<JDACommandSender> cloudParser;
-	protected final Quasicolon library;
-	private final @NonNull List<CommandData> applicationCommands = new ArrayList<>();
+	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
+	protected final @NonNull JdaAnnotationParser jdaParser;
+	protected final @NonNull AnnotationParser<JDACommandSender> cloudParser;
+	protected final @NonNull Quasicolon library;
+	private final @NonNull List<ApplicationCommand<?>> applicationCommands = new ArrayList<>();
 	private boolean annotatedApplicationCommandsRegistered = false;
 	private final @NonNull List<Command<JDACommandSender>> customCommands = new ArrayList<>();
 	private boolean annotatedCustomCommandsRegistered = false;
@@ -62,7 +62,7 @@ public abstract class AbstractCog implements Cog {
 	}
 
 	@Override
-	public @NonNull Collection<CommandData> getApplicationCommands() {
+	public @NonNull Collection<ApplicationCommand<?>> getApplicationCommands() {
 		if (!annotatedApplicationCommandsRegistered) {
 			annotatedApplicationCommandsRegistered = true;
 			applicationCommands.addAll(jdaParser.parse(this));
@@ -79,7 +79,7 @@ public abstract class AbstractCog implements Cog {
 		return customCommands;
 	}
 
-	protected void addApplicationCommand(@NonNull CommandData commandData) {
+	protected void addApplicationCommand(@NonNull ApplicationCommand<?> commandData) {
 		applicationCommands.add(commandData);
 	}
 

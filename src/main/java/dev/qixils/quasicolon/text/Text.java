@@ -18,7 +18,7 @@ import reactor.core.publisher.Mono;
 import java.util.Locale;
 
 /**
- * A simple object to store text.
+ * A container for text which may optionally be localized into other languages.
  */
 public interface Text {
 
