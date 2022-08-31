@@ -249,14 +249,18 @@ public class Quasicolon {
 			return false;
 		}
 
-		// TODO: custom permission parsing
-		// - separated by spaces or \n
-		// - different types of permissions:
-		//  - `guild` or `dm` indicating command must be run in DMs
-		//  - `owner` indicating you must be Me to use
-		//  - `perms:x,y,z` indicates that the user must have effective permissions x,y,z
-		//  - `botperms:x,y,z` indicates that the bot must have effective permissions
-		// - unfortunately cannot reply to messages with failure here, may have to do in a command preprocessor?
+		// TODO:  replace this with a command preprocessor so we can reply with an error message
+		//  and also so we can create our own permission annotations instead of using
+		//  the string-based one from the cloud library
+
+		// original to.do for custom permission parsing:
+		//  - separated by spaces or \n
+		//  - different types of permissions:
+		//   - `guild` or `dm` indicating command must be run in DMs
+		//   - `owner` indicating you must be Me to use
+		//   - `perms:x,y,z` indicates that the user must have effective permissions x,y,z
+		//   - `botperms:x,y,z` indicates that the bot must have effective permissions
+		//  - unfortunately cannot reply to messages with failure here, may have to do in a command preprocessor?
 	}
 
 	protected void verifyPermissions(@NonNull JDACommandSender sender, @NonNull String permission) throws NoPermissionException {
