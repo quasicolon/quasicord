@@ -8,6 +8,7 @@ package dev.qixils.quasicolon;
 
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,16 +22,16 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 class TemporaryListenerExecutor {
-	private final ConcurrentHashMap<String, TemporaryListener<?>> listeners = new ConcurrentHashMap<>();
-	private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private final @NonNull ConcurrentHashMap<String, TemporaryListener<?>> listeners = new ConcurrentHashMap<>();
+	private final @NonNull ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+	private final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
 
 	/**
 	 * Registers a temporary listener.
 	 *
 	 * @param listener temporary listener to register
 	 */
-	public void register(TemporaryListener<?> listener) {
+	public void register(@NonNull TemporaryListener<?> listener) {
 		Objects.requireNonNull(listener, "listener cannot be null");
 
 		final String ID = listener.getID();
@@ -40,7 +41,7 @@ class TemporaryListenerExecutor {
 
 	@SuppressWarnings("unchecked")
 	@SubscribeEvent
-	public void onEvent(GenericEvent event) {
+	public void onEvent(@NonNull GenericEvent event) {
 		Iterator<TemporaryListener<?>> iterator = listeners.values().iterator();
 		while (iterator.hasNext()) {
 			TemporaryListener<?> listener = iterator.next();
