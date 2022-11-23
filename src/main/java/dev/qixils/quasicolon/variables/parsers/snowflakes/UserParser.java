@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.variables.parsers.snowflakes;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 public class UserParser extends SnowflakeParser<User> {
 	private static final @NonNull Pattern TAG_PATTERN = Pattern.compile("@?.{2,32}#\\d{4}");
 
-	public UserParser(@NonNull Quasicolon bot) {
+	public UserParser(@NonNull Quasicord bot) {
 		super(bot);
 	}
 

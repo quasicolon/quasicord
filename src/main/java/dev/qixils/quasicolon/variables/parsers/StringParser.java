@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.variables.parsers;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,7 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 
 public class StringParser extends VariableParser<String> {
-	public StringParser(@NotNull Quasicolon bot) {
+	public StringParser(@NotNull Quasicord bot) {
 		super(bot);
 	}
 

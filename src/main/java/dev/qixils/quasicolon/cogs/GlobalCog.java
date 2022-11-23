@@ -6,6 +6,7 @@
 
 package dev.qixils.quasicolon.cogs;
 
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.registry.Registry;
 
 /**
@@ -16,7 +17,7 @@ import dev.qixils.quasicolon.registry.Registry;
  * during the {@link dev.qixils.quasicolon.registry.core.GlobalCogRegistry global cog registry}'s
  * {@link dev.qixils.quasicolon.events.EventDispatcher#dispatchRegistryInit(Registry) initialization
  * event} that is dispatched to your bot's
- * {@link dev.qixils.quasicolon.Quasicolon.Builder#eventHandler(Object) default event handler}.
+ * {@link Quasicord.Builder#eventHandler(Object) default event handler}.
  */
 public interface GlobalCog extends Cog {
 }

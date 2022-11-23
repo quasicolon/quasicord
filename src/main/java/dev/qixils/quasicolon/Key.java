@@ -106,10 +106,10 @@ public final class Key {
 	// static constructors
 
 	/**
-	 * The namespace internally used by the quasicolon library.
+	 * The namespace internally used by the quasicord library.
 	 */
 	@Internal
-	public static final @NonNull String LIBRARY_NAMESPACE = "quasicolon";
+	public static final @NonNull String LIBRARY_NAMESPACE = "quasicord";
 
 	/**
 	 * Constructs a new internal library key from the given value.

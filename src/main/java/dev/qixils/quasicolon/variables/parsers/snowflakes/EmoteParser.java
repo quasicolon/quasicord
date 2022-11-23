@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.variables.parsers.snowflakes;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Message;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class EmoteParser extends SnowflakeParser<Emote> {
-	public EmoteParser(@NonNull Quasicolon bot) {
+	public EmoteParser(@NonNull Quasicord bot) {
 		super(bot);
 	}
 

@@ -11,7 +11,7 @@ import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.GuildCog;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -26,7 +26,7 @@ import java.util.Collection;
 public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 	protected final long guildId;
 
-	protected AbstractGuildCog(@NonNull Quasicolon library, long guildId) {
+	protected AbstractGuildCog(@NonNull Quasicord library, long guildId) {
 		super(library);
 		this.guildId = guildId;
 		// call load method
@@ -52,13 +52,13 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 		// add guild key to @CommandMethod-based commands
 		return SimpleCommandMeta.builder()
 				.with(super.metaMapper(parameters))
-				.with(Quasicolon.GUILD_KEY, guildId)
+				.with(Quasicord.GUILD_KEY, guildId)
 				.build();
 	}
 
 	// override the addCustomCommand method to add the guild key to the command
 	@Override
 	protected void addCustomCommand(Command.@NonNull Builder<JDACommandSender> command) {
-		super.addCustomCommand(command.meta(Quasicolon.GUILD_KEY, guildId));
+		super.addCustomCommand(command.meta(Quasicord.GUILD_KEY, guildId));
 	}
 }

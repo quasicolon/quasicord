@@ -14,7 +14,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import dev.qixils.quasicolon.Environment;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -32,7 +32,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 /**
- * Manages the {@link Quasicolon Bot}'s database.
+ * Manages the {@link Quasicord Bot}'s database.
  */
 @ParametersAreNonnullByDefault
 public class DatabaseManager implements Closeable {

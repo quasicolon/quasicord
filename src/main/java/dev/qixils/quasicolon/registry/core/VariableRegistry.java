@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.registry.core;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.registry.impl.ClosableMappedRegistryImpl;
 import dev.qixils.quasicolon.variables.parsers.PrefixParser;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
@@ -19,9 +19,9 @@ public final class VariableRegistry extends ClosableMappedRegistryImpl<VariableP
 
 	public final PrefixParser PREFIX;
 
-	VariableRegistry(@NonNull Quasicolon quasicolon) {
+	VariableRegistry(@NonNull Quasicord quasicord) {
 		super("variables", true);
-		PREFIX = typedRegister("prefix", new PrefixParser(quasicolon));
+		PREFIX = typedRegister("prefix", new PrefixParser(quasicord));
 	}
 
 	private <R extends VariableParser<?>> R typedRegister(@NonNull String key, @NonNull R value) {

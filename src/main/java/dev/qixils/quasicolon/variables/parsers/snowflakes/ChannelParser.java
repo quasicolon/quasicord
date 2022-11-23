@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.variables.parsers.snowflakes;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.Message;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public class ChannelParser<R extends GuildChannel> extends SnowflakeParser<R> {
 	private final @NonNull Class<R> channelClass;
 
-	public ChannelParser(@NonNull Quasicolon bot, @NonNull Class<R> channelClass) {
+	public ChannelParser(@NonNull Quasicord bot, @NonNull Class<R> channelClass) {
 		super(bot);
 		this.channelClass = channelClass;
 	}

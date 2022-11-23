@@ -12,7 +12,7 @@ import cloud.commandframework.arguments.parser.ParserParameters;
 import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.meta.CommandMeta;
 import cloud.commandframework.meta.SimpleCommandMeta;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.Cog;
 import dev.qixils.quasicolon.cogs.impl.decorators.cloud.CloudAutoSendHandler;
@@ -37,13 +37,13 @@ public abstract class AbstractCog implements Cog {
 	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
 	protected final @NonNull JdaAnnotationParser jdaParser;
 	protected final @NonNull AnnotationParser<JDACommandSender> cloudParser;
-	protected final @NonNull Quasicolon library;
+	protected final @NonNull Quasicord library;
 	private final @NonNull List<ApplicationCommand<?>> applicationCommands = new ArrayList<>();
 	private boolean annotatedApplicationCommandsRegistered = false;
 	private final @NonNull List<Command<JDACommandSender>> customCommands = new ArrayList<>();
 	private boolean annotatedCustomCommandsRegistered = false;
 
-	protected AbstractCog(@NonNull Quasicolon library) {
+	protected AbstractCog(@NonNull Quasicord library) {
 		this.library = library;
 		this.jdaParser = new JdaAnnotationParser();
 		this.cloudParser = new AnnotationParser<>(library.getCommandManager(), JDACommandSender.class, this::metaMapper);
@@ -52,7 +52,7 @@ public abstract class AbstractCog implements Cog {
 
 	@NotNull
 	@Override
-	public Quasicolon getLibrary() {
+	public Quasicord getLibrary() {
 		return library;
 	}
 

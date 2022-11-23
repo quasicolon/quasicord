@@ -70,10 +70,10 @@ import java.util.regex.Pattern;
  * <p>
  * See {@link Builder} for instructions on how to create a new instance.
  */
-public class Quasicolon {
-	public static final @NonNull CloudKey<Quasicolon> BOT_KEY = SimpleCloudKey.of("quasicolon.bot", TypeToken.get(Quasicolon.class));
-	public static final @NonNull CloudKey<String> NAMESPACE_KEY = SimpleCloudKey.of("quasicolon.namespace", TypeToken.get(String.class));
-	public static final CommandMeta.@NonNull Key<Long> GUILD_KEY = CommandMeta.Key.of(TypeToken.get(Long.class), "quasicolon.guild_id");
+public class Quasicord {
+	public static final @NonNull CloudKey<Quasicord> BOT_KEY = SimpleCloudKey.of("quasicord.bot", TypeToken.get(Quasicord.class));
+	public static final @NonNull CloudKey<String> NAMESPACE_KEY = SimpleCloudKey.of("quasicord.namespace", TypeToken.get(String.class));
+	public static final CommandMeta.@NonNull Key<Long> GUILD_KEY = CommandMeta.Key.of(TypeToken.get(Long.class), "quasicord.guild_id");
 	protected static final @NonNull Pattern NEWLINE_SPLIT = Pattern.compile("\n");
 	protected static final @NonNull Pattern COLON_SPLIT = Pattern.compile(":");
 	protected static final @NonNull Pattern COMMA_SPLIT = Pattern.compile(",");
@@ -99,7 +99,7 @@ public class Quasicolon {
 	@SuppressWarnings("NullabilityAnnotations") // ffs intellij
 	protected @MonotonicNonNull Set<String> prefixes = null;
 
-	protected Quasicolon(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws ConfigurateException, LoginException, InterruptedException {
+	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws ConfigurateException, LoginException, InterruptedException {
 		// misc initialization
 		this.namespace = namespace;
 
@@ -456,7 +456,7 @@ public class Quasicolon {
 	}
 
 	/**
-	 * A builder for {@link Quasicolon} instances.
+	 * A builder for {@link Quasicord} instances.
 	 */
 	public static class Builder {
 		protected @Nullable String namespace;
@@ -533,7 +533,7 @@ public class Quasicolon {
 		}
 
 		/**
-		 * Builds a new {@link Quasicolon} instance.
+		 * Builds a new {@link Quasicord} instance.
 		 *
 		 * @return the new instance
 		 * @throws IllegalStateException if the namespace is not set
@@ -541,10 +541,10 @@ public class Quasicolon {
 		 * @throws InterruptedException  if the JDA login is interrupted
 		 * @throws ConfigurateException  if the configuration fails
 		 */
-		public @NonNull Quasicolon build() throws IllegalStateException, LoginException, InterruptedException, ConfigurateException {
+		public @NonNull Quasicord build() throws IllegalStateException, LoginException, InterruptedException, ConfigurateException {
 			if (namespace == null)
 				throw new IllegalStateException("namespace must be set");
-			return new Quasicolon(namespace, defaultLocale, configRoot, activity, eventHandler);
+			return new Quasicord(namespace, defaultLocale, configRoot, activity, eventHandler);
 		}
 	}
 }

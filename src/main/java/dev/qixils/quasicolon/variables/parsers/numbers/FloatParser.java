@@ -6,16 +6,16 @@
 
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class FloatParser extends NumberParser<Float> {
-	public FloatParser(@NotNull Quasicolon bot) {
+	public FloatParser(@NotNull Quasicord bot) {
 		this(bot, null);
 	}
 
-	public FloatParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
+	public FloatParser(@NotNull Quasicord bot, @Nullable ParserFilter filter) {
 		super(bot, filter);
 	}
 

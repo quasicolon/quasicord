@@ -10,7 +10,7 @@ import cloud.commandframework.execution.postprocessor.CommandPostprocessingConte
 import cloud.commandframework.execution.postprocessor.CommandPostprocessor;
 import cloud.commandframework.jda.JDACommandSender;
 import cloud.commandframework.services.types.ConsumerService;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.GuildChannel;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -23,7 +23,7 @@ public final class GuildCommandProcessor implements CommandPostprocessor<JDAComm
 
 	@Override
 	public void accept(@NonNull CommandPostprocessingContext<JDACommandSender> context) {
-		Optional<Long> guildID = context.getCommand().getCommandMeta().get(Quasicolon.GUILD_KEY);
+		Optional<Long> guildID = context.getCommand().getCommandMeta().get(Quasicord.GUILD_KEY);
 		if (guildID.isEmpty()) return;
 		JDACommandSender sender = context.getCommandContext().getSender();
 		if (!(sender.getChannel() instanceof GuildChannel channel) || channel.getGuild().getIdLong() != guildID.get()) {

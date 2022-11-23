@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.variables.parsers;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.entities.Message;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +18,7 @@ public class NullableParser<R> extends VariableParser<R> {
     protected final VariableParser<R> parser;
     protected static final String NULL_VALUE = "$\u2603"; // snowman! :)
 
-    public NullableParser(@NotNull Quasicolon bot, @NotNull VariableParser<R> parser) {
+    public NullableParser(@NotNull Quasicord bot, @NotNull VariableParser<R> parser) {
         super(bot);
         this.parser = Objects.requireNonNull(parser, "parser cannot be null");
     }

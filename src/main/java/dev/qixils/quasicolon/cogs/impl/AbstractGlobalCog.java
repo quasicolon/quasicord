@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.cogs.impl;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.GlobalCog;
 import dev.qixils.quasicolon.registry.Registry;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -19,10 +19,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  * during the {@link dev.qixils.quasicolon.registry.core.GlobalCogRegistry global cog registry}'s
  * {@link dev.qixils.quasicolon.events.EventDispatcher#dispatchRegistryInit(Registry) initialization
  * event} that is dispatched to your bot's
- * {@link Quasicolon.Builder#eventHandler(Object) default event handler}.
+ * {@link Quasicord.Builder#eventHandler(Object) default event handler}.
  */
 public abstract class AbstractGlobalCog extends AbstractCog implements GlobalCog {
-	protected AbstractGlobalCog(@NonNull Quasicolon library) {
+	protected AbstractGlobalCog(@NonNull Quasicord library) {
 		super(library);
 	}
 

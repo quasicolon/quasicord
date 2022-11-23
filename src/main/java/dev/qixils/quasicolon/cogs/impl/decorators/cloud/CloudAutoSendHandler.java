@@ -10,7 +10,7 @@ import cloud.commandframework.annotations.MethodCommandExecutionHandler;
 import cloud.commandframework.context.CommandContext;
 import cloud.commandframework.exceptions.CommandExecutionException;
 import cloud.commandframework.jda.JDACommandSender;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.impl.decorators.NoResponseException;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.LocaleProvider;
@@ -75,7 +75,7 @@ public class CloudAutoSendHandler extends MethodCommandExecutionHandler<JDAComma
 	 * @return new handler instance
 	 */
 	@Contract("_, _ -> new")
-	public static @NonNull CloudAutoSendHandler of(@NonNull Quasicolon library, @NonNull CommandMethodContext<JDACommandSender> context) {
+	public static @NonNull CloudAutoSendHandler of(@NonNull Quasicord library, @NonNull CommandMethodContext<JDACommandSender> context) {
 		return of(library.getLocaleProvider(), context);
 	}
 

@@ -8,13 +8,13 @@ package dev.qixils.quasicolon.cogs;
 
 import cloud.commandframework.Command;
 import cloud.commandframework.jda.JDACommandSender;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.Collection;
 
 /**
- * A module which adds functionality to {@link Quasicolon Quasicolon}.
+ * A module which adds functionality to {@link Quasicord Quasicord}.
  * <p>
  * Cogs are not automatically loaded. Please see the javadocs of subclasses for more information
  * about how to load a cog.
@@ -22,12 +22,12 @@ import java.util.Collection;
 public interface Cog {
 
 	/**
-	 * Gets the instance of the {@link Quasicolon} library.
+	 * Gets the instance of the {@link Quasicord} library.
 	 *
 	 * @return library instance
 	 */
 	@NonNull
-	Quasicolon getLibrary();
+	Quasicord getLibrary();
 
 	/**
 	 * Called when the cog is loaded.

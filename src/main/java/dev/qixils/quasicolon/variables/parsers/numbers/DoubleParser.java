@@ -6,16 +6,16 @@
 
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DoubleParser extends NumberParser<Double> {
-	public DoubleParser(@NotNull Quasicolon bot) {
+	public DoubleParser(@NotNull Quasicord bot) {
 		this(bot, null);
 	}
 
-	public DoubleParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
+	public DoubleParser(@NotNull Quasicord bot, @Nullable ParserFilter filter) {
 		super(bot, filter);
 	}
 

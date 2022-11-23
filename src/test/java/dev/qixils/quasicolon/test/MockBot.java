@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.test;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -17,7 +17,7 @@ import javax.security.auth.login.LoginException;
 import java.nio.file.Paths;
 import java.util.Locale;
 
-public class MockBot extends Quasicolon {
+public class MockBot extends Quasicord {
     public MockBot() throws LoginException, ConfigurateException, InterruptedException {
         super("mockbot", Locale.ROOT, Paths.get(".").toAbsolutePath(), null, null);
     }

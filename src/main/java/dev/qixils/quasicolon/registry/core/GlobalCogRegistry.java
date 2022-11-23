@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.registry.core;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.GlobalCog;
 import dev.qixils.quasicolon.registry.impl.ClosableRegistryImpl;
@@ -19,11 +19,11 @@ import java.util.List;
  * Registry of {@link GlobalCog}s.
  */
 public class GlobalCogRegistry extends ClosableRegistryImpl<GlobalCog> {
-	private final @NonNull Quasicolon quasicolon;
+	private final @NonNull Quasicord quasicord;
 
-	public GlobalCogRegistry(@NonNull Quasicolon quasicolon) {
+	public GlobalCogRegistry(@NonNull Quasicord quasicord) {
 		super("cogs", true);
-		this.quasicolon = quasicolon;
+		this.quasicord = quasicord;
 	}
 
 	@Override
@@ -34,13 +34,13 @@ public class GlobalCogRegistry extends ClosableRegistryImpl<GlobalCog> {
 			try {
 				cog.onLoad();
 				applicationCommands.addAll(cog.getApplicationCommands());
-				cog.getCustomCommands().forEach(command -> quasicolon.getCommandManager().command(command));
+				cog.getCustomCommands().forEach(command -> quasicord.getCommandManager().command(command));
 			} catch (Exception e) {
-				quasicolon.getLogger().error("Failed to load cog " + cog.getClass().getName(), e);
+				quasicord.getLogger().error("Failed to load cog " + cog.getClass().getName(), e);
 				// TODO: undo loading?
 			}
 		}
-		quasicolon.getJDA().updateCommands()
+		quasicord.getJDA().updateCommands()
 				.addCommands(applicationCommands.stream().map(ApplicationCommand::getCommandData).toList())
 				.queue(); // TODO: only update if there are new/updated commands
 		// TODO: process command events

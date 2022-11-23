@@ -1,7 +1,6 @@
 en:
   arg._unknown_: <unknown>
-  invalid_prefix_warning: One or more of your input prefixes contained the same starting
-  character(s) as another prefix. These are unsupported and have been filtered out.
+  invalid_prefix_warning: One or more of your input prefixes contained the same starting character(s) as another prefix. These are unsupported and have been filtered out.
   exception.invalid_syntax: "A syntax error occurred within argument {0}: {1}"
   exception.invalid_syntax.quotations: Quoted argument has improper quotation marks
   exception.owner_only: This command can only be run by the bot owner

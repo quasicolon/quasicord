@@ -6,18 +6,18 @@
 
 package dev.qixils.quasicolon.variables.parsers.numbers;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 
 public class BigIntegerParser extends NumberParser<BigInteger> {
-    public BigIntegerParser(@NotNull Quasicolon bot) {
+    public BigIntegerParser(@NotNull Quasicord bot) {
         super(bot, null);
     }
 
-    public BigIntegerParser(@NotNull Quasicolon bot, @Nullable ParserFilter filter) {
+    public BigIntegerParser(@NotNull Quasicord bot, @Nullable ParserFilter filter) {
         super(bot, filter);
     }
 

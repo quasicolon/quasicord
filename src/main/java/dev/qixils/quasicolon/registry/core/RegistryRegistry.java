@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.registry.core;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.registry.ClosableRegistry;
 import dev.qixils.quasicolon.registry.Registry;
 import dev.qixils.quasicolon.registry.impl.ClosableMappedRegistryImpl;
@@ -18,7 +18,7 @@ import org.jetbrains.annotations.ApiStatus.Internal;
  */
 public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<?>> {
 
-	private final @NonNull Quasicolon quasicolon;
+	private final @NonNull Quasicord quasicord;
 
 	/**
 	 * The registry of {@link dev.qixils.quasicolon.variables.parsers.VariableParser variables}.
@@ -33,15 +33,15 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	/**
 	 * Creates a new root registry.
 	 *
-	 * @param quasicolon the quasicolon instance
+	 * @param quasicord the quasicord instance
 	 */
 	@Internal
-	public RegistryRegistry(@NonNull Quasicolon quasicolon) {
+	public RegistryRegistry(@NonNull Quasicord quasicord) {
 		super("registries", false);
-		this.quasicolon = quasicolon;
+		this.quasicord = quasicord;
 		register(this);
-		VARIABLE_REGISTRY = register(new VariableRegistry(quasicolon));
-		GLOBAL_COG_REGISTRY = register(new GlobalCogRegistry(quasicolon));
+		VARIABLE_REGISTRY = register(new VariableRegistry(quasicord));
+		GLOBAL_COG_REGISTRY = register(new GlobalCogRegistry(quasicord));
 		close();
 	}
 
@@ -70,7 +70,7 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	@NonNull
 	public Registry<?> register(@NonNull String key, @NonNull Registry<?> value) throws IllegalArgumentException {
 		super.register(key, value);
-		quasicolon.getEventDispatcher().dispatchRegistryInit(value);
+		quasicord.getEventDispatcher().dispatchRegistryInit(value);
 		if (value instanceof ClosableRegistry<?> closable && closable.shouldClose() && !closable.isClosed())
 			closable.close();
 		return value;

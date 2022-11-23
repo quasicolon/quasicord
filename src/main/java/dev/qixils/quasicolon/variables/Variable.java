@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.variables;
 
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import lombok.Data;
 import org.bson.codecs.pojo.annotations.BsonId;
@@ -23,7 +23,7 @@ public class Variable {
 	private String name; // variable name (from Variables.java)
 
 	@NotNull
-	public VariableParser<?> getVariableParser(@NonNull Quasicolon bot) {
+	public VariableParser<?> getVariableParser(@NonNull Quasicord bot) {
 		return bot.getRootRegistry().VARIABLE_REGISTRY.get(name)
 				.orElseThrow(() -> new IllegalStateException("VariableParser could not be found"));
 	}

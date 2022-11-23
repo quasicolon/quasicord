@@ -7,7 +7,7 @@
 package dev.qixils.quasicolon.variables.parsers.snowflakes;
 
 import dev.qixils.quasicolon.Key;
-import dev.qixils.quasicolon.Quasicolon;
+import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.text.Text;
 import dev.qixils.quasicolon.utils.FakeCollection;
 import dev.qixils.quasicolon.utils.MessageUtil;
@@ -33,7 +33,7 @@ public abstract class SnowflakeParser<R extends ISnowflake> extends VariablePars
 	protected static final @NonNull Pattern SNOWFLAKE_PATTERN = Pattern.compile(".*(\\d{17,19})");
 	private static final @NonNull Collection<Long> EMPTY_COLLECTION = new FakeCollection<>();
 
-	public SnowflakeParser(@NonNull Quasicolon bot) {
+	public SnowflakeParser(@NonNull Quasicord bot) {
 		super(bot);
 	}
 
