@@ -7,7 +7,6 @@
 package dev.qixils.quasicolon.utils;
 
 import dev.qixils.quasicolon.TemporaryListener;
-import lombok.experimental.UtilityClass;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-@UtilityClass
 public class MessageUtil {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(MessageUtil.class);
 
