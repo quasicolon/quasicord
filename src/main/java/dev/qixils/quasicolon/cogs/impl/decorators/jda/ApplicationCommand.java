@@ -8,7 +8,6 @@ package dev.qixils.quasicolon.cogs.impl.decorators.jda;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.Command;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -18,8 +17,12 @@ import java.lang.annotation.Target;
 /**
  * Annotation for methods that represent interaction commands.
  * <p>
- * The name of this command is taken from the translation file(s)
- * using the {@link #value() provided ID} (and, optionally, the {@link SlashCommandGroup}).
+ * This command can have parameters annotated with {@link Contextual}.
+ * Alongside those, there should be exactly one parameter without this annotation. This parameter should represent the
+ * subject of the interaction, i.e. a {@link net.dv8tion.jda.api.interactions.components.buttons.Button Button} object
+ * for a {@link net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction ButtonInteraction}.
+ * </p>
+ * The name of this command is taken from the translation file(s) using the {@link #value() provided ID}.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -36,7 +39,7 @@ public @interface ApplicationCommand {
 	 *
 	 * @return command ID
 	 */
-	@NonNull String value();
+	String value();
 
 	/**
 	 * The type of command.
@@ -44,7 +47,7 @@ public @interface ApplicationCommand {
 	 * Should not be {@link Command.Type#UNKNOWN} or {@link Command.Type#SLASH};
 	 * see {@link SlashCommand} for slash commands.
 	 */
-	Command.@NonNull Type type();
+	Command.Type type();
 
 	/**
 	 * The permissions required to use this command by default.
@@ -52,7 +55,7 @@ public @interface ApplicationCommand {
 	 *
 	 * @return default permissions
 	 */
-	Permission @NonNull [] defaultPermissions() default {};
+	Permission[] defaultPermissions() default {};
 
 	/**
 	 * Whether the command can only be used in guilds.

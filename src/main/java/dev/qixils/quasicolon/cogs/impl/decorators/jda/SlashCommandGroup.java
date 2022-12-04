@@ -6,8 +6,6 @@
 
 package dev.qixils.quasicolon.cogs.impl.decorators.jda;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,5 +24,5 @@ public @interface SlashCommandGroup {
 	 *
 	 * @return command group name
 	 */
-	@NonNull String value();
+	String value();
 }
