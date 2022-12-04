@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+import net.dv8tion.jda.api.interactions.DiscordLocale;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
@@ -21,8 +22,10 @@ import java.util.Objects;
 @Data
 public final class MutableContextImpl implements Context {
 	private long user;
+	private @Nullable DiscordLocale userLocale;
 	private long channel;
 	private long guild;
+	private @Nullable DiscordLocale guildLocale;
 
 	@Override
 	public boolean isMutable() {
@@ -31,7 +34,7 @@ public final class MutableContextImpl implements Context {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(user, channel, guild);
+		return Objects.hash(user, userLocale, channel, guild, guildLocale);
 	}
 
 	public boolean equals(@Nullable Object obj) {

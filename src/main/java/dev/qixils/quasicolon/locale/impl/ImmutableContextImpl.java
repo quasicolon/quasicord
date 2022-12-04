@@ -7,11 +7,19 @@
 package dev.qixils.quasicolon.locale.impl;
 
 import dev.qixils.quasicolon.locale.Context;
-import lombok.experimental.Accessors;
+import net.dv8tion.jda.api.interactions.DiscordLocale;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
-@Accessors(fluent = true)
-public record ImmutableContextImpl(long user, long channel, long guild) implements Context {
+public record ImmutableContextImpl(
+		long user,
+		@Nullable DiscordLocale userLocale,
+		long channel,
+		long guild,
+		@Nullable DiscordLocale guildLocale
+) implements Context {
+
 	@Override
 	public boolean isMutable() {
 		return false;
@@ -23,12 +31,22 @@ public record ImmutableContextImpl(long user, long channel, long guild) implemen
 	}
 
 	@Override
+	public @NonNull Context userLocale(@Nullable DiscordLocale locale) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public @NotNull Context channel(long channel) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public @NotNull Context guild(long guild) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public @NonNull Context guildLocale(@Nullable DiscordLocale locale) {
 		throw new UnsupportedOperationException();
 	}
 }

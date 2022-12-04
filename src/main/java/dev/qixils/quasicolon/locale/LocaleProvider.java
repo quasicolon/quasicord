@@ -240,13 +240,23 @@ public class LocaleProvider {
 		Mono<Locale> user = context.user() == 0
 				? Mono.empty()
 				: forUser(context.user());
+		Mono<Locale> userLocale = Mono.justOrEmpty(context.userLocale())
+				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
 		Mono<Locale> channel = context.channel() == 0
 				? Mono.empty()
 				: forChannel(context.channel());
 		Mono<Locale> guild = context.guild() == 0
 				? Mono.empty()
 				: forGuild(context.guild());
-		return user.switchIfEmpty(channel).switchIfEmpty(guild).switchIfEmpty(Mono.just(defaultLocale));
+		Mono<Locale> guildLocale = Mono.justOrEmpty(context.guildLocale())
+				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
+		Mono<Locale> defaultLocale = Mono.just(defaultLocale());
+		return user
+				.switchIfEmpty(userLocale)
+				.switchIfEmpty(channel)
+				.switchIfEmpty(guild)
+				.switchIfEmpty(guildLocale)
+				.switchIfEmpty(defaultLocale);
 	}
 
 	private static final class DummyLocaleProvider extends LocaleProvider {
