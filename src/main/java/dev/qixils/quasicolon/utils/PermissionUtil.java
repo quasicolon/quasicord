@@ -1,14 +1,11 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.utils;
 
-import cloud.commandframework.jda.JDACommandSender;
-import cloud.commandframework.jda.JDAGuildSender;
-import cloud.commandframework.jda.JDAPrivateSender;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.internal.utils.Checks;
 import org.jetbrains.annotations.NotNull;
@@ -18,40 +15,6 @@ import org.jetbrains.annotations.NotNull;
  * a focus on methods relating to the cloud command framework.
  */
 public class PermissionUtil extends net.dv8tion.jda.internal.utils.PermissionUtil {
-	/**
-	 * Checks to see if the {@link JDACommandSender} has the specified {@link Permission}s.
-	 * This method properly deals with
-	 * {@link net.dv8tion.jda.api.entities.PermissionOverride PermissionOverrides} and Owner status.
-	 *
-	 * <p><b>Note:</b> this is based on effective permissions, not literal permissions. If a member
-	 * has permissions that would enable them to do something without the literal permission to do
-	 * it, this will still return true.
-	 * <br>Example: If a member has the
-	 * {@link net.dv8tion.jda.api.Permission#ADMINISTRATOR ADMINISTRATOR} permission, they will be
-	 * able to {@link net.dv8tion.jda.api.Permission#MESSAGE_SEND MESSAGE_SEND} in every channel.
-	 *
-	 * @param  sender
-	 *         The {@link JDACommandSender} whose permissions are being checked.
-	 * @param  permissions
-	 *         The {@link net.dv8tion.jda.api.Permission Permissions} being checked for.
-	 *
-	 * @throws IllegalArgumentException
-	 *         if any of the provided parameters is {@code null}
-	 *         or the provided {@link JDACommandSender} is neither from a guild nor a private message
-	 *
-	 * @return True -
-	 *         if the {@link JDACommandSender} effectively has the specified {@link net.dv8tion.jda.api.Permission Permissions}.
-	 */
-	public static boolean checkPermission(@NotNull JDACommandSender sender, @NotNull Permission... permissions) throws IllegalArgumentException {
-		Checks.notNull(sender, "sender");
-
-		if (sender instanceof JDAGuildSender guildSender)
-			return checkPermission(guildSender.getTextChannel(), guildSender.getMember(), permissions);
-		else if (sender instanceof JDAPrivateSender)
-			return checkPrivateChannelPermission(permissions);
-		else
-			throw new IllegalArgumentException("Unknown command sender type");
-	}
 
 	/**
 	 * Checks to see if the provided {@link Permission Permissions} are available in a private channel.

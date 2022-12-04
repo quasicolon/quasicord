@@ -1,13 +1,13 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.test.actions;
 
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,7 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
-public class DummyRestAction<T> implements RestAction<T> {
+public class DummyRestAction<T> implements CacheRestAction<T> {
 	protected final JDA jda;
 	protected final T value;
 
@@ -36,7 +36,13 @@ public class DummyRestAction<T> implements RestAction<T> {
 
 	@NotNull
 	@Override
-	public RestAction<T> setCheck(@Nullable BooleanSupplier checks) {
+	public CacheRestAction<T> setCheck(@Nullable BooleanSupplier checks) {
+		return this;
+	}
+
+	@NotNull
+	@Override
+	public CacheRestAction<T> useCache(boolean useCache) {
 		return this;
 	}
 

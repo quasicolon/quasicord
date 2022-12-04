@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.test;
@@ -15,6 +15,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 
 public class DummyApplicationInfo implements ApplicationInfo {
 	private final JDA jda;
@@ -102,6 +105,39 @@ public class DummyApplicationInfo implements ApplicationInfo {
 	@Override
 	public boolean isBotPublic() {
 		return false;
+	}
+
+	@NotNull
+	@Override
+	public List<String> getTags() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public String getCustomAuthorizationUrl() {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public List<String> getScopes() {
+		return Collections.emptyList();
+	}
+
+	@NotNull
+	@Override
+	public EnumSet<Permission> getPermissions() {
+		return EnumSet.noneOf(Permission.class);
+	}
+
+	@Override
+	public long getPermissionsRaw() {
+		return 0;
+	}
+
+	@Override
+	public long getFlagsRaw() {
+		return 0;
 	}
 
 	@Override

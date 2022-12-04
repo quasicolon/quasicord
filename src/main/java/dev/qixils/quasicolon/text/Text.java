@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.text;
@@ -10,7 +10,7 @@ import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.LocaleProvider;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.xyzsd.plurals.PluralRuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import reactor.core.publisher.Mono;
@@ -69,29 +69,26 @@ public interface Text {
 	 * Fetches the localized string for this text according to the author information obtained from
 	 * the provided {@link Message} and sends it as a reply to the provided message.
 	 * <p>
-	 * When {@code directReply} is {@code false}, this will return a {@link MessageAction}
+	 * When {@code directReply} is {@code false}, this will return a {@link MessageCreateAction}
 	 * analogous to {@code message.getChannel().sendMessage(...)}. Otherwise, this will return a
-	 * {@link MessageAction} analogous to {@code message.reply(...)}.
+	 * {@link MessageCreateAction} analogous to {@code message.reply(...)}.
 	 * </p>
 	 * <b>Note:</b> Due to the usage of an asynchronous database operation, the returned
-	 * {@link MessageAction} may behave abnormally compared to what is generally expected from JDA.
-	 * Namely, methods which set or append to the content of the {@link MessageAction} may throw an
+	 * {@link MessageCreateAction} may behave abnormally compared to what is generally expected from JDA.
+	 * Namely, methods which set or append to the content of the {@link MessageCreateAction} may throw an
 	 * {@link UnsupportedOperationException}.
 	 *
 	 * @param message the {@link Message} to reply to
 	 * @param directReply whether the message being sent should use Discord's reply feature
-	 * @return a {@link MessageAction} that will send the localized string for this text
+	 * @return a {@link MessageCreateAction} that will send the localized string for this text
 	 */
-	default @NonNull MessageAction sendAsReplyTo(@NonNull Message message, boolean directReply) {
-		MessageAction action = new TextMessageAction(
-				message.getJDA(),
-				null,
+	default @NonNull MessageCreateAction sendAsReplyTo(@NonNull Message message, boolean directReply) {
+		MessageCreateAction action = new TextMessageAction(
 				message.getChannel(),
 				asString(Context.fromMessage(message))
 		);
 		if (directReply)
-			//noinspection ResultOfMethodCallIgnored - chain method is erroneously marked as @CheckReturnValue
-			action.reference(message);
+			action.setMessageReference(message);
 		return action;
 	}
 
@@ -104,14 +101,14 @@ public interface Text {
 	 * {@link #sendAsReplyTo(Message, boolean) sendAsReplyTo(message, true)}.
 	 * </p>
 	 * <b>Note:</b> Due to the usage of an asynchronous database operation, the returned
-	 * {@link MessageAction} may behave abnormally compared to what is generally expected from JDA.
-	 * Namely, methods which set or append to the content of the {@link MessageAction} may throw an
+	 * {@link MessageCreateAction} may behave abnormally compared to what is generally expected from JDA.
+	 * Namely, methods which set or append to the content of the {@link MessageCreateAction} may throw an
 	 * {@link UnsupportedOperationException}.
 	 *
 	 * @param message the {@link Message} to reply to
-	 * @return a {@link MessageAction} that will send the localized string for this text
+	 * @return a {@link MessageCreateAction} that will send the localized string for this text
 	 */
-	default @NonNull MessageAction sendAsReplyTo(@NonNull Message message) {
+	default @NonNull MessageCreateAction sendAsReplyTo(@NonNull Message message) {
 		return sendAsReplyTo(message, true);
 	}
 

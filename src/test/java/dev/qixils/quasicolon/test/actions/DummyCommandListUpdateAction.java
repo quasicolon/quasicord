@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.test.actions;
@@ -27,25 +27,25 @@ public class DummyCommandListUpdateAction extends DummyRestAction<List<Command>>
 
 	@NotNull
 	@Override
-	public CommandListUpdateAction timeout(long timeout, @NotNull TimeUnit unit) {
-		return (CommandListUpdateAction) super.timeout(timeout, unit);
+	public DummyCommandListUpdateAction timeout(long timeout, @NotNull TimeUnit unit) {
+		return (DummyCommandListUpdateAction) super.timeout(timeout, unit);
 	}
 
 	@NotNull
 	@Override
-	public CommandListUpdateAction deadline(long timestamp) {
-		return (CommandListUpdateAction) super.deadline(timestamp);
+	public DummyCommandListUpdateAction deadline(long timestamp) {
+		return (DummyCommandListUpdateAction) super.deadline(timestamp);
 	}
 
 	@NotNull
 	@Override
-	public CommandListUpdateAction addCheck(@NotNull BooleanSupplier checks) {
-		return (CommandListUpdateAction) super.addCheck(checks);
+	public DummyCommandListUpdateAction addCheck(@NotNull BooleanSupplier checks) {
+		return (DummyCommandListUpdateAction) super.addCheck(checks);
 	}
 
 	@Override
-	public @NotNull CommandListUpdateAction setCheck(@Nullable BooleanSupplier checks) {
-		return (CommandListUpdateAction) super.setCheck(checks);
+	public @NotNull DummyCommandListUpdateAction setCheck(@Nullable BooleanSupplier checks) {
+		return (DummyCommandListUpdateAction) super.setCheck(checks);
 	}
 
 	@NotNull

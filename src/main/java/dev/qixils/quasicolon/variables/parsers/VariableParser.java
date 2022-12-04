@@ -1,11 +1,12 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.variables.parsers;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.variables.Variable;
 import net.dv8tion.jda.api.entities.Message;
@@ -14,7 +15,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.CheckReturnValue;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;

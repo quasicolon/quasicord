@@ -1,22 +1,15 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.cogs.impl;
 
-import cloud.commandframework.Command;
-import cloud.commandframework.annotations.AnnotationParser;
-import cloud.commandframework.arguments.parser.ParserParameters;
-import cloud.commandframework.jda.JDACommandSender;
-import cloud.commandframework.meta.CommandMeta;
-import cloud.commandframework.meta.SimpleCommandMeta;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.Cog;
-import dev.qixils.quasicolon.cogs.impl.decorators.cloud.CloudAutoSendHandler;
-import dev.qixils.quasicolon.cogs.impl.decorators.jda.JdaAnnotationParser;
+import dev.qixils.quasicolon.cogs.impl.decorators.jda.AnnotationParser;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -35,19 +28,14 @@ import java.util.List;
 public abstract class AbstractCog implements Cog {
 
 	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
-	protected final @NonNull JdaAnnotationParser jdaParser;
-	protected final @NonNull AnnotationParser<JDACommandSender> cloudParser;
+	protected final @NonNull AnnotationParser parser;
 	protected final @NonNull Quasicord library;
-	private final @NonNull List<ApplicationCommand<?>> applicationCommands = new ArrayList<>();
-	private boolean annotatedApplicationCommandsRegistered = false;
-	private final @NonNull List<Command<JDACommandSender>> customCommands = new ArrayList<>();
-	private boolean annotatedCustomCommandsRegistered = false;
+	private final @NonNull List<ApplicationCommand<?>> commands = new ArrayList<>();
+	private boolean annotatedCommandsRegistered = false;
 
 	protected AbstractCog(@NonNull Quasicord library) {
 		this.library = library;
-		this.jdaParser = new JdaAnnotationParser();
-		this.cloudParser = new AnnotationParser<>(library.getCommandManager(), JDACommandSender.class, this::metaMapper);
-		this.cloudParser.registerCommandExecutionMethodFactory(CloudAutoSendHandler.IS_AUTO_SEND, context -> CloudAutoSendHandler.of(library, context));
+		this.parser = new AnnotationParser();
 	}
 
 	@NotNull
@@ -56,42 +44,20 @@ public abstract class AbstractCog implements Cog {
 		return library;
 	}
 
-	@NonNull
-	protected CommandMeta metaMapper(@NonNull ParserParameters parameters) {
-		return SimpleCommandMeta.empty();
-	}
-
 	@Override
-	public @NonNull Collection<ApplicationCommand<?>> getApplicationCommands() {
-		if (!annotatedApplicationCommandsRegistered) {
-			annotatedApplicationCommandsRegistered = true;
-			applicationCommands.addAll(jdaParser.parse(this));
+	public @NonNull Collection<ApplicationCommand<?>> getCommands() {
+		if (!annotatedCommandsRegistered) {
+			annotatedCommandsRegistered = true;
+			commands.addAll(parser.parse(this));
 		}
-		return applicationCommands;
+		return commands;
 	}
 
-	@Override
-	public @NonNull Collection<Command<JDACommandSender>> getCustomCommands() {
-		if (!annotatedCustomCommandsRegistered) {
-			annotatedCustomCommandsRegistered = true;
-			customCommands.addAll(cloudParser.parse(this));
-		}
-		return customCommands;
+	protected void addCommand(@NonNull ApplicationCommand<?> commandData) {
+		commands.add(commandData);
 	}
 
-	protected void addApplicationCommand(@NonNull ApplicationCommand<?> commandData) {
-		applicationCommands.add(commandData);
-	}
-
-	protected void addCustomCommand(Command.@NonNull Builder<JDACommandSender> command) {
-		customCommands.add(command.build());
-	}
-
-	protected boolean areAnnotatedApplicationCommandsRegistered() {
-		return annotatedApplicationCommandsRegistered;
-	}
-
-	protected boolean areAnnotatedCustomCommandsRegistered() {
-		return annotatedCustomCommandsRegistered;
+	protected boolean areAnnotatedCommandsRegistered() {
+		return annotatedCommandsRegistered;
 	}
 }

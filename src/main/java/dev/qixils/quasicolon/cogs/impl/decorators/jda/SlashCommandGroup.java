@@ -1,12 +1,11 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.cogs.impl.decorators.jda;
 
-import net.dv8tion.jda.api.interactions.commands.Command;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.lang.annotation.ElementType;
@@ -15,23 +14,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for methods that represent interaction commands.
+ * Applied to classes to denote the parent command under which all slash command methods in the class are registered.
+ * This will also be prepended to command IDs when fetching translations.
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface InteractionCommandMethod {
+public @interface SlashCommandGroup {
 
 	/**
-	 * The command's syntax.
+	 * The name of the command group.
 	 *
-	 * @return command syntax
+	 * @return command group name
 	 */
 	@NonNull String value();
-
-	/**
-	 * The type of interaction command.
-	 *
-	 * @return interaction command type
-	 */
-	Command.@NonNull Type type() default Command.Type.MESSAGE;
 }

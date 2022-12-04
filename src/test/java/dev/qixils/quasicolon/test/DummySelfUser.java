@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.test;
@@ -75,20 +75,20 @@ public class DummySelfUser extends DummyUser implements SelfUser {
 
         @NotNull
         @Override
-        public AccountManager setCheck(BooleanSupplier checks) {
-            return this;
+        public DummyAccountManager setCheck(BooleanSupplier checks) {
+            return (DummyAccountManager) super.setCheck(checks);
         }
 
         @NotNull
         @Override
-        public AccountManager timeout(long timeout, @NotNull TimeUnit unit) {
-            return this;
+        public DummyAccountManager timeout(long timeout, @NotNull TimeUnit unit) {
+            return (DummyAccountManager) super.timeout(timeout, unit);
         }
 
-        @NotNull
+		@NotNull
         @Override
-        public AccountManager deadline(long timestamp) {
-            return this;
+        public DummyAccountManager deadline(long timestamp) {
+            return (DummyAccountManager) super.deadline(timestamp);
         }
 
         @NotNull

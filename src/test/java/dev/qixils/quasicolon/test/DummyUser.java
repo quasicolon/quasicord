@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.test;
@@ -9,9 +9,9 @@ package dev.qixils.quasicolon.test;
 import dev.qixils.quasicolon.test.actions.DummyRestAction;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -86,8 +86,8 @@ public class DummyUser implements User {
 
 	@NotNull
 	@Override
-	public RestAction<Profile> retrieveProfile() {
-		return new DummyRestAction<>(getJDA());
+	public CacheRestAction<Profile> retrieveProfile() {
+		return new DummyRestAction<>(jda);
 	}
 
 	@NotNull
@@ -105,7 +105,7 @@ public class DummyUser implements User {
 
 	@NotNull
 	@Override
-	public RestAction<PrivateChannel> openPrivateChannel() {
+	public CacheRestAction<PrivateChannel> openPrivateChannel() {
 		return new DummyRestAction<>(jda);
 	}
 

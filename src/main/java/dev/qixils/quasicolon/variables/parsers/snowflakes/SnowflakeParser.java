@@ -1,11 +1,12 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.variables.parsers.snowflakes;
 
+import com.google.errorprone.annotations.CheckReturnValue;
 import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.text.Text;
@@ -15,16 +16,15 @@ import dev.qixils.quasicolon.utils.PermissionUtil;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.IMentionable;
-import net.dv8tion.jda.api.entities.IPermissionContainer;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.channel.attribute.IPermissionContainer;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.Contract;
 
-import javax.annotation.CheckReturnValue;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;

@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.locale;
@@ -11,8 +11,8 @@ import dev.qixils.quasicolon.locale.impl.MutableContextImpl;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import reactor.core.publisher.Mono;
 
@@ -170,7 +170,11 @@ public interface Context {
 	 * @return a context
 	 */
 	static @NonNull Context fromMessage(@NonNull Message message) {
-		return new ImmutableContextImpl(message.getAuthor().getIdLong(), message.getTextChannel().getIdLong(), message.getGuild().getIdLong());
+		return new ImmutableContextImpl(
+				message.getAuthor().getIdLong(),
+				message.getChannel().getIdLong(),
+				message.isFromGuild() ? message.getGuild().getIdLong() : 0
+		);
 	}
 
 	/**

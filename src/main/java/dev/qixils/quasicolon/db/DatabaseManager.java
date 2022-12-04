@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.db;
@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.Closeable;
 import java.util.Locale;
 import java.util.Map;
@@ -34,7 +33,6 @@ import java.util.Objects;
 /**
  * Manages the {@link Quasicord Bot}'s database.
  */
-@ParametersAreNonnullByDefault
 public class DatabaseManager implements Closeable {
 	private final @NotNull CodecRegistry pojoRegistry = CodecRegistries.fromRegistries(MongoClientSettings.getDefaultCodecRegistry(),
 			CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build()));

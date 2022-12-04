@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.test;
@@ -14,21 +14,26 @@ import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.ApplicationInfo;
-import net.dv8tion.jda.api.entities.AudioChannel;
-import net.dv8tion.jda.api.entities.Category;
-import net.dv8tion.jda.api.entities.Emote;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Icon;
-import net.dv8tion.jda.api.entities.NewsChannel;
-import net.dv8tion.jda.api.entities.PrivateChannel;
 import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.ScheduledEvent;
 import net.dv8tion.jda.api.entities.SelfUser;
-import net.dv8tion.jda.api.entities.StageChannel;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.ThreadChannel;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.StageChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
+import net.dv8tion.jda.api.entities.sticker.StickerPack;
+import net.dv8tion.jda.api.entities.sticker.StickerSnowflake;
+import net.dv8tion.jda.api.entities.sticker.StickerUnion;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.hooks.IEventManager;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -38,6 +43,7 @@ import net.dv8tion.jda.api.managers.DirectAudioController;
 import net.dv8tion.jda.api.managers.Presence;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
+import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
 import net.dv8tion.jda.api.requests.restaction.CommandEditAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
@@ -259,6 +265,12 @@ public class DummyJDA implements JDA {
 
 	@NonNull
 	@Override
+	public RestAction<List<Command>> retrieveCommands(boolean withLocalizations) {
+		return new DummyRestAction<>(this, Collections.emptyList());
+	}
+
+	@NonNull
+	@Override
 	public RestAction<Command> retrieveCommandById(@NonNull String id) {
 		return new DummyRestAction<>(this);
 	}
@@ -325,7 +337,7 @@ public class DummyJDA implements JDA {
 
 	@NonNull
 	@Override
-	public RestAction<User> retrieveUserById(long id, boolean update) {
+	public CacheRestAction<User> retrieveUserById(long id) {
 		return new DummyRestAction<>(this);
 	}
 
@@ -349,6 +361,12 @@ public class DummyJDA implements JDA {
 	@NonNull
 	@Override
 	public SnowflakeCacheView<Role> getRoleCache() {
+		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
+	@NonNull
+	@Override
+	public SnowflakeCacheView<ScheduledEvent> getScheduledEventCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
@@ -390,20 +408,38 @@ public class DummyJDA implements JDA {
 
 	@NonNull
 	@Override
+	public SnowflakeCacheView<ForumChannel> getForumChannelCache() {
+		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
+	@NonNull
+	@Override
 	public SnowflakeCacheView<PrivateChannel> getPrivateChannelCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
 	@NonNull
 	@Override
-	public RestAction<PrivateChannel> openPrivateChannelById(long userId) {
+	public CacheRestAction<PrivateChannel> openPrivateChannelById(long userId) {
 		return new DummyRestAction<>(this);
 	}
 
 	@NonNull
 	@Override
-	public SnowflakeCacheView<Emote> getEmoteCache() {
+	public SnowflakeCacheView<RichCustomEmoji> getEmojiCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
+	@NonNull
+	@Override
+	public RestAction<StickerUnion> retrieveSticker(@NonNull StickerSnowflake sticker) {
+		return new DummyRestAction<>(this);
+	}
+
+	@NonNull
+	@Override
+	public RestAction<List<StickerPack>> retrieveNitroStickerPacks() {
+		return new DummyRestAction<>(this, Collections.emptyList());
 	}
 
 	@NonNull

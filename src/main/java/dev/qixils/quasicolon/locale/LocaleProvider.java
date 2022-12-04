@@ -1,7 +1,7 @@
 /*
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
 package dev.qixils.quasicolon.locale;
@@ -10,8 +10,8 @@ import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.locale.LocaleConfig.EntryType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
-import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +24,7 @@ import java.util.Map;
  * Provides the {@link Locale} selected by a user, channel, guild, or the default one.
  */
 public class LocaleProvider {
+	// TODO: cache in RAM (can be forever while the bot is still small and then we can add a timeout later)
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(LocaleProvider.class);
 	private static final @NonNull LocaleProvider DUMMY_INSTANCE = new DummyLocaleProvider(Locale.ROOT);
 	private static @NonNull LocaleProvider INSTANCE = DUMMY_INSTANCE;
