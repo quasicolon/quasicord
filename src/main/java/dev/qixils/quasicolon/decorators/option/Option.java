@@ -4,8 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.option;
+package dev.qixils.quasicolon.decorators.option;
 
+import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 
 import java.lang.annotation.ElementType;
@@ -17,7 +18,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation for parameters that represent
- * {@link dev.qixils.quasicolon.cogs.impl.decorators.slash.SlashCommand slash command}
+ * {@link SlashCommand slash command}
  * arguments (options).
  * <p>
  * The name and description of this option are taken from the translation file(s)
@@ -25,8 +26,9 @@ import java.lang.annotation.Target;
  *
  * @see ChannelTypes
  * @see Range
- * @see AutoCompleting
+ * @see AutoCompleteWith
  * @see Choice
+ * @see ConvertWith
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

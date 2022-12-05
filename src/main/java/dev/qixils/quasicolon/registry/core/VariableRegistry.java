@@ -6,9 +6,7 @@
 
 package dev.qixils.quasicolon.registry.core;
 
-import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.registry.impl.ClosableMappedRegistryImpl;
-import dev.qixils.quasicolon.variables.parsers.PrefixParser;
 import dev.qixils.quasicolon.variables.parsers.VariableParser;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -17,14 +15,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  */
 public final class VariableRegistry extends ClosableMappedRegistryImpl<VariableParser<?>> {
 
-	public final PrefixParser PREFIX;
-
-	VariableRegistry(@NonNull Quasicord quasicord) {
+	VariableRegistry() {
 		super("variables", true);
-		PREFIX = typedRegister("prefix", new PrefixParser(quasicord));
 	}
 
-	private <R extends VariableParser<?>> R typedRegister(@NonNull String key, @NonNull R value) {
+	public <R extends VariableParser<?>> R typedRegister(@NonNull String key, @NonNull R value) {
 		register(key, value);
 		return value;
 	}

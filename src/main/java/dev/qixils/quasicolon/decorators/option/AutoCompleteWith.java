@@ -4,16 +4,23 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.option;
+package dev.qixils.quasicolon.decorators.option;
 
-import dev.qixils.quasicolon.autocomplete.AutoCompleter;
+import dev.qixils.quasicolon.decorators.functional.AutoCompleter;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Denotes the class that should be used to generate tab completions for a {@link Option}.
  * This is only to be used by options whose {@link Option#type() type}
  * {@link net.dv8tion.jda.api.interactions.commands.OptionType#canSupportChoices() supports choices}.
  */
-public @interface AutoCompleting {
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AutoCompleteWith {
 
 	/**
 	 * The class to use for generating auto-complete suggestions.

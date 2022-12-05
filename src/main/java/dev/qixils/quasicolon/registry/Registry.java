@@ -8,6 +8,9 @@ package dev.qixils.quasicolon.registry;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
 /**
  * A generally static collection of unique objects which can be appended to and iterated over.
  *
@@ -40,5 +43,15 @@ public interface Registry<T> extends Iterable<T> {
 	 */
 	default boolean isClosed() {
 		return false;
+	}
+
+	/**
+	 * Streams this registry's values.
+	 *
+	 * @return a stream of this registry's values
+	 */
+	@NonNull
+	default Stream<T> stream() {
+		return StreamSupport.stream(spliterator(), false);
 	}
 }

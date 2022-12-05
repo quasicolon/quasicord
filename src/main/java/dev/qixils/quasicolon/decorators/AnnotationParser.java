@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators;
+package dev.qixils.quasicolon.decorators;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

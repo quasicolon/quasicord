@@ -4,10 +4,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.slash;
+package dev.qixils.quasicolon.decorators.slash;
 
-import dev.qixils.quasicolon.cogs.impl.decorators.option.Contextual;
-import dev.qixils.quasicolon.cogs.impl.decorators.option.Option;
+import dev.qixils.quasicolon.decorators.option.Contextual;
+import dev.qixils.quasicolon.decorators.option.Option;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

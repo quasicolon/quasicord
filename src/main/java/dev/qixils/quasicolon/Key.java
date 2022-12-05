@@ -130,7 +130,7 @@ public final class Key {
 	 * @param value     the translation key
 	 * @return a new {@link Key}
 	 */
-	public static @NonNull Key of(@NonNull String namespace, @NonNull String value) {
+	public static @NonNull Key key(@NonNull String namespace, @NonNull String value) {
 		return new Key(namespace, value);
 	}
 }

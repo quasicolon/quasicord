@@ -4,7 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.option;
+package dev.qixils.quasicolon.decorators.option;
+
+import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
@@ -14,7 +16,7 @@ import java.lang.annotation.Target;
 
 /**
  * Denotes a pre-defined choice that a user may select for this {@link Option} in a
- * {@link dev.qixils.quasicolon.cogs.impl.decorators.slash.SlashCommand SlashCommand}.
+ * {@link SlashCommand SlashCommand}.
  * <p>
  * While three different types of value methods are available for you to use, only the one matching the
  * {@link Option#type() type} specified in your {@link Option @Option} annotation will be utilized.

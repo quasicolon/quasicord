@@ -14,10 +14,10 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
 
-public abstract class RegistryImpl<T> extends AbstractRegistryImpl<T> {
+public class RegistryImpl<T> extends AbstractRegistryImpl<T> {
 	private final Set<T> values = new HashSet<>();
 
-	protected RegistryImpl(@NonNull String id) {
+	public RegistryImpl(@NonNull String id) {
 		super(id);
 	}
 

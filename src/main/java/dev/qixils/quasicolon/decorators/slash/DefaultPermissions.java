@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.slash;
+package dev.qixils.quasicolon.decorators.slash;
 
 import net.dv8tion.jda.api.Permission;
 

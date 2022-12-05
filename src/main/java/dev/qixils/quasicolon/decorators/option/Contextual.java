@@ -4,15 +4,22 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.option;
+package dev.qixils.quasicolon.decorators.option;
 
-// TODO: optional value denoting a custom class for option parsing
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Annotations for parameters that represent data obtained from an
  * {@link net.dv8tion.jda.api.interactions.Interaction Interaction}.
  * For example, a {@link net.dv8tion.jda.api.entities.User User} parameter annotated with this annotation will be
  * provided with the user who invoked the interaction.
+ *
+ * @see ConvertWith
  */
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Contextual {
 }

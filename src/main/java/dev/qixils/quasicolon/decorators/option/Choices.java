@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.slash;
+package dev.qixils.quasicolon.decorators.option;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,17 +12,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Applied to classes to denote the parent command under which all slash command methods in the class are registered.
- * This will also be prepended to command IDs when fetching translations.
+ * The holder for {@link Choice} annotations.
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface SlashCommandGroup {
+public @interface Choices {
 
 	/**
-	 * The name of the command group.
+	 * The {@link Choice}s.
 	 *
-	 * @return command group name
+	 * @return choices
 	 */
-	String value();
+	Choice[] value();
 }
