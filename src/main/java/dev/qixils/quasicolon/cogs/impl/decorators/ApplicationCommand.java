@@ -4,8 +4,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.jda;
+package dev.qixils.quasicolon.cogs.impl.decorators;
 
+import dev.qixils.quasicolon.cogs.impl.decorators.option.Contextual;
+import dev.qixils.quasicolon.cogs.impl.decorators.slash.SlashCommand;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.Command;
 

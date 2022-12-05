@@ -4,9 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.cloud;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
+package dev.qixils.quasicolon.cogs.impl.decorators.option;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -14,17 +12,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for Cloud commands that return a {@link dev.qixils.quasicolon.text.Text} object which
- * should be sent as a Discord message.
+ * The holder for {@link Choice} annotations.
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CloudAutoSend {
+public @interface Choices {
 
 	/**
-	 * The type of message to send.
+	 * The {@link Choice}s.
 	 *
-	 * @return message type
+	 * @return choices
 	 */
-	@NonNull CloudSendType value();
+	Choice[] value();
 }

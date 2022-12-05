@@ -4,7 +4,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.jda;
+package dev.qixils.quasicolon.cogs.impl.decorators.option;
+
+// TODO: optional value denoting a custom class for option parsing
 
 /**
  * Annotations for parameters that represent data obtained from an

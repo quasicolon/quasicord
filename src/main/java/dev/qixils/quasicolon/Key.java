@@ -24,7 +24,7 @@ import java.util.Locale;
  * </p>
  * The namespace always corresponds to a registered
  * {@link dev.qixils.quasicolon.locale.TranslationProvider TranslationProvider}.
- * For convenience, this
+ * For convenience, this <!-- TODO: I've just discovered this incomplete sentence and I've no idea what it's meant to say. -->
  */
 @EqualsAndHashCode
 @ToString

@@ -9,7 +9,7 @@ package dev.qixils.quasicolon.cogs.impl;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.Cog;
-import dev.qixils.quasicolon.cogs.impl.decorators.jda.AnnotationParser;
+import dev.qixils.quasicolon.cogs.impl.decorators.AnnotationParser;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

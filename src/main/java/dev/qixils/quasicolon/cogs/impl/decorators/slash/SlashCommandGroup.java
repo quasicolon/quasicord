@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.cogs.impl.decorators.jda;
+package dev.qixils.quasicolon.cogs.impl.decorators.slash;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
