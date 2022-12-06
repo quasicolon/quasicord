@@ -13,32 +13,46 @@ import dev.qixils.quasicolon.locale.translation.Translation;
 import dev.qixils.quasicolon.locale.translation.impl.PluralTranslationImpl;
 import dev.qixils.quasicolon.locale.translation.impl.SingleTranslationImpl;
 import dev.qixils.quasicolon.locale.translation.impl.UnknownTranslationImpl;
+import net.dv8tion.jda.api.interactions.DiscordLocale;
+import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.regex.Pattern;
 
 /**
  * Provides the translation(s) for a key inside the configured namespace.
  * @see TranslationProvider#TranslationProvider(String, Locale)  TranslationProvider constructor
+ * @see LocalizationFunction
  */
 public final class TranslationProvider {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(TranslationProvider.class);
 	private final @NonNull String namespace;
 	private final @NonNull Locale defaultLocale;
-	private final @NonNull Map<Locale, Map<String, ?>> translations = new HashMap<>(1);
+	private final @NonNull Map<String, Map<Locale, ?>> allTranslations = new HashMap<>();
+	private final @NonNull Map<String, Map<DiscordLocale, String>> discordTranslations = new HashMap<>();
 
 	/**
 	 * Creates a new translation provider for the given resource source and default locale.
 	 * <p>
 	 * Your bot or plugin should store its language files inside the directory
-	 * {@code src/main/resources/langs/&lt;namespace&gt;}, where {@code &lt;namespace&gt;} is the
+	 * {@code src/main/resources/langs/<namespace>}, where {@code <namespace>} is the
 	 * same as the string you pass in to the {@code namespace} parameter.
 	 * </p>
 	 * <b>Note:</b> The {@code namespace} parameter is converted to lowercase. Usage of
@@ -47,9 +61,117 @@ public final class TranslationProvider {
 	 * @param namespace     the directory in which the translations are stored
 	 * @param defaultLocale the default locale to use if no translation is found for the current locale
 	 */
-	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale) {
+	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale) throws IOException {
 		this.namespace = namespace.toLowerCase(Locale.ROOT);
 		this.defaultLocale = defaultLocale;
+		loadTranslations();
+	}
+
+	/**
+	 * Fetches a list of alternative locales for the given locale.
+	 *
+	 * @param locale the locale to fetch alternatives for
+	 * @return a list of alternative locales
+	 */
+	private static @NonNull List<Locale> getAlternatives(@NonNull Locale locale) {
+		// ResourceBundle.Control has a great algorithm for searching for the best locale which for some reason is
+		//  nearly impossible to use! but I figured it out!
+		//  fun fact: the message accepts a string parameter and does a null check on it but doesn't actually use it lol
+		List<Locale> candidates = new ArrayList<>(ResourceBundle.Control.getControl(ResourceBundle.Control.FORMAT_DEFAULT).getCandidateLocales("", locale));
+		candidates.remove(candidates.size() - 1); // remove the ROOT locale
+		return candidates;
+	}
+
+	/**
+	 * Fetches a list of alternative locales for the given locale with the default locale included.
+	 *
+	 * @param locale the locale to fetch alternatives for
+	 * @return a list of alternative locales
+	 */
+	private @NonNull List<Locale> getAlternativesWithDefault(@NonNull Locale locale) {
+		List<Locale> alternatives = getAlternatives(locale);
+		alternatives.add(defaultLocale);
+		return alternatives;
+	}
+
+	/**
+	 * Fetches a {@link DiscordLocale} equivalent to the given {@link Locale}.
+	 *
+	 * @param locale the locale to convert
+	 * @return a Discord locale
+	 */
+	private static @NonNull DiscordLocale getDiscordLocale(@NonNull Locale locale) {
+		for (Locale variant : getAlternatives(locale)) {
+			DiscordLocale discordLocale = DiscordLocale.from(variant);
+			if (discordLocale != DiscordLocale.UNKNOWN)
+				return discordLocale;
+		}
+		return DiscordLocale.UNKNOWN;
+	}
+
+	/**
+	 * Loads translations from the configured namespace.
+	 */
+	@SuppressWarnings("unchecked")
+	public void loadTranslations() throws IOException {
+		// reset maps
+		allTranslations.clear();
+		discordTranslations.clear();
+
+		// iterate through all .yaml files in the `langs/$namespace` resource directory
+		// TODO: if this fails, try moving the langs folder into META-INF (and updating the corresponding code paths).
+		//  seems to be working for now tho
+		Yaml yaml = new Yaml();
+		Reflections reflections = new Reflections(new ConfigurationBuilder()
+				.addScanners(Scanners.Resources)
+				.forPackage("langs." + namespace));
+		for (String file : reflections.getResources(Pattern.compile(".+\\.ya?ml"))) {
+			// parse locale from filename
+			String languageTag = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.'));
+			Locale locale = Locale.forLanguageTag(languageTag);
+			DiscordLocale discordLocale = getDiscordLocale(locale);
+
+			// load file
+			try (InputStream inputStream = ClassLoader.getSystemResourceAsStream(file)) {
+				if (inputStream == null) {
+					logger.warn("Failed to load translations for locale {} in namespace {}: file not found", locale, namespace);
+					continue;
+				}
+				Map<String, Object> translationMap = yaml.load(inputStream);
+
+				// some language files are nested inside the language code, so we need to extract
+				// the inner map
+				if (translationMap.containsKey(languageTag))
+					translationMap = (Map<String, Object>) translationMap.get(languageTag);
+
+				// add translations to maps
+				for (Map.Entry<String, Object> entry : translationMap.entrySet()) {
+					String key = entry.getKey();
+					Object value = entry.getValue();
+					// type-checking here feels kinda redundant, but I suppose it's good
+					//  to warn developers of improper i18n files earlier rather than later
+					if (value instanceof String translation) {
+						// single translation
+						Map<Locale, String> translations = (Map<Locale, String>) this.allTranslations.computeIfAbsent(key, k -> new HashMap<>());
+						translations.put(locale, translation);
+						if (discordLocale == DiscordLocale.UNKNOWN)
+							continue;
+						Map<DiscordLocale, String> discordTranslations = this.discordTranslations.computeIfAbsent(key, k -> new HashMap<>());
+						discordTranslations.put(discordLocale, translation);
+					} else if (value instanceof Map) {
+						// plural translation
+						Map<Locale, Map<String, String>> translations = (Map<Locale, Map<String, String>>) allTranslations.computeIfAbsent(key, k -> new HashMap<>());
+						translations.put(locale, (Map<String, String>) value);
+						// (discord doesn't support plural translations)
+					} else {
+						logger.warn("Invalid translation value for key '{}' in {} file '{}': {}", key, namespace, file, value);
+					}
+				}
+
+				// log
+				logger.info("Loaded {} translations for locale {} in namespace {}", translationMap.size(), locale, namespace);
+			}
+		}
 	}
 
 	/**
@@ -61,56 +183,45 @@ public final class TranslationProvider {
 		return namespace;
 	}
 
-	private @NonNull Translation getTranslation(@NonNull String key, @NonNull Locale locale, @NonNull Locale requestedLocale) {
-		if (!translations.containsKey(locale)) {
-			// load the translations for the given locale
-			Yaml yaml = new Yaml();
-			String languageCode = locale.getLanguage().toLowerCase(Locale.ROOT); // TODO: try variants as well (i.e. en_US)
-			InputStream inputStream = ClassLoader.getSystemResourceAsStream("langs/" + namespace + '/' + languageCode + ".yaml"); // TODO: test this
+	private @Nullable Translation tryGetTranslation(@NonNull String key, @NonNull Locale locale, @NonNull Locale requestedLocale) {
+		// get the translation map
+		// (null check was performed in caller)
+		Map<Locale, ?> translations = allTranslations.get(key);
 
-			if (inputStream == null) {
-				logger.warn("No translation file for locale " + languageCode + " found");
-				translations.put(locale, Collections.emptyMap());
-			} else {
-				// load the translations
-				Map<String, Object> translationMap = yaml.load(inputStream);
-				// some language files are nested inside the language code, so we need to extract
-				// the inner map
-				// TODO: this should probably be dumber (i.e. always look for a nested map if the
-				//    outer map's size is 1 instead of just trying to grab the inner map via
-				//    languageCode)
-				if (translationMap.containsKey(languageCode))
-					translationMap = (Map<String, Object>) translationMap.get(languageCode);
-				// add the translation map to the cache
-				translations.put(locale, translationMap);
-			}
-		}
+		// check if there is a translation for the given locale
+		if (!translations.containsKey(locale))
+			return null;
 
-		// get the translation
-		Map<String, ?> localeTranslations = translations.get(locale);
-		if (!localeTranslations.containsKey(key)) {
-			// key does not exist in requested locale
-			if (locale.equals(defaultLocale))
-				// key does not exist in default locale either; return unknown translation
-				return new UnknownTranslationImpl(key, locale, requestedLocale);
+		// parse the translation
+		Object translation = translations.get(locale);
+		if (translation instanceof String value)
+			return new SingleTranslationImpl(key, locale, requestedLocale, value);
 
-			return getTranslation(key, defaultLocale);
-		}
-
-		Object translation = localeTranslations.get(key);
-		if (translation instanceof String)
-			return new SingleTranslationImpl(key, locale, requestedLocale, (String) translation);
-		else if (translation instanceof Map) {
+		if (translation instanceof Map) {
 			//noinspection unchecked
 			Map<String, String> stringMap = (Map<String, String>) translation;
 			return PluralTranslationImpl.fromStringMap(key, locale, requestedLocale, stringMap);
-		} else {
-			throw new IllegalStateException("Translation for key " + key + " in " + locale + " is not a string or map");
 		}
+
+		// this should never happen, but just in case
+		logger.warn("Invalid translation value for key '{}' in {} locale '{}': {}", key, namespace, locale, translation);
+		return null;
 	}
 
 	private @NonNull Translation getTranslation(@NonNull String key, @NonNull Locale locale) {
-		return getTranslation(key, locale, locale);
+		// ensure the key is valid
+		if (!allTranslations.containsKey(key))
+			return new UnknownTranslationImpl(key, locale);
+
+		// search for a translation
+		for (Locale variant : getAlternativesWithDefault(locale)) {
+			Translation translation = tryGetTranslation(key, variant, locale);
+			if (translation != null)
+				return translation;
+		}
+
+		// no translation found
+		return new UnknownTranslationImpl(key, locale);
 	}
 
 	/**
@@ -123,8 +234,8 @@ public final class TranslationProvider {
 	 */
 	public @NonNull SingleTranslation getSingle(@NonNull String key, @NonNull Locale locale) throws IllegalArgumentException {
 		Object translation = getTranslation(key, locale);
-		if (translation instanceof SingleTranslation)
-			return (SingleTranslation) translation;
+		if (translation instanceof SingleTranslation value)
+			return value;
 		throw new IllegalArgumentException("Translation for key " + key + " is not a string");
 	}
 
@@ -138,9 +249,20 @@ public final class TranslationProvider {
 	 */
 	public @NonNull PluralTranslation getPlural(@NonNull String key, @NonNull Locale locale) throws IllegalArgumentException {
 		Object translation = getTranslation(key, locale);
-		if (translation instanceof PluralTranslation)
-			return (PluralTranslation) translation;
+		if (translation instanceof PluralTranslation value)
+			return value;
 		throw new IllegalArgumentException("Translation for key " + key + " is not a plural map");
+	}
+
+	/**
+	 * Gets the Discord translation map for the given key.
+	 *
+	 * @param key the translation key
+	 * @return the translation map
+	 */
+	@NotNull
+	public Map<DiscordLocale, String> getDiscordTranslations(@NotNull String key) {
+		return discordTranslations.getOrDefault(key, Collections.emptyMap());
 	}
 
 	// static instance management

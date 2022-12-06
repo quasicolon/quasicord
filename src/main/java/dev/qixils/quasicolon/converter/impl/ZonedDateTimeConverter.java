@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -28,7 +27,7 @@ import static dev.qixils.quasicolon.Key.library;
 public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> {
 	private final @NonNull Class<? extends Interaction> interactionClass = Interaction.class;
 	private final @NonNull Class<String> inputClass = String.class;
-	private final @NonNull Class<Instant> outputClass = Instant.class;
+	private final @NonNull Class<ZonedDateTime> outputClass = ZonedDateTime.class;
 	private final @NonNull Quasicord library;
 
 	private static final Pattern[] DATE_PATTERNS = {

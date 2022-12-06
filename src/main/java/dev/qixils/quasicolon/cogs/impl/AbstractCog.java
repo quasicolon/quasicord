@@ -7,8 +7,8 @@
 package dev.qixils.quasicolon.cogs.impl;
 
 import dev.qixils.quasicolon.Quasicord;
-import dev.qixils.quasicolon.cogs.ApplicationCommand;
 import dev.qixils.quasicolon.cogs.Cog;
+import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.decorators.AnnotationParser;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
@@ -30,7 +30,7 @@ public abstract class AbstractCog implements Cog {
 	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
 	protected final @NonNull AnnotationParser parser;
 	protected final @NonNull Quasicord library;
-	private final @NonNull List<ApplicationCommand<?>> commands = new ArrayList<>();
+	private final @NonNull List<Command<?>> commands = new ArrayList<>();
 	private boolean annotatedCommandsRegistered = false;
 
 	protected AbstractCog(@NonNull Quasicord library) {
@@ -45,7 +45,7 @@ public abstract class AbstractCog implements Cog {
 	}
 
 	@Override
-	public @NonNull Collection<ApplicationCommand<?>> getCommands() {
+	public @NonNull Collection<Command<?>> getCommands() {
 		if (!annotatedCommandsRegistered) {
 			annotatedCommandsRegistered = true;
 			commands.addAll(parser.parse(this));
@@ -53,7 +53,7 @@ public abstract class AbstractCog implements Cog {
 		return commands;
 	}
 
-	protected void addCommand(@NonNull ApplicationCommand<?> commandData) {
+	protected void addCommand(@NonNull Command<?> commandData) {
 		commands.add(commandData);
 	}
 

@@ -38,5 +38,5 @@ public interface Cog {
 	 * @return provided application commands
 	 */
 	@NonNull
-	Collection<ApplicationCommand<?>> getCommands();
+	Collection<Command<?>> getCommands();
 }

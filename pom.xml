@@ -86,7 +86,7 @@
         <dependency>
             <groupId>net.xyzsd.plurals</groupId>
             <artifactId>cldr-plural-rules</artifactId>
-            <version>3.0</version>
+            <version>41</version>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
@@ -98,6 +98,22 @@
             <artifactId>annotations</artifactId>
             <version>23.0.0</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.5</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

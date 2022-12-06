@@ -29,6 +29,7 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -56,7 +57,7 @@ public class Quasicord {
 	protected final @NonNull TranslationProvider translationProvider;
 	protected final @NonNull LocaleProvider localeProvider;
 
-	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws ConfigurateException, LoginException, InterruptedException {
+	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
 		// misc initialization
 		this.namespace = namespace;
 
@@ -318,7 +319,7 @@ public class Quasicord {
 		 * @throws InterruptedException  if the JDA login is interrupted
 		 * @throws ConfigurateException  if the configuration fails
 		 */
-		public @NonNull Quasicord build() throws IllegalStateException, LoginException, InterruptedException, ConfigurateException {
+		public @NonNull Quasicord build() throws IllegalStateException, LoginException, InterruptedException, IOException {
 			if (namespace == null)
 				throw new IllegalStateException("namespace must be set");
 			return new Quasicord(namespace, defaultLocale, configRoot, activity, eventHandler);

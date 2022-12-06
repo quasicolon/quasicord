@@ -7,7 +7,7 @@
 package dev.qixils.quasicolon.registry.core;
 
 import dev.qixils.quasicolon.Quasicord;
-import dev.qixils.quasicolon.cogs.ApplicationCommand;
+import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.cogs.GlobalCog;
 import dev.qixils.quasicolon.registry.impl.ClosableRegistryImpl;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -29,18 +29,18 @@ public class GlobalCogRegistry extends ClosableRegistryImpl<GlobalCog> {
 	@Override
 	public void close() {
 		super.close();
-		List<ApplicationCommand<?>> applicationCommands = new ArrayList<>();
+		List<Command<?>> commands = new ArrayList<>();
 		for (GlobalCog cog : this) {
 			try {
 				cog.onLoad();
-				applicationCommands.addAll(cog.getCommands());
+				commands.addAll(cog.getCommands());
 			} catch (Exception e) {
 				quasicord.getLogger().error("Failed to load cog " + cog.getClass().getName(), e);
 				// TODO: undo loading?
 			}
 		}
 		quasicord.getJDA().updateCommands()
-				.addCommands(applicationCommands.stream().map(ApplicationCommand::getCommandData).toList())
+				.addCommands(commands.stream().map(Command::getCommandData).toList())
 				.queue(); // TODO: only update if there are new/updated commands
 		// TODO: process command events
 	}

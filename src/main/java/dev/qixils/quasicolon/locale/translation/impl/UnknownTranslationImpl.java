@@ -19,12 +19,11 @@ public class UnknownTranslationImpl extends AbstractTranslation implements Unkno
 	/**
 	 * Initializes a new unknown translation.
 	 *
-	 * @param key    the key of the translation
-	 * @param locale the locale of the translation
+	 * @param key             the key of the translation
+	 * @param requestedLocale the requested locale
 	 */
 	public UnknownTranslationImpl(@NonNull String key,
-								  @NonNull Locale locale,
 								  @NonNull Locale requestedLocale) {
-		super(key, locale, requestedLocale);
+		super(key, Locale.ROOT, requestedLocale);
 	}
 }

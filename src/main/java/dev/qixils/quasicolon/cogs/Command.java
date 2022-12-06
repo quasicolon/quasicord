@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 /**
  * A wrapper for {@link CommandData} which defines an executor for the command.
  */
-public interface ApplicationCommand<I extends CommandInteraction> extends Consumer<I> {
+public interface Command<I extends CommandInteraction> extends Consumer<I> {
 
 	/**
 	 * Gets the data (i.e. the defined arguments) for the command.

@@ -34,6 +34,14 @@ public @interface SlashCommand {
 	 * The ID of the command in your translation file.
 	 * <p>
 	 * Should be lowercase and alphanumeric.
+	 * </p>
+	 * Dots indicate a subcommand group, i.e. "pronouns.add".
+	 * Note that the parent of a subcommand group cannot itself be a command,
+	 * i.e. you cannot have commands both for "pronouns" and "pronouns.add".
+	 * <p>
+	 * See the Javadocs of {@link dev.qixils.quasicolon.locale.TranslationProvider TranslationProvider}
+	 * and {@link net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction LocalizationFunction}
+	 * for more information on how to use this.
 	 *
 	 * @return command ID
 	 */

@@ -32,6 +32,10 @@ public @interface Choice {
 	 * The ID of the choice in your translation file.
 	 * <p>
 	 * Should be lowercase and alphanumeric.
+	 * </p>
+	 * See the Javadocs of {@link dev.qixils.quasicolon.locale.TranslationProvider TranslationProvider}
+	 * and {@link net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction LocalizationFunction}
+	 * for more information on how to use this.
 	 *
 	 * @return choice ID
 	 */

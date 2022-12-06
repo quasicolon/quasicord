@@ -6,17 +6,17 @@
 
 package dev.qixils.quasicolon.cogs.impl;
 
-import dev.qixils.quasicolon.cogs.ApplicationCommand;
+import dev.qixils.quasicolon.cogs.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class AbstractApplicationCommand<I extends CommandInteraction> implements ApplicationCommand<I> {
+public abstract class AbstractCommand<I extends CommandInteraction> implements Command<I> {
 	private final @NonNull CommandData commandData;
 	private final @NonNull Class<I> interactionClass;
 
-	public AbstractApplicationCommand(@NonNull CommandData commandData, @NonNull Class<I> interactionClass) {
+	public AbstractCommand(@NonNull CommandData commandData, @NonNull Class<I> interactionClass) {
 		this.commandData = commandData;
 		this.interactionClass = interactionClass;
 	}

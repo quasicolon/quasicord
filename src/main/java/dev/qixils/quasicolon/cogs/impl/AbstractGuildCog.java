@@ -7,7 +7,7 @@
 package dev.qixils.quasicolon.cogs.impl;
 
 import dev.qixils.quasicolon.Quasicord;
-import dev.qixils.quasicolon.cogs.ApplicationCommand;
+import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.cogs.GuildCog;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -29,10 +29,10 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 		onLoad();
 
 		// register commands
-		Collection<ApplicationCommand<?>> applicationCommands = getCommands();
+		Collection<Command<?>> commands = getCommands();
 		getGuild().ifPresentOrElse(
 				guild -> guild.updateCommands()
-						.addCommands(applicationCommands.stream().map(ApplicationCommand::getCommandData).toList())
+						.addCommands(commands.stream().map(Command::getCommandData).toList())
 						.queue(), // TODO: only update if there are new/updated commands
 				// TODO: process command events
 				() -> library.getLogger().warn("Guild {} not found when loading cog {}", guildId, getClass().getSimpleName())

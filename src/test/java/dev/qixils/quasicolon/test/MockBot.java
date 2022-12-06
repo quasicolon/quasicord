@@ -11,14 +11,14 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.configurate.ConfigurateException;
 
 import javax.security.auth.login.LoginException;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Locale;
 
 public class MockBot extends Quasicord {
-    public MockBot() throws LoginException, ConfigurateException, InterruptedException {
+    public MockBot() throws LoginException, IOException, InterruptedException {
         super("mockbot", Locale.ROOT, Paths.get(".").toAbsolutePath(), null, null);
     }
 
