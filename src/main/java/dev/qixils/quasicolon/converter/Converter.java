@@ -42,4 +42,22 @@ public interface Converter<I, O> {
 	 */
 	@NonNull
 	O convert(@NonNull Interaction interaction, @NonNull I input);
+
+	/**
+	 * Determines whether this converter can be converted to in a converter chain.
+	 *
+	 * @return true if this converter can be converted to
+	 */
+	default boolean canConvertTo() {
+		return true;
+	}
+
+	/**
+	 * Determines whether this converter can be converted from in a converter chain.
+	 *
+	 * @return true if this converter can be converted from
+	 */
+	default boolean canConvertFrom() {
+		return true;
+	}
 }

@@ -20,9 +20,15 @@ import java.lang.annotation.Target;
 public @interface SlashCommandGroup {
 
 	/**
-	 * The name of the command group.
+	 * The ID of the command group in your translation file.
+	 * <p>
+	 * Should be lowercase and alphanumeric.
+	 * </p>
+	 * See the Javadocs of {@link dev.qixils.quasicolon.locale.TranslationProvider TranslationProvider}
+	 * and {@link net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction LocalizationFunction}
+	 * for more information on how to use this.
 	 *
-	 * @return command group name
+	 * @return command group ID
 	 */
 	String value();
 }

@@ -22,9 +22,12 @@ import java.lang.annotation.Target;
 public @interface ConvertWith {
 
 	/**
-	 * The converter class.
-	 * The class must have a constructor with no parameters, or one parameter of type
-	 * {@link dev.qixils.quasicolon.Quasicord Quasicord}.
+	 * The converter class. The class should have a public constructor which accepts one of the following:
+	 * <ul>
+	 *     <li>no arguments</li>
+	 *     <li>one argument of type {@link dev.qixils.quasicolon.Quasicord Quasicord}</li>
+	 *     <li>one argument of type {@link dev.qixils.quasicolon.cogs.Cog Cog}</li>
+	 * </ul>
 	 *
 	 * @return converter class
 	 */

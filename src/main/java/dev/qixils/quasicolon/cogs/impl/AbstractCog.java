@@ -35,7 +35,7 @@ public abstract class AbstractCog implements Cog {
 
 	protected AbstractCog(@NonNull Quasicord library) {
 		this.library = library;
-		this.parser = new AnnotationParser();
+		this.parser = new AnnotationParser(this);
 	}
 
 	@NotNull

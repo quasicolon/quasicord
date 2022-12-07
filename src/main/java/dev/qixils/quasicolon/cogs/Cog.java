@@ -28,6 +28,17 @@ public interface Cog {
 	Quasicord getLibrary();
 
 	/**
+	 * Returns the namespace that this cog's translatable strings (i.e. command names) are registered under.
+	 * Defaults to {@link Quasicord#getNamespace()}.
+	 *
+	 * @return namespace
+	 */
+	@NonNull
+	default String getNamespace() {
+		return getLibrary().getNamespace();
+	}
+
+	/**
 	 * Called when the cog is loaded.
 	 */
 	void onLoad();

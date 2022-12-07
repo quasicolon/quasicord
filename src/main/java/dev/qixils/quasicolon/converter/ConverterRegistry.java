@@ -8,7 +8,22 @@ package dev.qixils.quasicolon.converter;
 
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.converter.impl.ZonedDateTimeConverter;
+import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.registry.impl.RegistryImpl;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
+import net.dv8tion.jda.api.entities.channel.concrete.Category;
+import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.StageChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,6 +35,9 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
+import static dev.qixils.quasicolon.converter.ConverterImpl.contextual;
 
 public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 
@@ -27,6 +45,24 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 
 	public ConverterRegistry(@NonNull Quasicord library) {
 		super("converters");
+		// contextual converters
+		register(contextual(Member.class, Interaction::getMember));
+		register(contextual(User.class, Interaction::getUser));
+		register(contextual(Guild.class, Interaction::getGuild));
+		register(contextual(Channel.class, Interaction::getChannel));
+		register(contextual(ChannelType.class, Interaction::getChannelType));
+		register(contextual(Context.class, Context::fromInteraction));
+		register(contextual(DiscordLocale.class, Interaction::getUserLocale));
+		register(new ConverterImpl<>(Context.class, Locale.class, (it, ctx) -> ctx.locale(library.getLocaleProvider()).block())); // TODO: async
+		// channels
+		register(ConverterImpl.channel(TextChannel.class));
+		register(ConverterImpl.channel(PrivateChannel.class));
+		register(ConverterImpl.channel(VoiceChannel.class));
+		register(ConverterImpl.channel(Category.class));
+		register(ConverterImpl.channel(NewsChannel.class));
+		register(ConverterImpl.channel(StageChannel.class));
+		register(ConverterImpl.channel(ThreadChannel.class));
+		register(ConverterImpl.channel(ForumChannel.class));
 		// zoned date time and misc conversions to other java time types
 		ZONED_DATE_TIME = typedRegister(new ZonedDateTimeConverter(library));
 		register(new ConverterImpl<>(ZonedDateTime.class, Instant.class, (it, zdt) -> zdt.toInstant()));
@@ -44,11 +80,10 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 	@Nullable
 	public <I, O> Converter<I, O> getConverter(@NonNull Class<I> inputClass, @NonNull Class<O> outputClass) {
 		//noinspection unchecked
-		return (Converter<I, O>) stream().filter(converter -> {
-			if (!converter.getInputClass().isAssignableFrom(inputClass))
-				return false;
-			return outputClass.isAssignableFrom(converter.getOutputClass());
-		}).findAny().orElse(null);
+		return (Converter<I, O>) stream().filter(converter ->
+				converter.getInputClass().isAssignableFrom(inputClass)
+						&& outputClass.isAssignableFrom(converter.getOutputClass())
+		).findAny().orElse(null);
 	}
 
 	@Nullable
@@ -62,6 +97,7 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 			return direct;
 
 		// if there's no direct converter, we need to find a chain of converters
+		List<Converter<?, ?>> encounteredConverters = new ArrayList<>();
 		List<FindNode> nodes = stream()
 				.filter(converter -> converter.getInputClass().isAssignableFrom(inputClass))
 				.map(converter -> new FindNode(converter, null))
@@ -70,9 +106,13 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 			List<FindNode> newNodes = new ArrayList<>();
 			for (FindNode node : nodes) {
 				for (Converter<?, ?> converter : this) {
-					if (node.isDuplicate(converter.getOutputClass()))
+					if (!converter.canConvertTo())
+						continue;
+					if (encounteredConverters.contains(converter))
 						continue;
 					if (!node.converter().getOutputClass().isAssignableFrom(converter.getInputClass()))
+						continue;
+					if (node.isDuplicate(converter.getOutputClass()))
 						continue;
 
 					FindNode newNode = new FindNode(converter, node);
@@ -80,7 +120,9 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 						// we found a chain! | TODO: cache
 						return new ChainConverter<>(inputClass, outputClass, newNode);
 					}
-					newNodes.add(newNode);
+					if (converter.canConvertFrom())
+						newNodes.add(newNode);
+					encounteredConverters.add(converter);
 				}
 			}
 			nodes = newNodes;
@@ -102,12 +144,6 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		private boolean isDuplicate(@NonNull Class<?> type) {
 			FindNode node = this;
 			while (node != null) {
-				// TODO: equals or isAssignableFrom?? honestly i'm wondering this about this whole class
-				//   I think i've just been using isAssignableFrom for easy conversion from, say, TextChannel to MessageableGuildChannel
-				//   But then that creates ambiguous situations like someone asking for just any Channel... it could use either the TextChannel
-				//    or VoiceChannel converter, and it's not clear which one should be used
-				//   I think it might be better to just use equals and register converters manually for all the main JDA types
-				//   but i'm leaving this comment here until i make up my mind
 				if (node.converter.getInputClass().equals(type) || node.converter.getOutputClass().equals(type))
 					return true;
 				node = node.parent;

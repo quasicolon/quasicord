@@ -183,6 +183,15 @@ public final class TranslationProvider {
 		return namespace;
 	}
 
+	/**
+	 * Gets the default locale of this translation provider.
+	 *
+	 * @return the default locale
+	 */
+	public @NonNull Locale getDefaultLocale() {
+		return defaultLocale;
+	}
+
 	private @Nullable Translation tryGetTranslation(@NonNull String key, @NonNull Locale locale, @NonNull Locale requestedLocale) {
 		// get the translation map
 		// (null check was performed in caller)
