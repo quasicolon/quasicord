@@ -8,8 +8,10 @@ package dev.qixils.quasicolon.decorators;
 
 import dev.qixils.quasicolon.cogs.Cog;
 import dev.qixils.quasicolon.cogs.Command;
+import dev.qixils.quasicolon.cogs.impl.AbstractCommand;
 import dev.qixils.quasicolon.converter.Converter;
-import dev.qixils.quasicolon.converter.ConverterImpl;
+import dev.qixils.quasicolon.converter.VoidConverter;
+import dev.qixils.quasicolon.converter.VoidConverterImpl;
 import dev.qixils.quasicolon.decorators.option.AutoCompleteFrom;
 import dev.qixils.quasicolon.decorators.option.AutoCompleteWith;
 import dev.qixils.quasicolon.decorators.option.ChannelTypes;
@@ -32,10 +34,13 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +52,7 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public final class AnnotationParser {
@@ -85,11 +91,11 @@ public final class AnnotationParser {
 		return commands;
 	}
 
-	private Command<?> parseApplicationCommand(Object object, Method method, ApplicationCommand annotation) {
+	private Command<ContextInteraction<?>> parseApplicationCommand(Object object, Method method, ApplicationCommand annotation) {
 		throw new UnsupportedOperationException("TODO");
 	}
 
-	private Command<?> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
+	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
 		// TODO: command groups (for i18n ID and, well, grouping)
 
 		// get i18n
@@ -127,7 +133,7 @@ public final class AnnotationParser {
 
 		// parameters
 		// TODO: instead of Converter array, maybe needs to be a wrapper which lists the name of the parameter (or null for context)? idk yet
-		Converter<?, ?>[] converters = new Converter<?, ?>[method.getParameterCount()];
+		ConverterData[] converters = new ConverterData[method.getParameterCount()];
 		for (int i = 0; i < method.getParameterCount(); i++) {
 			// set converter
 			Parameter parameter = method.getParameters()[i];
@@ -136,24 +142,31 @@ public final class AnnotationParser {
 			if (contextual != null && option != null)
 				throw new IllegalArgumentException("Cannot have both @Contextual and @Option on the same parameter");
 			ConvertWith convertWith = parameter.getAnnotation(ConvertWith.class);
+
+			// converter data
+			Converter<?, ?> converter;
+			String optNameStr = null;
+
 			if (convertWith != null) {
-				converters[i] = createConverter(convertWith.value());
+				converter = createConverter(convertWith.value());
 			} else if (contextual != null) {
 				if (Interaction.class.isAssignableFrom(parameter.getType()))
-					converters[i] = ConverterImpl.contextual(Interaction.class, Function.identity());
+					converter = new VoidConverterImpl<>(Interaction.class, Function.identity());
 				else {
-					Converter<Void, ?> converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(Void.class, parameter.getType());
+					converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(Void.class, parameter.getType());
 					if (converter == null)
 						throw new IllegalArgumentException("No converter found for parameter " + parameter.getName() + " of type " + parameter.getType().getName());
-					converters[i] = converter;
 				}
 			} else if (option != null) {
 				Class<?> inputClass = parseInputClass(parameter.getType(), option.type());
-				Converter<?, ?> converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(inputClass, parameter.getType());
+				converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(inputClass, parameter.getType());
 				if (converter == null)
 					throw new IllegalArgumentException("No converter found for parameter " + parameter.getName() + " of type " + parameter.getType().getName());
-				converters[i] = converter;
+			} else {
+				throw new IllegalArgumentException("Parameters must be annotated with @Contextual or @Option");
+			}
 
+			if (option != null) {
 				// register option
 				String optId = option.value();
 				AutoCompleteWith acWith = parameter.getAnnotation(AutoCompleteWith.class);
@@ -166,14 +179,16 @@ public final class AnnotationParser {
 				SingleTranslation optName = i18n.getSingle(id + ".options." + optId + ".name", i18n.getDefaultLocale());
 				if (optName instanceof UnknownTranslation)
 					throw new IllegalStateException("Missing translation for option " + namespace + ":" + id + ".options." + optId + ".name");
+				optNameStr = optName.get();
 
 				// description
 				SingleTranslation optDescription = i18n.getSingle(id + ".options." + optId + ".description", i18n.getDefaultLocale());
 				if (optDescription instanceof UnknownTranslation)
 					throw new IllegalStateException("Missing translation for option " + namespace + ":" + id + ".options." + optId + ".description");
+				String optDescriptionStr = optDescription.get();
 
 				// option
-				OptionData opt = new OptionData(option.type(), optName.get(), optDescription.get(), option.required(), acWith != null || acFrom != null);
+				OptionData opt = new OptionData(option.type(), optNameStr, optDescriptionStr, option.required(), acWith != null || acFrom != null);
 				opt.setNameLocalizations(i18n.getDiscordTranslations(id + ".options." + optId + ".name"));
 				opt.setDescriptionLocalizations(i18n.getDiscordTranslations(id + ".options." + optId + ".description"));
 
@@ -200,12 +215,52 @@ public final class AnnotationParser {
 				// TODO: auto complete
 
 				command.addOptions(opt);
-			} else {
-				throw new IllegalArgumentException("Parameters must be annotated with @Contextual or @Option");
 			}
+
+			converters[i] = new ConverterData(converter, optNameStr);
 		}
 
-		// TODO executor
+		return new AbstractCommand<>(command, SlashCommandInteraction.class) {
+			@SuppressWarnings({"rawtypes", "unchecked"})
+			@Override
+			public void accept(@NonNull SlashCommandInteraction interaction) {
+				// note: this has no try/catch because that is being handled at an even higher level than this
+
+				// fetch args
+				Object[] args = new Object[converters.length];
+				for (int i = 0; i < args.length; i++) {
+					ConverterData converterData = converters[i];
+					Converter converter = converterData.converter();
+					if (converter instanceof VoidConverter<?> voidConverter) {
+						args[i] = voidConverter.convert(interaction);
+						continue;
+					}
+					String optName = Objects.requireNonNull(converterData.optName(), "optName should only be null for @Contextual parameters");
+					OptionMapping option = interaction.getOption(optName);
+					if (option == null) {
+						args[i] = null;
+						continue;
+					}
+					// TODO: generate input identically to the specification in #parseInputClass / #guessInputClass
+					// i.e. if converter.getInputClass() == String.class, call option.getAsString()
+					Object input = new Object(); // <-- placeholder, please remove :-)
+					args[i] = converter.convert(interaction, input);
+				}
+
+				// invoke
+				Object result;
+				try {
+					result = method.invoke(object, args);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+
+				// handle result (i.e. send message)
+				if (result == null)
+					return;
+				// TODO: handle result like the old cloud AutoSend: https://github.com/quasicolon/quasicord/blob/71ec6fe192f8f68f5438171938b65d3252fdb6e1/src/main/java/dev/qixils/quasicolon/cogs/impl/decorators/cloud/CloudAutoSendHandler.java#L113-L126
+			}
+		};
 	}
 
 	private Converter<?, ?> createConverter(Class<? extends Converter<?, ?>> converterClass) {

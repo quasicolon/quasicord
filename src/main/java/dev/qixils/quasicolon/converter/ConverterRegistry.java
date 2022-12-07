@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-import static dev.qixils.quasicolon.converter.ConverterImpl.contextual;
 import static dev.qixils.quasicolon.converter.ConverterImpl.identity;
 
 public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
@@ -48,13 +47,13 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 	public ConverterRegistry(@NonNull Quasicord library) {
 		super("converters");
 		// contextual converters
-		register(contextual(Member.class, Interaction::getMember));
-		register(contextual(User.class, Interaction::getUser));
-		register(contextual(Guild.class, Interaction::getGuild));
-		register(contextual(Channel.class, Interaction::getChannel));
-		register(contextual(ChannelType.class, Interaction::getChannelType));
-		register(contextual(Context.class, Context::fromInteraction));
-		register(contextual(DiscordLocale.class, Interaction::getUserLocale));
+		register(new VoidConverterImpl<>(Member.class, Interaction::getMember));
+		register(new VoidConverterImpl<>(User.class, Interaction::getUser));
+		register(new VoidConverterImpl<>(Guild.class, Interaction::getGuild));
+		register(new VoidConverterImpl<>(Channel.class, Interaction::getChannel));
+		register(new VoidConverterImpl<>(ChannelType.class, Interaction::getChannelType));
+		register(new VoidConverterImpl<>(Context.class, Context::fromInteraction));
+		register(new VoidConverterImpl<>(DiscordLocale.class, Interaction::getUserLocale));
 		register(new ConverterImpl<>(Context.class, Locale.class, (it, ctx) -> ctx.locale(library.getLocaleProvider()).block())); // TODO: async
 		// channels
 		register(ConverterImpl.channel(TextChannel.class));
