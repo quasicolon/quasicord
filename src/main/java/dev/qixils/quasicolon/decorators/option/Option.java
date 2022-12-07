@@ -57,6 +57,8 @@ public @interface Option {
 
 	/**
 	 * The {@link OptionType type} of this option.
+	 * This determines how the {@link dev.qixils.quasicolon.converter.ConverterRegistry ConverterRegistry} will attempt
+	 * to convert the user-provided value to the parameter type.
 	 * If unset, the type will attempt to be inferred from the parameter type.
 	 *
 	 * @return the type of this option

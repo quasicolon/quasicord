@@ -19,8 +19,15 @@ import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
 import dev.qixils.quasicolon.locale.translation.UnknownTranslation;
 import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.IMentionable;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -34,6 +41,7 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 public final class AnnotationParser {
 
@@ -112,8 +120,10 @@ public final class AnnotationParser {
 		command.setDescriptionLocalizations(i18n.getDiscordTranslations(id + ".description"));
 
 		// parameters
+		// TODO: instead of Converter array, maybe needs to be a wrapper which lists the name of the parameter (or null for context)? idk yet
 		Converter<?, ?>[] converters = new Converter<?, ?>[method.getParameterCount()];
 		for (int i = 0; i < method.getParameterCount(); i++) {
+			// set converter
 			Parameter parameter = method.getParameters()[i];
 			Contextual contextual = parameter.getAnnotation(Contextual.class);
 			Option option = parameter.getAnnotation(Option.class);
@@ -124,7 +134,7 @@ public final class AnnotationParser {
 				converters[i] = createConverter(convertWith.value());
 			} else if (contextual != null) {
 				if (Interaction.class.isAssignableFrom(parameter.getType()))
-					converters[i] = ConverterImpl.identity(Interaction.class);
+					converters[i] = ConverterImpl.contextual(Interaction.class, Function.identity());
 				else {
 					Converter<Void, ?> converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(Void.class, parameter.getType());
 					if (converter == null)
@@ -132,6 +142,13 @@ public final class AnnotationParser {
 					converters[i] = converter;
 				}
 			} else if (option != null) {
+				Class<?> inputClass = parseInputClass(parameter.getType(), option.type());
+				Converter<?, ?> converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(inputClass, parameter.getType());
+				if (converter == null)
+					throw new IllegalArgumentException("No converter found for parameter " + parameter.getName() + " of type " + parameter.getType().getName());
+				converters[i] = converter;
+
+				// register option
 				// TODO
 			} else {
 				throw new IllegalArgumentException("Parameters must be annotated with @Contextual or @Option");
@@ -170,5 +187,36 @@ public final class AnnotationParser {
 			}
 		}
 		throw new IllegalArgumentException("Converter must have a no-arg or Quasicord/Cog constructor");
+	}
+
+	private Class<?> parseInputClass(Class<?> outputClass, OptionType optionType) {
+		return switch (optionType) {
+			case STRING			-> String.class;
+			case INTEGER		-> Long.class;
+			case BOOLEAN		-> Boolean.class;
+			case USER			-> outputClass == Member.class ? Member.class : User.class;
+			case CHANNEL		-> Channel.class;
+			case ROLE			-> Role.class;
+			case MENTIONABLE	-> IMentionable.class;
+			case NUMBER			-> Double.class;
+			case ATTACHMENT		-> Message.Attachment.class;
+			case UNKNOWN		-> guessInputClass(outputClass);
+			default -> throw new IllegalArgumentException("Unknown option type " + optionType);
+		};
+	}
+
+	private Class<?> guessInputClass(Class<?> outputClass) {
+		if (outputClass == String.class)						return String.class;
+		if (outputClass == Long.class)							return Long.class;
+		if (outputClass == Integer.class)						return Long.class;
+		if (Number.class.isAssignableFrom(outputClass))			return Double.class;
+		if (outputClass == Boolean.class)						return Boolean.class;
+		if (outputClass == User.class)							return User.class;
+		if (outputClass == Member.class)						return Member.class;
+		if (Channel.class.isAssignableFrom(outputClass))		return Channel.class;
+		if (outputClass == Role.class)							return Role.class;
+		if (outputClass == Message.Attachment.class)			return Message.Attachment.class;
+		if (IMentionable.class.isAssignableFrom(outputClass))	return IMentionable.class;
+		throw new IllegalArgumentException("Cannot guess input class for output class " + outputClass.getName());
 	}
 }

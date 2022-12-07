@@ -36,8 +36,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import static dev.qixils.quasicolon.converter.ConverterImpl.contextual;
+import static dev.qixils.quasicolon.converter.ConverterImpl.identity;
 
 public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 
@@ -69,6 +71,15 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new ConverterImpl<>(ZonedDateTime.class, LocalDateTime.class, (it, zdt) -> zdt.toLocalDateTime()));
 		register(new ConverterImpl<>(LocalDateTime.class, LocalDate.class, (it, ldt) -> ldt.toLocalDate()));
 		register(new ConverterImpl<>(LocalDateTime.class, LocalTime.class, (it, ldt) -> ldt.toLocalTime()));
+		// numbers
+		register(new ConverterImpl<>(Number.class, Integer.class, (it, l) -> l.intValue()));
+		register(new ConverterImpl<>(Number.class, Long.class, (it, d) -> d.longValue()));
+		register(new ConverterImpl<>(Number.class, Float.class, (it, f) -> f.floatValue()));
+		register(new ConverterImpl<>(Number.class, Double.class, (it, d) -> d.doubleValue()));
+		register(new ConverterImpl<>(Number.class, Short.class, (it, s) -> s.shortValue()));
+		register(new ConverterImpl<>(Number.class, Byte.class, (it, b) -> b.byteValue()));
+		// misc
+		register(new ConverterImpl<>(User.class, Member.class, (it, u) -> Objects.requireNonNull(Objects.requireNonNull(it.getGuild()).getMember(u))));
 	}
 
 	@NonNull
@@ -79,11 +90,16 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 
 	@Nullable
 	public <I, O> Converter<I, O> getConverter(@NonNull Class<I> inputClass, @NonNull Class<O> outputClass) {
+		if (inputClass == outputClass)
+			//noinspection unchecked
+			return (Converter<I, O>) identity(outputClass);
+
 		//noinspection unchecked
 		return (Converter<I, O>) stream().filter(converter ->
-				converter.getInputClass().isAssignableFrom(inputClass)
-						&& outputClass.isAssignableFrom(converter.getOutputClass())
-		).findAny().orElse(null);
+				converter.getInputClass() == inputClass && converter.getOutputClass() == outputClass
+		).findAny().or(() -> stream().filter(converter ->
+				converter.getInputClass().isAssignableFrom(inputClass) && outputClass.isAssignableFrom(converter.getOutputClass())
+		).findAny()).orElse(null);
 	}
 
 	@Nullable
