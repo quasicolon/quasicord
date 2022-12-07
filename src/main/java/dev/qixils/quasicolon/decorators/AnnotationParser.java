@@ -92,11 +92,12 @@ public final class AnnotationParser {
 	}
 
 	private Command<ContextInteraction<?>> parseApplicationCommand(Object object, Method method, ApplicationCommand annotation) {
-		throw new UnsupportedOperationException("TODO");
+		throw new UnsupportedOperationException("TODO"); // TODO
 	}
 
 	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
-		// TODO: command groups (for i18n ID and, well, grouping)
+		// TODO: handle command groups (the SlashCommandGroup annotation and the dots in SlashCommand#value)
+		//  ngl I have no ideas how to implement this right now... will need some sort of map or wrapper record or something
 
 		// get i18n
 		String namespace = cog.getNamespace();
@@ -132,7 +133,6 @@ public final class AnnotationParser {
 		command.setDescriptionLocalizations(i18n.getDiscordTranslations(id + ".description"));
 
 		// parameters
-		// TODO: instead of Converter array, maybe needs to be a wrapper which lists the name of the parameter (or null for context)? idk yet
 		ConverterData[] converters = new ConverterData[method.getParameterCount()];
 		for (int i = 0; i < method.getParameterCount(); i++) {
 			// set converter
