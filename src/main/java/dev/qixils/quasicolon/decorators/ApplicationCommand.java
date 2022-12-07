@@ -7,8 +7,8 @@
 package dev.qixils.quasicolon.decorators;
 
 import dev.qixils.quasicolon.decorators.option.Contextual;
+import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.interactions.commands.Command;
 
 import java.lang.annotation.ElementType;
@@ -25,6 +25,8 @@ import java.lang.annotation.Target;
  * for a {@link net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction ButtonInteraction}.
  * </p>
  * The name of this command is taken from the translation file(s) using the {@link #value() provided ID}.
+ *
+ * @see DefaultPermissions
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
@@ -50,14 +52,6 @@ public @interface ApplicationCommand {
 	 * see {@link SlashCommand} for slash commands.
 	 */
 	Command.Type type();
-
-	/**
-	 * The permissions required to use this command by default.
-	 * Note that moderators can override these.
-	 *
-	 * @return default permissions
-	 */
-	Permission[] defaultPermissions() default {};
 
 	/**
 	 * Whether the command can only be used in guilds.

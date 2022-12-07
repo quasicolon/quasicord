@@ -4,14 +4,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.decorators.functional;
+package dev.qixils.quasicolon.autocomplete;
 
 import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * An object which supplies auto-complete suggestions for {@link IAutoCompleteCallback}s.
@@ -25,5 +25,5 @@ public interface AutoCompleter {
 	 * @param event event to get suggestions for
 	 * @return list of suggestions
 	 */
-	@NonNull List<Command.@NotNull Choice> getSuggestions(@NonNull IAutoCompleteCallback event);
+	@NonNull Collection<Command.@NotNull Choice> getSuggestions(@NonNull IAutoCompleteCallback event);
 }

@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.decorators.option;
 
-import dev.qixils.quasicolon.decorators.functional.AutoCompleter;
+import dev.qixils.quasicolon.autocomplete.AutoCompleter;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

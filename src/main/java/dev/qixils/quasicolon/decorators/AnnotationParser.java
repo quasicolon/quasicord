@@ -10,9 +10,14 @@ import dev.qixils.quasicolon.cogs.Cog;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.converter.Converter;
 import dev.qixils.quasicolon.converter.ConverterImpl;
+import dev.qixils.quasicolon.decorators.option.AutoCompleteFrom;
+import dev.qixils.quasicolon.decorators.option.AutoCompleteWith;
+import dev.qixils.quasicolon.decorators.option.ChannelTypes;
+import dev.qixils.quasicolon.decorators.option.Choice;
 import dev.qixils.quasicolon.decorators.option.Contextual;
 import dev.qixils.quasicolon.decorators.option.ConvertWith;
 import dev.qixils.quasicolon.decorators.option.Option;
+import dev.qixils.quasicolon.decorators.option.Range;
 import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 import dev.qixils.quasicolon.locale.TranslationProvider;
@@ -29,6 +34,7 @@ import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
@@ -149,13 +155,57 @@ public final class AnnotationParser {
 				converters[i] = converter;
 
 				// register option
-				// TODO
+				String optId = option.value();
+				AutoCompleteWith acWith = parameter.getAnnotation(AutoCompleteWith.class);
+				AutoCompleteFrom acFrom = parameter.getAnnotation(AutoCompleteFrom.class);
+				Range range = parameter.getAnnotation(Range.class);
+				ChannelTypes channelTypes = parameter.getAnnotation(ChannelTypes.class);
+				Choice[] choices = parameter.getAnnotationsByType(Choice.class);
+
+				// name
+				SingleTranslation optName = i18n.getSingle(id + ".options." + optId + ".name", i18n.getDefaultLocale());
+				if (optName instanceof UnknownTranslation)
+					throw new IllegalStateException("Missing translation for option " + namespace + ":" + id + ".options." + optId + ".name");
+
+				// description
+				SingleTranslation optDescription = i18n.getSingle(id + ".options." + optId + ".description", i18n.getDefaultLocale());
+				if (optDescription instanceof UnknownTranslation)
+					throw new IllegalStateException("Missing translation for option " + namespace + ":" + id + ".options." + optId + ".description");
+
+				// option
+				OptionData opt = new OptionData(option.type(), optName.get(), optDescription.get(), option.required(), acWith != null || acFrom != null);
+				opt.setNameLocalizations(i18n.getDiscordTranslations(id + ".options." + optId + ".name"));
+				opt.setDescriptionLocalizations(i18n.getDiscordTranslations(id + ".options." + optId + ".description"));
+
+				// range
+				if (range != null) {
+					if (option.type() == OptionType.INTEGER)
+						opt.setRequiredRange((long) range.min(), (long) range.max());
+					else if (option.type() == OptionType.NUMBER)
+						opt.setRequiredRange(range.min(), range.max());
+					else if (option.type() == OptionType.STRING)
+						opt.setRequiredLength((int) range.min(), (int) range.max());
+					else
+						throw new IllegalArgumentException("Cannot use @Range on option of type " + option.type());
+				}
+
+				// channel types
+				if (channelTypes != null)
+					opt.setChannelTypes(channelTypes.value());
+
+				// choices
+				if (choices.length > 0)
+					opt.addChoices(createChoices(choices, option.type(), id + ".options." + optId + ".choices.", i18n));
+
+				// TODO: auto complete
+
+				command.addOptions(opt);
 			} else {
 				throw new IllegalArgumentException("Parameters must be annotated with @Contextual or @Option");
 			}
 		}
 
-		// TODO
+		// TODO executor
 	}
 
 	private Converter<?, ?> createConverter(Class<? extends Converter<?, ?>> converterClass) {
@@ -218,5 +268,27 @@ public final class AnnotationParser {
 		if (outputClass == Message.Attachment.class)			return Message.Attachment.class;
 		if (IMentionable.class.isAssignableFrom(outputClass))	return IMentionable.class;
 		throw new IllegalArgumentException("Cannot guess input class for output class " + outputClass.getName());
+	}
+
+	private net.dv8tion.jda.api.interactions.commands.Command.Choice[] createChoices(Choice[] choices, OptionType optionType, String rootKey, TranslationProvider i18n) {
+		if (choices.length > OptionData.MAX_CHOICES)
+			throw new IllegalArgumentException("Cannot have more than " + OptionData.MAX_CHOICES + " choices");
+		net.dv8tion.jda.api.interactions.commands.Command.Choice[] jdaChoices = new net.dv8tion.jda.api.interactions.commands.Command.Choice[choices.length];
+		for (int i = 0; i < choices.length; i++) {
+			Choice choice = choices[i];
+			String id = rootKey + choice.id() + ".name";
+			SingleTranslation name = i18n.getSingle(id, i18n.getDefaultLocale());
+			if (name instanceof UnknownTranslation)
+				throw new IllegalStateException("Missing translation for choice " + id);
+			if (optionType == OptionType.INTEGER)
+				jdaChoices[i] = new net.dv8tion.jda.api.interactions.commands.Command.Choice(name.get(), choice.intValue());
+			else if (optionType == OptionType.STRING)
+				jdaChoices[i] = new net.dv8tion.jda.api.interactions.commands.Command.Choice(name.get(), choice.stringValue());
+			else if (optionType == OptionType.NUMBER)
+				jdaChoices[i] = new net.dv8tion.jda.api.interactions.commands.Command.Choice(name.get(), choice.numberValue());
+			else
+				throw new IllegalArgumentException("Cannot use @Choice on option of type " + optionType);
+		}
+		return jdaChoices;
 	}
 }

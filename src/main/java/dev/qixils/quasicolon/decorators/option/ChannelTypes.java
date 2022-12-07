@@ -14,7 +14,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Denotes which {@link ChannelType}s are supported by a {@link Option} of
+ * Denotes which {@link ChannelType}s are supported by an {@link Option} of
  * {@link Option#type() type} {@link net.dv8tion.jda.api.interactions.commands.OptionType#CHANNEL CHANNEL}.
  *
  * @see Option
