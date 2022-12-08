@@ -9,9 +9,13 @@ package dev.qixils.quasicolon.cogs.impl;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.cogs.GuildCog;
+import net.dv8tion.jda.api.entities.Guild;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.Optional;
+
 
 /**
  * A basic implementation of a cog that applies to only one guild.
@@ -19,24 +23,44 @@ import java.util.Collection;
  * All associated commands are automatically registered upon construction.
  */
 public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
-	protected final long guildId;
+	@NonNull
+	protected final Guild guild;
 
-	protected AbstractGuildCog(@NonNull Quasicord library, long guildId) {
+	/**
+	 * Attempt to instantiate a new guild cog for the given guild.
+	 * Returns None when the guild does not exist.
+	 * Throws any exceptions thrown by the constructor for the cog.
+	 */
+	@NonNull
+	protected static <T extends AbstractGuildCog> Optional<T> TryLoad(@NonNull Quasicord library, long guildId, Class<T> cogType) throws InvocationTargetException {
+		var guild = library.getJDA().getGuildById(guildId);
+		// check if guild exists
+		if (guild == null) {
+			library.getLogger().warn("Guild {} does not exist!", guildId);
+			return Optional.empty();
+		} else {
+
+			try {
+				return Optional.of(cogType.getDeclaredConstructor(Quasicord.class, Guild.class).newInstance(library, guild));
+			} catch (InstantiationException | IllegalAccessException |
+					 NoSuchMethodException e) {
+				throw new AssertionError(e);
+			}
+		}
+	}
+
+	protected AbstractGuildCog(@NonNull Quasicord library, Guild guild) {
 		super(library);
-		this.guildId = guildId;
+		this.guild = guild;
 
-		// call load method
 		onLoad();
 
 		// register commands
 		Collection<Command<?>> commands = getCommands();
-		getGuild().ifPresentOrElse(
-				guild -> guild.updateCommands()
-						.addCommands(commands.stream().map(Command::getCommandData).toList())
-						.queue(), // TODO: only update if there are new/updated commands
-				// TODO: process command events
-				() -> library.getLogger().warn("Guild {} not found when loading cog {}", guildId, getClass().getSimpleName())
-		);
+		guild
+			.updateCommands()
+			.addCommands(commands.stream().map(Command::getCommandData).toList())
+			.queue();
 	}
 
 	@Override

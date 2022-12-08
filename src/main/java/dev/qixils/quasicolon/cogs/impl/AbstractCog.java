@@ -53,6 +53,10 @@ public abstract class AbstractCog implements Cog {
 		return commands;
 	}
 
+	private void RegisterCommands() {
+		;
+	}
+
 	protected void addCommand(@NonNull Command<?> commandData) {
 		commands.add(commandData);
 	}
