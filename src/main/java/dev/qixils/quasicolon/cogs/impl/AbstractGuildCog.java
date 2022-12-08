@@ -10,6 +10,7 @@ import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.cogs.GuildCog;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.lang.reflect.InvocationTargetException;
@@ -69,4 +70,6 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 	@Override
 	public void onLoad() {
 	}
+
+	protected abstract Collection<GatewayIntent> getRequiredIntents();
 }

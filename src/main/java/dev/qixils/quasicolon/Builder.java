@@ -13,7 +13,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
  *
  * @param <R> the type of object being built
  */
-public interface Builder<R> {
+public interface Builder<R> { // , ErrorType extends Throwable
 
 	/**
 	 * Builds the object.
@@ -21,5 +21,5 @@ public interface Builder<R> {
 	 * @return the built object
 	 * @throws IllegalStateException a required field is missing
 	 */
-	@NonNull R build() throws IllegalStateException;
+	@NonNull R build() throws IllegalStateException; //  throws ErrorType
 }
