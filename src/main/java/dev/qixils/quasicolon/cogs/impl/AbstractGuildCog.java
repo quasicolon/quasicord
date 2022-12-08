@@ -44,12 +44,15 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 				return Optional.of(cogType.getDeclaredConstructor(Quasicord.class, Guild.class).newInstance(library, guild));
 			} catch (InstantiationException | IllegalAccessException |
 					 NoSuchMethodException e) {
-				throw new AssertionError(e);
+				// cogType is restricted to implement AbstractGuildCog.
+				// AbstractGuildCog has exactly one constructor, which takes these two types.
+				// Therefore, this exception should never be thrown.
+				throw new Error(e);
 			}
 		}
 	}
 
-	protected AbstractGuildCog(@NonNull Quasicord library, Guild guild) {
+	protected AbstractGuildCog(@NonNull Quasicord library, @NonNull Guild guild) {
 		super(library);
 		this.guild = guild;
 
