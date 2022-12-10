@@ -22,6 +22,7 @@ import net.dv8tion.jda.api.utils.messages.MessageRequest;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurateException;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -44,12 +46,12 @@ import java.util.Objects;
  */
 public class Quasicord {
 	protected final @NonNull JDA jda;
-	protected final @NonNull ConfigurationNode rootNode;
+	protected final @NotNull QuasicordConfig config;
 	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
-	protected final @NonNull Environment environment;
 	protected final @NonNull DatabaseManager database;
 	protected final @NonNull RegistryRegistry rootRegistry;
 	protected final @NonNull EventDispatcher eventDispatcher = new EventDispatcher();
+	protected final @NonNull HashMap<Long, EventDispatcher> guildDispatchers = new HashMap<>();
 	protected final @NonNull TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
 	protected final @NonNull String namespace;
 	protected final long ownerId;
@@ -75,11 +77,11 @@ public class Quasicord {
 				.path(configRoot.resolve("config.yml"))
 				// TODO: default config options
 				.build();
-		rootNode = loader.load();
-		environment = Environment.valueOf(rootNode.node("environment").getString("TEST").toUpperCase(Locale.ENGLISH));
+		var rootConfigNode = loader.load();
+		config = Objects.requireNonNull(rootConfigNode.get(QuasicordConfig.class), "config.yml is missing or invalid");
 
 		// load database and locale provider
-		database = new DatabaseManager(namespace, environment);
+		database = new DatabaseManager(namespace, config.environment());
 		localeProvider = new LocaleProvider(defaultLocale, database);
 
 		// initialize JDA and relevant data
@@ -93,7 +95,7 @@ public class Quasicord {
 
 	@NonNull
 	protected JDA initJDA(@Nullable Activity activity) {
-		JDABuilder builder = JDABuilder.createDefault(rootNode.node("token").getString())
+		JDABuilder builder = JDABuilder.createDefault(config.token())
 				.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING,
 						GatewayIntent.GUILD_MESSAGE_TYPING,
 						// GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
@@ -153,12 +155,12 @@ public class Quasicord {
 	// boilerplate
 
 	/**
-	 * Returns the root {@link ConfigurationNode} representing the options set in {@code config.yml}.
+	 * Returns the root {@link QuasicordConfig} representing the options set in {@code config.yml}.
 	 *
 	 * @return root configuration node
 	 */
-	public @NonNull ConfigurationNode getRootConfigNode() {
-		return rootNode;
+	public @NonNull QuasicordConfig getConfig() {
+		return config;
 	}
 
 	/**
@@ -176,7 +178,7 @@ public class Quasicord {
 	 * @return execution environment
 	 */
 	public @NonNull Environment getEnvironment() {
-		return environment;
+		return config.environment();
 	}
 
 	/**

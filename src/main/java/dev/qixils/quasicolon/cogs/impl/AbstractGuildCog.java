@@ -33,7 +33,7 @@ public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 	 * Throws any exceptions thrown by the constructor for the cog.
 	 */
 	@NonNull
-	protected static <T extends AbstractGuildCog> Optional<T> TryLoad(@NonNull Quasicord library, long guildId, Class<T> cogType) throws InvocationTargetException {
+	public static <T extends AbstractGuildCog> Optional<T> TryLoad(@NonNull Quasicord library, long guildId, Class<T> cogType) throws InvocationTargetException {
 		var guild = library.getJDA().getGuildById(guildId);
 		// check if guild exists
 		if (guild == null) {

@@ -9,7 +9,11 @@ package dev.qixils.quasicolon.cogs.impl;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.cogs.GlobalCog;
 import dev.qixils.quasicolon.registry.Registry;
+import net.dv8tion.jda.api.entities.Guild;
 import org.checkerframework.checker.nullness.qual.NonNull;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.Optional;
 
 /**
  * A basic implementation of a cog that applies to all guilds.
@@ -24,6 +28,19 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 public abstract class AbstractGlobalCog extends AbstractCog implements GlobalCog {
 	protected AbstractGlobalCog(@NonNull Quasicord library) {
 		super(library);
+	}
+
+	@NonNull
+	public static <T extends AbstractGlobalCog> T Load(@NonNull Quasicord library, Class<T> cogType) throws InvocationTargetException {
+		try {
+			return cogType.getDeclaredConstructor(Quasicord.class).newInstance(library);
+		} catch (InstantiationException | IllegalAccessException |
+				 NoSuchMethodException e) {
+			// cogType is restricted to implement AbstractGlobalCog.
+			// AbstractGuildCog has exactly one constructor, which takes exactly this type.
+			// Therefore, this exception should never be thrown.
+			throw new Error(e);
+		}
 	}
 
 	@Override
