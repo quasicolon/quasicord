@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public final class AnnotationParser {
@@ -247,20 +248,24 @@ public final class AnnotationParser {
 					args[i] = converter.convert(interaction, input);
 				}
 
-				// invoke
-				Object result;
+				// invoke and handle
 				try {
-					result = method.invoke(object, args);
+					ConsumeCommandResult(interaction, method.invoke(object, args));
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
-
-				// handle result (i.e. send message)
-				if (result == null)
-					return;
-				// TODO: handle result like the old cloud AutoSend: https://github.com/quasicolon/quasicord/blob/71ec6fe192f8f68f5438171938b65d3252fdb6e1/src/main/java/dev/qixils/quasicolon/cogs/impl/decorators/cloud/CloudAutoSendHandler.java#L113-L126
 			}
 		};
+	}
+
+	private void ConsumeCommandResult(@NonNull SlashCommandInteraction interaction, Object result) {
+		switch (result) {
+			case CompletableFuture<?> fut -> fut.thenAccept(res -> ConsumeCommandResult(interaction, res));
+			// terminal cases:
+			case null -> {}
+			case String text -> interaction.reply(text).queue(); // TODO: QuasiMessage and translation
+			default -> throw new IllegalArgumentException("Unsupported response type: " + result.getClass().getName());
+		}
 	}
 
 	private Converter<?, ?> createConverter(Class<? extends Converter<?, ?>> converterClass) {
