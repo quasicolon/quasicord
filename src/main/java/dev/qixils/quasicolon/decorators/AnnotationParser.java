@@ -42,6 +42,7 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -242,9 +243,30 @@ public final class AnnotationParser {
 						args[i] = null;
 						continue;
 					}
-					// TODO: generate input identically to the specification in #parseInputClass / #guessInputClass
-					// i.e. if converter.getInputClass() == String.class, call option.getAsString()
-					Object input = new Object(); // <-- placeholder, please remove :-)
+
+					Class inputClass = converter.getInputClass();
+					// maybe this would be better done with a pair of hashmaps between Class<?> and Converter<?, ?>?
+					// and a method on the converter that converts from just the Interaction and OptionMapping.
+					Object input; // extract the appropriate type from the interaction option for the converter:
+						 if (inputClass == String.class)  			 input = option.getAsString();
+					else if (inputClass == Long.class)   			 input = option.getAsInt();
+					else if (inputClass == Double.class)   	 		 input = option.getAsDouble();
+					else if (inputClass == Boolean.class)  	 		 input = option.getAsBoolean();
+					else if (inputClass == Channel.class)   		 input = option.getAsChannel();
+					else if (inputClass == Role.class)    		     input = option.getAsRole();
+					else if (inputClass == IMentionable.class) 		 input = option.getAsMentionable();
+					else if (inputClass == Message.Attachment.class) input = option.getAsAttachment();
+					else if (inputClass == User.class)				 input = option.getAsUser();
+				    else if (inputClass == Member.class)  {
+						 var maybe_member = option.getAsMember(); // I think this is the only case where it is nullable
+						 if (maybe_member == null) {
+							 throw new IllegalArgumentException("Member was not found in this guild for " + option.getName());
+						 } else {
+							 input = maybe_member;
+						 }
+					}
+
+					else throw new IllegalArgumentException("Could not accept interaction option of type " + option.getType() + " for a converter from " + inputClass.getName());
 					args[i] = converter.convert(interaction, input);
 				}
 
