@@ -103,6 +103,14 @@ public class Quasicord {
 						GatewayIntent.GUILD_INVITES,
 						GatewayIntent.GUILD_VOICE_STATES)
 				.enableIntents(GatewayIntent.GUILD_MEMBERS)
+				// TODO:
+				//	1. register cogs before initJDA() is called
+				//  2. implement getRequiredIntents() in Cog
+				//  3. use that result here to compute minimum required intents
+				//  4. late-loaded cogs, if any/ever, can decline when their required intents weren't met at startup
+				//  5. except wait, cogs need jda to be constructed (and probably should), that's a problem
+				.enableIntents(GatewayIntent.GUILD_MESSAGES)
+				.enableIntents(GatewayIntent.MESSAGE_CONTENT)
 				.setMemberCachePolicy(MemberCachePolicy.ALL)
 				.setEventManager(new AnnotatedEventManager())
 				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE);
@@ -112,6 +120,12 @@ public class Quasicord {
 		JDA jda = builder.build();
 		jda.setRequiredScopes("applications.commands");
 		jda.addEventListener(tempListenerExecutor);
+		jda.addEventListener(new Object() {
+			@net.dv8tion.jda.api.hooks.SubscribeEvent
+			public void on(net.dv8tion.jda.api.events.Event event) {
+				eventDispatcher.dispatch(event);
+			}
+		});
 		try {
 			jda.awaitReady();
 		} catch (InterruptedException ignored) {
