@@ -42,7 +42,6 @@ import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,6 +222,11 @@ public final class AnnotationParser {
 		}
 
 		return new AbstractCommand<>(command, SlashCommandInteraction.class) {
+			@Override
+			public @NonNull String getName() {
+				return id;
+			}
+
 			@SuppressWarnings({"rawtypes", "unchecked"})
 			@Override
 			public void accept(@NonNull SlashCommandInteraction interaction) {
