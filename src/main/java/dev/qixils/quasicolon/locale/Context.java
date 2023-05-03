@@ -35,6 +35,7 @@ public interface Context {
 	/**
 	 * Computes the locale to use for localizing a response message.
 	 *
+	 * @param localeProvider the locale provider
 	 * @return the locale to use for localizing a response message
 	 */
 	default @NonNull Mono<Locale> locale(@NonNull LocaleProvider localeProvider) {

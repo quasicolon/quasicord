@@ -6,8 +6,10 @@
 
 package dev.qixils.quasicolon.error;
 
+import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.text.ForwardingLocalizedText;
 import dev.qixils.quasicolon.text.LocalizableText;
+import dev.qixils.quasicolon.text.Text;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -16,5 +18,9 @@ public class LocalizedException extends Exception implements ForwardingLocalized
 
 	public LocalizedException(@NonNull LocalizableText text) {
 		this.text = text;
+	}
+
+	public LocalizedException(@NonNull Key key, Object @NonNull ... args) {
+		this(Text.single(key, args));
 	}
 }

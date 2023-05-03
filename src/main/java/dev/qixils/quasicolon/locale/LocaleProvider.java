@@ -15,6 +15,7 @@ import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Locale;
@@ -69,8 +70,8 @@ public class LocaleProvider {
 	// generic
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided object if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided object if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param id   the id of the object to get the locale for
 	 * @param type the type of the object to get the locale for
@@ -84,8 +85,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided object if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided object if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param id   the id of the object to get the locale for
 	 * @param type the type of the object to get the locale for
@@ -96,8 +97,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided object if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided object if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param object the object to get the locale for
 	 * @param type   the type of the object to get the locale for
@@ -110,8 +111,8 @@ public class LocaleProvider {
 	// user
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided user if they have
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided user if they have one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param userId the id of the user to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -121,8 +122,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided user if they have
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided user if they have one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param userId the id of the user to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -132,8 +133,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided user if they have
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided user if they have one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param user the user to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -142,11 +143,22 @@ public class LocaleProvider {
 		return forUser(user.getIdLong());
 	}
 
+	/**
+	 * Returns a {@link Mono} that emits the {@link Locale} for the user from the provided context if they have one set,
+	 * otherwise it will emit nothing.
+	 *
+	 * @param context the context to get the user from
+	 * @return a {@link Mono} that may emit a {@link Locale}
+	 */
+	public @NonNull Mono<@NonNull Locale> forUser(@NonNull Context context) {
+		return context.user() == 0 ? Mono.empty() : forUser(context.user());
+	}
+
 	// channel
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided channel if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided channel if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param channelId the id of the channel to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -156,8 +168,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided channel if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided channel if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param channelId the id of the channel to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -167,8 +179,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided channel if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided channel if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param channel the channel to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -177,11 +189,22 @@ public class LocaleProvider {
 		return forChannel(channel.getIdLong());
 	}
 
+	/**
+	 * Returns a {@link Mono} that emits the {@link Locale} for the channel from the provided context if it has one set,
+	 * otherwise it will emit nothing.
+	 *
+	 * @param context the context to get the channel from
+	 * @return a {@link Mono} that may emit a {@link Locale}
+	 */
+	public @NonNull Mono<@NonNull Locale> forChannel(@NonNull Context context) {
+		return context.channel() == 0 ? Mono.empty() : forChannel(context.channel());
+	}
+
 	// guild
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided guild if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided guild if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param guildId the id of the guild to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -191,8 +214,8 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided guild if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided guild if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param guildId the id of the guild to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
@@ -202,14 +225,25 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that emits the {@link Locale} for the provided guild if it has
-	 * one set, otherwise it will emit nothing.
+	 * Returns a {@link Mono} that emits the {@link Locale} for the provided guild if it has one set,
+	 * otherwise it will emit nothing.
 	 *
 	 * @param guild the guild to get the locale for
 	 * @return a {@link Mono} that may emit a {@link Locale}
 	 */
 	public @NonNull Mono<@NonNull Locale> forGuild(@NonNull Guild guild) {
 		return forGuild(guild.getIdLong());
+	}
+
+	/**
+	 * Returns a {@link Mono} that emits the {@link Locale} for the guild from the provided context if it has one set,
+	 * otherwise it will emit nothing.
+	 *
+	 * @param context the context to get the guild from
+	 * @return a {@link Mono} that may emit a {@link Locale}
+	 */
+	public @NonNull Mono<@NonNull Locale> forGuild(@NonNull Context context) {
+		return context.guild() == 0 ? Mono.empty() : forGuild(context.guild());
 	}
 
 	// misc
@@ -224,12 +258,14 @@ public class LocaleProvider {
 	}
 
 	/**
-	 * Returns a {@link Mono} that will emit the {@link Locale} corresponding to the given
-	 * {@link Context}. This searches for a configured {@link Locale} in the following order:
+	 * Returns a {@link Mono} that will emit the {@link Locale} corresponding to the given {@link Context}.
+	 * This searches for a configured {@link Locale} in the following order:
 	 * <ul>
 	 *     <li>User</li>
+	 *     <li>User (via Discord)</li>
 	 *     <li>Channel</li>
 	 *     <li>Guild</li>
+	 *     <li>Guild (via Discord)</li>
 	 *     <li>{@link #defaultLocale() Default}</li>
 	 * </ul>
 	 *
@@ -237,17 +273,11 @@ public class LocaleProvider {
 	 * @return a {@link Mono} that will emit the {@link Locale} corresponding to the given {@link Context}
 	 */
 	public @NonNull Mono<Locale> forContext(@NonNull Context context) {
-		Mono<Locale> user = context.user() == 0
-				? Mono.empty()
-				: forUser(context.user());
+		Mono<Locale> user = forUser(context);
 		Mono<Locale> userLocale = Mono.justOrEmpty(context.userLocale())
 				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
-		Mono<Locale> channel = context.channel() == 0
-				? Mono.empty()
-				: forChannel(context.channel());
-		Mono<Locale> guild = context.guild() == 0
-				? Mono.empty()
-				: forGuild(context.guild());
+		Mono<Locale> channel = forChannel(context);
+		Mono<Locale> guild = forGuild(context);
 		Mono<Locale> guildLocale = Mono.justOrEmpty(context.guildLocale())
 				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
 		Mono<Locale> defaultLocale = Mono.just(defaultLocale());
@@ -257,6 +287,24 @@ public class LocaleProvider {
 				.switchIfEmpty(guild)
 				.switchIfEmpty(guildLocale)
 				.switchIfEmpty(defaultLocale);
+	}
+
+	/**
+	 * Returns a {@link Flux} that will emit all {@link Locale}s that are configured for the given {@link Context}.
+	 *
+	 * @param context the {@link Context} to get the {@link Locale}s for
+	 * @return a {@link Flux} that will emit all {@link Locale}s that are configured for the given {@link Context}
+	 */
+	public @NonNull Flux<Locale> allForContext(@NonNull Context context) {
+		Mono<Locale> user = forUser(context);
+		Mono<Locale> userLocale = Mono.justOrEmpty(context.userLocale())
+				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
+		Mono<Locale> channel = forChannel(context);
+		Mono<Locale> guild = forGuild(context);
+		Mono<Locale> guildLocale = Mono.justOrEmpty(context.guildLocale())
+				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
+		Mono<Locale> defaultLocale = Mono.just(defaultLocale());
+		return Flux.concat(user, userLocale, channel, guild, guildLocale, defaultLocale).distinct();
 	}
 
 	private static final class DummyLocaleProvider extends LocaleProvider {

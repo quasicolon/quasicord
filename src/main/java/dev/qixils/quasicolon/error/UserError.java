@@ -4,16 +4,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.error.permissions;
+package dev.qixils.quasicolon.error;
 
-import dev.qixils.quasicolon.error.UserError;
+import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.text.LocalizableText;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-// TODO: clean up the unused subclasses of this
+public class UserError extends LocalizedRuntimeException {
 
-public class NoPermissionException extends UserError {
-	public NoPermissionException(@NonNull LocalizableText text) {
+	public UserError(@NonNull LocalizableText text) {
 		super(text);
+	}
+
+	public UserError(@NonNull Key key, Object @NonNull ... args) {
+		super(key, args);
 	}
 }

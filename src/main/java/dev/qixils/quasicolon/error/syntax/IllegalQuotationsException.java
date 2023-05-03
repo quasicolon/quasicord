@@ -7,10 +7,11 @@
 package dev.qixils.quasicolon.error.syntax;
 
 import dev.qixils.quasicolon.Key;
+import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class IllegalQuotationsException extends InvalidSyntaxException {
+public class IllegalQuotationsException extends UserError {
 	private static final @NonNull Text ERROR_TEXT = Text.single(Key.library("exception.invalid_syntax.quotations"));
 
 	// same TODO as parent class

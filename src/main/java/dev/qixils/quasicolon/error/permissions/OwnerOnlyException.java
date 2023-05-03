@@ -7,9 +7,10 @@
 package dev.qixils.quasicolon.error.permissions;
 
 import dev.qixils.quasicolon.Key;
+import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
 
-public class OwnerOnlyException extends NoPermissionException {
+public class OwnerOnlyException extends UserError { // TODO: may no longer be applicable
 	public OwnerOnlyException() {
 		super(Text.single(Key.library("exception.owner_only")));
 	}

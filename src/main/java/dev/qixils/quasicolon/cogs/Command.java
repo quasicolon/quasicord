@@ -18,6 +18,14 @@ import java.util.function.Consumer;
 public interface Command<I extends CommandInteraction> extends Consumer<I> {
 
 	/**
+	 * Gets the full name of the command.
+	 *
+	 * @return command name
+	 */
+	@NonNull
+	String getName();
+
+	/**
 	 * Gets the data (i.e. the defined arguments) for the command.
 	 *
 	 * @return command data

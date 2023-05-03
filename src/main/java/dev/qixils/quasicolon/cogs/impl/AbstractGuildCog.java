@@ -21,7 +21,7 @@ import java.util.Optional;
 /**
  * A basic implementation of a cog that applies to only one guild.
  * <p>
- * All associated commands are automatically registered upon construction.
+ * All associated commands are automatically registered upon construction after {@link #onLoad()} is called.
  */
 public abstract class AbstractGuildCog extends AbstractCog implements GuildCog {
 	@NonNull

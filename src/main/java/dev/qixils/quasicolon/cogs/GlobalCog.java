@@ -17,7 +17,8 @@ import dev.qixils.quasicolon.registry.Registry;
  * during the {@link dev.qixils.quasicolon.registry.core.GlobalCogRegistry global cog registry}'s
  * {@link dev.qixils.quasicolon.events.EventDispatcher#dispatchRegistryInit(Registry) initialization
  * event} that is dispatched to your bot's
- * {@link Quasicord.Builder#eventHandler(Object) default event handler}.
+ * {@link Quasicord.Builder#eventHandler(Object) default event handler}. This will register all of this cog's
+ * {@link #getCommands() commands}.
  */
 public interface GlobalCog extends Cog {
 }

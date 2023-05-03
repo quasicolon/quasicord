@@ -10,7 +10,7 @@ package dev.qixils.quasicolon.cogs;
  * A {@link Cog} that applies to only one guild.
  * <p>
  * Guild cogs have no specific registration method. It is recommended that implementations of this
- * interface automatically register their associated commands upon construction.
+ * interface automatically register their associated commands upon construction after calling {@link #onLoad()}.
  */
 public interface GuildCog extends Cog {
 

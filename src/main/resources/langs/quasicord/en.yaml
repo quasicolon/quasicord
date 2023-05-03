@@ -5,7 +5,6 @@ en:
   exception.invalid_syntax.quotations: Quoted argument has improper quotation marks
   exception.owner_only: This command can only be run by the bot owner
   exception.dms_only: This command can only be run in direct messages
-  exception.guild_only: This command can only be run in guilds
   exception.negative_time: Provided time must be from the future, not the past
   exception.unknown_token: "Unable to parse token `{0}`"
   exception.unknown_format: "Input text `{0}` is of an unknown format"
@@ -14,4 +13,5 @@ en:
   exception.no_response: Command successfully executed but returned no response
   exception.bot_missing_perm: Bot is missing permission `{0}`
   exception.user_missing_perm: User is missing permission `{0}`
+  exception.command_error: An internal error occurred while executing this command. The issue has been reported to the developers.
   snowflake_confirm: "{0}: Did you mean {1}?"

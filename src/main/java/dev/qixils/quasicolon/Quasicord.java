@@ -6,6 +6,7 @@
 
 package dev.qixils.quasicolon;
 
+import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.events.EventDispatcher;
 import dev.qixils.quasicolon.locale.LocaleProvider;
@@ -26,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
 import javax.security.auth.login.LoginException;
@@ -36,6 +36,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -58,6 +59,7 @@ public class Quasicord {
 	protected final long botId;
 	protected final @NonNull TranslationProvider translationProvider;
 	protected final @NonNull LocaleProvider localeProvider;
+	protected final @NonNull Map<String, Command<?>> commands = new HashMap<>();
 
 	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
 		// misc initialization
@@ -120,6 +122,7 @@ public class Quasicord {
 		JDA jda = builder.build();
 		jda.setRequiredScopes("applications.commands");
 		jda.addEventListener(tempListenerExecutor);
+		jda.addEventListener(new CommandExecutor(this));
 		jda.addEventListener(new Object() {
 			@net.dv8tion.jda.api.hooks.SubscribeEvent
 			public void on(net.dv8tion.jda.api.events.Event event) {
@@ -141,6 +144,16 @@ public class Quasicord {
 	// we don't expose the raw executor in a getter because objects could abuse the #onEvent method
 	public void register(@NonNull TemporaryListener<?> listener) {
 		tempListenerExecutor.register(Objects.requireNonNull(listener, "listener cannot be null"));
+	}
+
+	/**
+	 * Registers a command.
+	 *
+	 * @param command the command to register
+	 */
+	public void register(@NonNull Command<?> command) {
+		Objects.requireNonNull(command, "command cannot be null");
+		commands.put(command.getName(), command);
 	}
 
 	/**

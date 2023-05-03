@@ -7,10 +7,11 @@
 package dev.qixils.quasicolon.error.syntax;
 
 import dev.qixils.quasicolon.Key;
+import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class UnknownTokenException extends InvalidSyntaxException {
+public class UnknownTokenException extends UserError {
 
 	// same TODO as parent class
 

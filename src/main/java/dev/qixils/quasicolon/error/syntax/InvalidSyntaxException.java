@@ -7,11 +7,11 @@
 package dev.qixils.quasicolon.error.syntax;
 
 import dev.qixils.quasicolon.Key;
-import dev.qixils.quasicolon.error.LocalizedRuntimeException;
+import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-public class InvalidSyntaxException extends LocalizedRuntimeException {
+public class InvalidSyntaxException extends UserError {
 	private static final @NonNull Key UNKNOWN_ARGUMENT = Key.library("arg._unknown_");
 
 	// TODO: easy constructor for JDA args? idk what this would involve tbh
