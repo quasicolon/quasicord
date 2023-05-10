@@ -12,7 +12,10 @@ import dev.qixils.quasicolon.text.Text;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+
+import java.util.Optional;
 
 import static dev.qixils.quasicolon.Key.library;
 import static dev.qixils.quasicolon.locale.Context.fromInteraction;
@@ -31,17 +34,15 @@ class CommandExecutor {
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@SubscribeEvent
-	public void onCommandInteraction(@NonNull GenericCommandInteractionEvent event) {
-		library.commands.entrySet().stream()
-				.filter(entry -> entry.getKey().equals(event.getFullCommandName()))
-				.findFirst()
-				.ifPresentOrElse(entry -> {
+	public void onCommandInteraction(@NonNull CommandInteraction event) {
+		Optional.ofNullable( library.commands.get(event.getFullCommandName()) )
+				.ifPresentOrElse(slash_cmd -> {
 					try {
-						((Command) entry.getValue()).accept(event);
+						((Command) slash_cmd).accept(event);
 					} catch (UserError e) {
 						sendEphemeral(event, e);
 					} catch (Exception e) {
-						library.getLogger().error("Failed to execute command " + entry.getKey(), e);
+						library.getLogger().error("Failed to execute command " + slash_cmd.getName(), e);
 						sendEphemeral(event, single(library("exception.command_error")));
 					}
 				}, () -> {
