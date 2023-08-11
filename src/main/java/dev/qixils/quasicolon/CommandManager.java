@@ -14,14 +14,19 @@ import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static dev.qixils.quasicolon.Key.library;
 import static dev.qixils.quasicolon.locale.Context.fromInteraction;
 import static dev.qixils.quasicolon.text.Text.single;
 
-class CommandExecutor {
+public class CommandManager {
 	private final @NonNull Quasicord library;
+	protected final @NonNull Map<String, Command<?>> commands = new HashMap<>();
+	private boolean initialUpsertDone = false;
 
-	public CommandExecutor(@NonNull Quasicord library) {
+	public CommandManager(@NonNull Quasicord library) {
 		this.library = library;
 	}
 
@@ -29,10 +34,30 @@ class CommandExecutor {
 		text.asString(fromInteraction(event)).subscribe(string -> event.reply(string).setEphemeral(true).queue());
 	}
 
+	public void upsertCommands() {
+		if (initialUpsertDone) return;
+		initialUpsertDone = true;
+		var updater = library.getJDA().updateCommands();
+		for (Command<?> command : commands.values())
+			//noinspection ResultOfMethodCallIgnored
+			updater.addCommands(command.getCommandData());
+		updater.queue();
+	}
+
+	public void registerCommand(@NonNull Command<?> command) {
+		commands.put(command.getName(), command);
+		if (initialUpsertDone)
+			library.getJDA().upsertCommand(command.getCommandData()).queue();
+	}
+
+	public void discoverCommands(@NonNull Object object) {
+		// TODO: use AnnotationParser
+	}
+
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@SubscribeEvent
 	public void onCommandInteraction(@NonNull GenericCommandInteractionEvent event) {
-		library.commands.entrySet().stream()
+		commands.entrySet().stream()
 				.filter(entry -> entry.getKey().equals(event.getFullCommandName()))
 				.findFirst()
 				.ifPresentOrElse(entry -> {

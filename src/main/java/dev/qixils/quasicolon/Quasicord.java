@@ -6,7 +6,6 @@
 
 package dev.qixils.quasicolon;
 
-import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.events.EventDispatcher;
 import dev.qixils.quasicolon.locale.LocaleProvider;
@@ -36,7 +35,6 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -59,11 +57,12 @@ public class Quasicord {
 	protected final long botId;
 	protected final @NonNull TranslationProvider translationProvider;
 	protected final @NonNull LocaleProvider localeProvider;
-	protected final @NonNull Map<String, Command<?>> commands = new HashMap<>();
+	protected final @NonNull CommandManager commandManager;
 
 	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
 		// misc initialization
 		this.namespace = namespace;
+		this.commandManager = new CommandManager(this);
 
 		// register default event handler
 		if (eventHandler != null)
@@ -122,7 +121,7 @@ public class Quasicord {
 		JDA jda = builder.build();
 		jda.setRequiredScopes("applications.commands");
 		jda.addEventListener(tempListenerExecutor);
-		jda.addEventListener(new CommandExecutor(this));
+		jda.addEventListener(commandManager);
 		jda.addEventListener(new Object() {
 			@net.dv8tion.jda.api.hooks.SubscribeEvent
 			public void on(net.dv8tion.jda.api.events.Event event) {
@@ -131,6 +130,8 @@ public class Quasicord {
 		});
 		try {
 			jda.awaitReady();
+			preRegisterCommands();
+			commandManager.upsertCommands();
 		} catch (InterruptedException ignored) {
 		}
 		return jda;
@@ -147,13 +148,10 @@ public class Quasicord {
 	}
 
 	/**
-	 * Registers a command.
-	 *
-	 * @param command the command to register
+	 * Called before commands are registered.
+	 * Use this to register commands in {@link #getCommandManager()} in preparation for the initial upsert.
 	 */
-	public void register(@NonNull Command<?> command) {
-		Objects.requireNonNull(command, "command cannot be null");
-		commands.put(command.getName(), command);
+	protected void preRegisterCommands() {
 	}
 
 	/**
@@ -242,6 +240,15 @@ public class Quasicord {
 	 */
 	public @NonNull EventDispatcher getEventDispatcher() {
 		return eventDispatcher;
+	}
+
+	/**
+	 * Gets the command manager.
+	 *
+	 * @return command manager
+	 */
+	public @NonNull CommandManager getCommandManager() {
+		return commandManager;
 	}
 
 	/**
