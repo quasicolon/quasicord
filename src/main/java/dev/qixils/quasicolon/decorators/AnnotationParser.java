@@ -26,6 +26,7 @@ import dev.qixils.quasicolon.utils.QuasiMessage;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.*;
@@ -162,6 +163,7 @@ public final class AnnotationParser {
 			if (option != null) {
 				// register option
 				String optId = option.value();
+				String fullOptId = id + ".options." + optId;
 				AutoCompleteWith acWith = parameter.getAnnotation(AutoCompleteWith.class);
 				AutoCompleteFrom acFrom = parameter.getAnnotation(AutoCompleteFrom.class);
 				Range range = parameter.getAnnotation(Range.class);
@@ -209,22 +211,19 @@ public final class AnnotationParser {
 				}
 
 				// auto complete
-				AutoCompleteWith acwith = command.getClass().getAnnotation(AutoCompleteWith.class);
-				AutoCompleteFrom acfrom = command.getClass().getAnnotation(AutoCompleteFrom.class);
-				if (acwith != null && acfrom != null)
+				if (acWith != null && acFrom != null)
 					throw new IllegalArgumentException("Cannot have both @AutoCompleteWith and @AutoCompleteFrom on the same command");
-				if (acwith != null || acfrom != null) {
+				if (acWith != null || acFrom != null) {
 					if (!option.type().canSupportChoices())
 						throw new IllegalArgumentException("Cannot use @Choice on option of type " + option.type());
-					opt.setAutoComplete(true);
 				}
-				if (acwith != null) {
-					AutoCompleter autoCompleter = registerAutoCompleter(acwith.value());
-					autoCompletersByCommand.put(id, autoCompleter);
-				} else if (acfrom != null) {
-					var autocompletes = createChoices(acfrom.value(), option.type(), id + ".options." + optId + ".choices.", i18n);
+				if (acWith != null) {
+					AutoCompleter autoCompleter = registerAutoCompleter(acWith.value());
+					autoCompletersByCommand.put(fullOptId, autoCompleter);
+				} else if (acFrom != null) {
+					var autocompletes = createChoices(acFrom.value(), option.type(), fullOptId + ".choices.", i18n);
 					AutoCompleter autoCompleter = new AutoCompleterFrom(autocompletes);
-					autoCompletersByCommand.put(id, autoCompleter);
+					autoCompletersByCommand.put(fullOptId, autoCompleter);
 				}
 
 				command.addOptions(opt);
@@ -432,8 +431,10 @@ public final class AnnotationParser {
 	}
 
 	@SubscribeEvent
-	public void onAutoComplete(CommandAutoCompleteInteraction event) {
-		AutoCompleter completer = autoCompletersByCommand.get(event.getFullCommandName());
+	public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
+		// TODO: move to Command class maybe>?? also just like cleanup i think
+		String id = event.getFullCommandName() /* TODO: wrong format! */ + ".options." + event.getFocusedOption().getName();
+		AutoCompleter completer = autoCompletersByCommand.get(id);
 		if (completer == null) {
 			event.replyChoices(Collections.emptyList()).queue();
 			return;
