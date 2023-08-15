@@ -6,6 +6,8 @@
 
 package dev.qixils.quasicolon.decorators;
 
+import dev.qixils.quasicolon.autocomplete.AutoCompleter;
+import dev.qixils.quasicolon.autocomplete.AutoCompleterFrom;
 import dev.qixils.quasicolon.cogs.Cog;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.cogs.impl.AbstractCommand;
@@ -24,6 +26,7 @@ import dev.qixils.quasicolon.utils.QuasiMessage;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
@@ -38,10 +41,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -49,9 +49,12 @@ public final class AnnotationParser {
 
 	private static final Logger logger = LoggerFactory.getLogger(AnnotationParser.class);
 	private final @NonNull Cog cog;
+	private final @NonNull Map<Class<? extends AutoCompleter>, AutoCompleter> autoCompleters = new HashMap<>();
+	private final @NonNull Map<String, AutoCompleter> autoCompletersByCommand = new HashMap<>();
 
 	public AnnotationParser(@NonNull Cog cog) {
 		this.cog = cog;
+		cog.getLibrary().getJDA().addEventListener(this);
 	}
 
 	public Collection<Command<?>> parse(Object object) {
@@ -199,10 +202,30 @@ public final class AnnotationParser {
 					opt.setChannelTypes(channelTypes.value());
 
 				// choices
-				if (choices.length > 0)
+				if (choices.length > 0) {
+					if (!opt.getType().canSupportChoices())
+						throw new IllegalArgumentException("Cannot use @Choice on option of type " + option.type());
 					opt.addChoices(createChoices(choices, option.type(), id + ".options." + optId + ".choices.", i18n));
+				}
 
-				// TODO: auto complete
+				// auto complete
+				AutoCompleteWith acwith = command.getClass().getAnnotation(AutoCompleteWith.class);
+				AutoCompleteFrom acfrom = command.getClass().getAnnotation(AutoCompleteFrom.class);
+				if (acwith != null && acfrom != null)
+					throw new IllegalArgumentException("Cannot have both @AutoCompleteWith and @AutoCompleteFrom on the same command");
+				if (acwith != null || acfrom != null) {
+					if (!option.type().canSupportChoices())
+						throw new IllegalArgumentException("Cannot use @Choice on option of type " + option.type());
+					opt.setAutoComplete(true);
+				}
+				if (acwith != null) {
+					AutoCompleter autoCompleter = registerAutoCompleter(acwith.value());
+					autoCompletersByCommand.put(id, autoCompleter);
+				} else if (acfrom != null) {
+					var autocompletes = createChoices(acfrom.value(), option.type(), id + ".options." + optId + ".choices.", i18n);
+					AutoCompleter autoCompleter = new AutoCompleterFrom(autocompletes);
+					autoCompletersByCommand.put(id, autoCompleter);
+				}
 
 				command.addOptions(opt);
 			}
@@ -314,7 +337,7 @@ public final class AnnotationParser {
 					throw new IllegalArgumentException("Failed to construct converter", e);
 				}
 			} else {
-				throw new IllegalArgumentException("Converter constructor must have 0 or 1 parameters; see @");
+				throw new IllegalArgumentException("Converter constructor must have 0 or 1 parameters; see @"); // TODO: ?
 			}
 		}
 		throw new IllegalArgumentException("Converter must have a no-arg or Quasicord/Cog constructor");
@@ -371,5 +394,50 @@ public final class AnnotationParser {
 				throw new IllegalArgumentException("Cannot use @Choice on option of type " + optionType);
 		}
 		return jdaChoices;
+	}
+
+	private AutoCompleter createAutoCompleter(Class<? extends AutoCompleter> completerClass) {
+		for (Constructor<?> constructor : completerClass.getConstructors()) {
+			if (constructor.getParameterCount() == 0) {
+				try {
+					return (AutoCompleter) constructor.newInstance();
+				} catch (Exception e) {
+					throw new IllegalArgumentException("Failed to construct auto-completer", e);
+				}
+			} else if (constructor.getParameterCount() == 1) {
+				Class<?> argClass = constructor.getParameterTypes()[0];
+				// get arg to construct with
+				Object arg;
+				if (argClass.isAssignableFrom(cog.getLibrary().getClass()))
+					arg = cog.getLibrary();
+				else if (argClass.isAssignableFrom(cog.getClass()))
+					arg = cog;
+				else
+					throw new IllegalArgumentException("Auto-completer constructor must take Quasicord or Cog as an argument");
+				// construct
+				try {
+					return (AutoCompleter) constructor.newInstance(arg);
+				} catch (Exception e) {
+					throw new IllegalArgumentException("Failed to construct auto-completer", e);
+				}
+			} else {
+				throw new IllegalArgumentException("Auto-completer constructor must have 0 or 1 parameters; see @"); // TODO: ?
+			}
+		}
+		throw new IllegalArgumentException("Auto-completer must have a no-arg or Quasicord/Cog constructor");
+	}
+
+	private AutoCompleter registerAutoCompleter(Class<? extends AutoCompleter> autoCompleter) {
+		return autoCompleters.computeIfAbsent(autoCompleter, this::createAutoCompleter);
+	}
+
+	@SubscribeEvent
+	public void onAutoComplete(CommandAutoCompleteInteraction event) {
+		AutoCompleter completer = autoCompletersByCommand.get(event.getFullCommandName());
+		if (completer == null) {
+			event.replyChoices(Collections.emptyList()).queue();
+			return;
+		}
+		event.replyChoices(completer.getSuggestions(event)).queue();
 	}
 }
