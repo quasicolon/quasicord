@@ -8,6 +8,7 @@ package dev.qixils.quasicolon.utils;
 
 import dev.qixils.quasicolon.text.Text;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
+import net.dv8tion.jda.api.utils.messages.MessageCreateRequest;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Contract;
 
@@ -20,7 +21,7 @@ import java.util.function.Consumer;
  * This wrapper is useful for sending embeds or attachments
  * from an {@code @AutoSend}-annotated method.
  */
-public record QuasiMessage(@NonNull Text text, @NonNull Consumer<MessageCreateAction> modifier) {
+public record QuasiMessage(@NonNull Text text, @NonNull Consumer<MessageCreateRequest<?>> modifier) {
 
 	/**
 	 * Returns the {@link Text} to be used as the message content.
@@ -40,7 +41,7 @@ public record QuasiMessage(@NonNull Text text, @NonNull Consumer<MessageCreateAc
 	 */
 	@NonNull
 	@Contract(pure = true)
-	public Consumer<MessageCreateAction> modifier() {
+	public Consumer<MessageCreateRequest<?>> modifier() {
 		return modifier;
 	}
 }

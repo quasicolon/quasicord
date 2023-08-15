@@ -12,31 +12,20 @@ import dev.qixils.quasicolon.cogs.impl.AbstractCommand;
 import dev.qixils.quasicolon.converter.Converter;
 import dev.qixils.quasicolon.converter.VoidConverter;
 import dev.qixils.quasicolon.converter.VoidConverterImpl;
-import dev.qixils.quasicolon.decorators.option.AutoCompleteFrom;
-import dev.qixils.quasicolon.decorators.option.AutoCompleteWith;
-import dev.qixils.quasicolon.decorators.option.ChannelTypes;
-import dev.qixils.quasicolon.decorators.option.Choice;
-import dev.qixils.quasicolon.decorators.option.Contextual;
-import dev.qixils.quasicolon.decorators.option.ConvertWith;
-import dev.qixils.quasicolon.decorators.option.Option;
-import dev.qixils.quasicolon.decorators.option.Range;
+import dev.qixils.quasicolon.decorators.option.*;
 import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
+import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
 import dev.qixils.quasicolon.locale.translation.UnknownTranslation;
+import dev.qixils.quasicolon.text.Text;
+import dev.qixils.quasicolon.utils.QuasiMessage;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.IMentionable;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
-import net.dv8tion.jda.api.interactions.commands.OptionMapping;
-import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
+import net.dv8tion.jda.api.interactions.commands.*;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
@@ -284,12 +273,18 @@ public final class AnnotationParser {
 		};
 	}
 
-	private void ConsumeCommandResult(@NonNull SlashCommandInteraction interaction, Object result) {
+	private void ConsumeCommandResult(@NonNull CommandInteraction interaction, Object result) {
 		switch (result) {
 			case CompletableFuture<?> fut -> fut.thenAccept(res -> ConsumeCommandResult(interaction, res));
 			// terminal cases:
 			case null -> {}
-			case String text -> interaction.reply(text).queue(); // TODO: QuasiMessage and translation
+			case QuasiMessage message -> message.text().asString(Context.fromInteraction(interaction)).subscribe(string -> {
+				var action = interaction.reply(string);
+				message.modifier().accept(action);
+				action.queue();
+			});
+			case Text text -> text.asString(Context.fromInteraction(interaction)).subscribe(msg -> interaction.reply(msg).queue());
+			case String text -> interaction.reply(text).queue();
 			default -> throw new IllegalArgumentException("Unsupported response type: " + result.getClass().getName());
 		}
 	}
