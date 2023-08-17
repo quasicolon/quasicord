@@ -8,27 +8,11 @@ package dev.qixils.quasicolon.test;
 
 import dev.qixils.quasicolon.test.actions.DummyCommandListUpdateAction;
 import dev.qixils.quasicolon.test.actions.DummyRestAction;
-import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.ApplicationInfo;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Icon;
-import net.dv8tion.jda.api.entities.Role;
-import net.dv8tion.jda.api.entities.ScheduledEvent;
-import net.dv8tion.jda.api.entities.SelfUser;
-import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.Webhook;
-import net.dv8tion.jda.api.entities.channel.concrete.Category;
-import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.StageChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.entities.sticker.StickerPack;
@@ -43,11 +27,7 @@ import net.dv8tion.jda.api.managers.DirectAudioController;
 import net.dv8tion.jda.api.managers.Presence;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.CacheRestAction;
-import net.dv8tion.jda.api.requests.restaction.CommandCreateAction;
-import net.dv8tion.jda.api.requests.restaction.CommandEditAction;
-import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import net.dv8tion.jda.api.requests.restaction.GuildAction;
+import net.dv8tion.jda.api.requests.restaction.*;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.CacheView;
@@ -55,19 +35,13 @@ import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import okhttp3.OkHttpClient;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class DummyJDA implements JDA {
 	private final @NonNull ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -166,7 +140,7 @@ public class DummyJDA implements JDA {
 			this.idle = idle;
 		}
 	};
-	private final @NonNull SelfUser user = new DummySelfUser(this, "qixils", "0493", 140564059417346049L);
+	private final @NonNull SelfUser user = new DummySelfUser(this, "qixils", "Lexi", 140564059417346049L);
 	private final @NonNull ApplicationInfo applicationInfo = new DummyApplicationInfo(this, user, user);
 	private @NonNull IEventManager eventManager = new AnnotatedEventManager();
 	private boolean autoReconnect = true;
@@ -204,6 +178,12 @@ public class DummyJDA implements JDA {
 	@Override
 	public JDA awaitStatus(JDA.@NonNull Status status, Status @NonNull ... failOn) {
 		return this;
+	}
+
+	@Override
+	public boolean awaitShutdown(long duration, @NotNull TimeUnit unit) throws InterruptedException {
+		shutdownNow();
+		return true;
 	}
 
 	@Override
@@ -297,6 +277,18 @@ public class DummyJDA implements JDA {
 	@Override
 	public RestAction<Void> deleteCommandById(@NonNull String commandId) {
 		return new DummyRestAction<>(this);
+	}
+
+	@NotNull
+	@Override
+	public RestAction<List<RoleConnectionMetadata>> retrieveRoleConnectionMetadata() {
+		return new DummyRestAction<>(this, Collections.emptyList());
+	}
+
+	@NotNull
+	@Override
+	public RestAction<List<RoleConnectionMetadata>> updateRoleConnectionMetadata(@NotNull Collection<? extends RoleConnectionMetadata> records) {
+		return new DummyRestAction<>(this, new ArrayList<>(records));
 	}
 
 	@NonNull
@@ -515,12 +507,6 @@ public class DummyJDA implements JDA {
 	@Override
 	public void shutdownNow() {
 		cancelRequests();
-	}
-
-	@NonNull
-	@Override
-	public AccountType getAccountType() {
-		return AccountType.BOT;
 	}
 
 	@NonNull

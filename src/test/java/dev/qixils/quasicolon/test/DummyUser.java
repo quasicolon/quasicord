@@ -23,8 +23,9 @@ import java.util.Objects;
 public class DummyUser implements User {
 	private final JDA jda;
 	private final String username;
-	private final String discriminator;
-	private final short discrimShort;
+	private final String globalName;
+	private final String discriminator = "0";
+	private final short discrimShort = 0;
 	private final long id;
 	private final boolean bot;
 	private final boolean system;
@@ -33,24 +34,18 @@ public class DummyUser implements User {
 		this.jda = Objects.requireNonNull(jda, "jda");
 		this.id = id;
 		this.username = null;
-		this.discriminator = null;
-		this.discrimShort = 0;
+		this.globalName = null;
 		this.bot = bot;
 		this.system = system;
 	}
 
-	public DummyUser(@NotNull JDA jda, @NotNull String username, @NotNull String discriminator, long id, boolean bot, boolean system) {
+	public DummyUser(@NotNull JDA jda, @NotNull String username, @NotNull String globalName, long id, boolean bot, boolean system) {
 		this.jda = Objects.requireNonNull(jda, "jda");
 		this.username = Objects.requireNonNull(username, "username");
+		this.globalName = Objects.requireNonNull(globalName, "globalName");
 		this.id = id;
 		this.bot = bot;
 		this.system = system;
-
-		Objects.requireNonNull(discriminator, "discriminator");
-		if (discriminator.length() != 4)
-			throw new IllegalArgumentException("Illegal length for discriminator");
-		this.discriminator = discriminator;
-		this.discrimShort = Short.parseShort(discriminator);
 	}
 
 
@@ -60,6 +55,14 @@ public class DummyUser implements User {
 		if (username == null)
 			throw new UnsupportedOperationException("User was created from only an ID");
 		return username;
+	}
+
+	@Nullable
+	@Override
+	public String getGlobalName() {
+		if (globalName == null)
+			throw new UnsupportedOperationException("User was created from only an ID");
+		return globalName;
 	}
 
 	@NotNull

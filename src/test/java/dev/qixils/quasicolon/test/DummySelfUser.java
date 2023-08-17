@@ -24,8 +24,8 @@ public class DummySelfUser extends DummyUser implements SelfUser {
         super(jda, id, true, false);
     }
 
-    public DummySelfUser(@NotNull JDA jda, @NotNull String username, @NotNull String discriminator, long id) {
-        super(jda, username, discriminator, id, true, false);
+    public DummySelfUser(@NotNull JDA jda, @NotNull String username, @NotNull String globalName, long id) {
+        super(jda, username, globalName, id, true, false);
     }
 
     @Override
