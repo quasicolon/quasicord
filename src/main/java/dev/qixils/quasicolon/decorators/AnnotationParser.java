@@ -97,13 +97,16 @@ public final class AnnotationParser {
 
 		// get i18n
 		String namespace = cog.getNamespace();
-		String id = annotation.value();
+		String raw_id = annotation.value();
 		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
 
 		// get owning command
 		SlashCommandGroup group = object.getClass().getAnnotation(SlashCommandGroup.class);
+		final String id;
 		if (group != null) {
-			id = group.value() + "." + id;
+			id = group.value() + "." + raw_id;
+		} else {
+			id = raw_id;
 		}
 
 		// name
