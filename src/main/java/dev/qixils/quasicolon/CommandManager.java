@@ -9,6 +9,7 @@ package dev.qixils.quasicolon;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
@@ -34,10 +35,10 @@ public class CommandManager {
 		text.asString(fromInteraction(event)).subscribe(string -> event.reply(string).setEphemeral(true).queue());
 	}
 
-	public void upsertCommands() {
+	public void upsertCommands(JDA jda) {
 		if (initialUpsertDone) return;
 		initialUpsertDone = true;
-		var updater = library.getJDA().updateCommands();
+		var updater = jda.updateCommands();
 		for (Command<?> command : commands.values())
 			//noinspection ResultOfMethodCallIgnored
 			updater.addCommands(command.getCommandData());

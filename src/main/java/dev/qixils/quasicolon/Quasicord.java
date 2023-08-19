@@ -131,7 +131,7 @@ public class Quasicord {
 		try {
 			jda.awaitReady();
 			preRegisterCommands();
-			commandManager.upsertCommands();
+			commandManager.upsertCommands(jda);
 		} catch (InterruptedException ignored) {
 		}
 		return jda;
