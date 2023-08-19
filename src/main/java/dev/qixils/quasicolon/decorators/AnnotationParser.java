@@ -17,6 +17,7 @@ import dev.qixils.quasicolon.converter.VoidConverterImpl;
 import dev.qixils.quasicolon.decorators.option.*;
 import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
+import dev.qixils.quasicolon.decorators.slash.SlashCommandGroup;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
@@ -92,11 +93,18 @@ public final class AnnotationParser {
 	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
 		// TODO: handle command groups (the SlashCommandGroup annotation and the dots in SlashCommand#value)
 		//  ngl I have no ideas how to implement this right now... will need some sort of map or wrapper record or something
+		//  EDIT: oh god subcommands are *abysmal* dude, why are there three distinct classes???
 
 		// get i18n
 		String namespace = cog.getNamespace();
 		String id = annotation.value();
 		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
+
+		// get owning command
+		SlashCommandGroup group = object.getClass().getAnnotation(SlashCommandGroup.class);
+		if (group != null) {
+			id = group.value() + "." + id;
+		}
 
 		// name
 		SingleTranslation name = i18n.getSingle(id + ".name", i18n.getDefaultLocale());
