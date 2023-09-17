@@ -26,7 +26,6 @@ public @interface ConvertWith {
 	 * <ul>
 	 *     <li>no arguments</li>
 	 *     <li>one argument of type {@link dev.qixils.quasicolon.Quasicord Quasicord}</li>
-	 *     <li>one argument of type {@link dev.qixils.quasicolon.cogs.Cog Cog}</li>
 	 * </ul>
 	 *
 	 * @return converter class

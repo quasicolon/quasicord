@@ -6,9 +6,9 @@
 
 package dev.qixils.quasicolon.decorators;
 
+import dev.qixils.quasicolon.CommandManager;
 import dev.qixils.quasicolon.autocomplete.AutoCompleter;
 import dev.qixils.quasicolon.autocomplete.AutoCompleterFrom;
-import dev.qixils.quasicolon.cogs.Cog;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.cogs.impl.AbstractCommand;
 import dev.qixils.quasicolon.converter.Converter;
@@ -50,13 +50,13 @@ import java.util.function.Function;
 public final class AnnotationParser {
 
 	private static final Logger logger = LoggerFactory.getLogger(AnnotationParser.class);
-	private final @NonNull Cog cog;
+	private final @NonNull CommandManager commandManager;
 	private final @NonNull Map<Class<? extends AutoCompleter>, AutoCompleter> autoCompleters = new HashMap<>();
 	private final @NonNull Map<String, AutoCompleter> autoCompletersByCommand = new HashMap<>();
 
-	public AnnotationParser(@NonNull Cog cog) {
-		this.cog = cog;
-		cog.getLibrary().getJDA().addEventListener(this);
+	public AnnotationParser(@NonNull CommandManager commandManager) {
+		this.commandManager = commandManager;
+		commandManager.getLibrary().getJDA().addEventListener(this);
 	}
 
 	public Collection<Command<?>> parse(Object object) {
@@ -96,12 +96,18 @@ public final class AnnotationParser {
 		//  EDIT: oh god subcommands are *abysmal* dude, why are there three distinct classes???
 
 		// get i18n
-		String namespace = cog.getNamespace();
-		String raw_id = annotation.value();
+		String namespace;
+		if (method.isAnnotationPresent(Namespace.class))
+			namespace = method.getAnnotation(Namespace.class).value();
+		else if (object.getClass().isAnnotationPresent(Namespace.class))
+			namespace = object.getClass().getAnnotation(Namespace.class).value();
+		else
+			namespace = commandManager.getLibrary().getNamespace();
 		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
 
 		// get owning command
 		SlashCommandGroup group = object.getClass().getAnnotation(SlashCommandGroup.class);
+		String raw_id = annotation.value();
 		final String id;
 		if (group != null) {
 			id = group.value() + "." + raw_id;
@@ -158,13 +164,13 @@ public final class AnnotationParser {
 				if (Interaction.class.isAssignableFrom(parameter.getType()))
 					converter = new VoidConverterImpl<>(Interaction.class, Function.identity());
 				else {
-					converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(Void.class, parameter.getType());
+					converter = commandManager.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(Void.class, parameter.getType());
 					if (converter == null)
 						throw new IllegalArgumentException("No converter found for parameter " + parameter.getName() + " of type " + parameter.getType().getName());
 				}
 			} else if (option != null) {
 				Class<?> inputClass = parseInputClass(parameter.getType(), option.type());
-				converter = cog.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(inputClass, parameter.getType());
+				converter = commandManager.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(inputClass, parameter.getType());
 				if (converter == null)
 					throw new IllegalArgumentException("No converter found for parameter " + parameter.getName() + " of type " + parameter.getType().getName());
 			} else {
@@ -334,12 +340,12 @@ public final class AnnotationParser {
 				Class<?> argClass = constructor.getParameterTypes()[0];
 				// get arg to construct with
 				Object arg;
-				if (argClass.isAssignableFrom(cog.getLibrary().getClass()))
-					arg = cog.getLibrary();
-				else if (argClass.isAssignableFrom(cog.getClass()))
-					arg = cog;
+				if (argClass.isAssignableFrom(commandManager.getLibrary().getClass()))
+					arg = commandManager.getLibrary();
+				else if (argClass.isAssignableFrom(commandManager.getClass()))
+					arg = commandManager;
 				else
-					throw new IllegalArgumentException("Converter constructor must take Quasicord or Cog as an argument");
+					throw new IllegalArgumentException("Converter constructor must take Quasicord as an argument");
 				// construct
 				try {
 					return (Converter<?, ?>) constructor.newInstance(arg);
@@ -350,7 +356,7 @@ public final class AnnotationParser {
 				throw new IllegalArgumentException("Converter constructor must have 0 or 1 parameters; see @"); // TODO: ?
 			}
 		}
-		throw new IllegalArgumentException("Converter must have a no-arg or Quasicord/Cog constructor");
+		throw new IllegalArgumentException("Converter must have a no-arg or Quasicord constructor");
 	}
 
 	private Class<?> parseInputClass(Class<?> outputClass, OptionType optionType) {
@@ -407,6 +413,7 @@ public final class AnnotationParser {
 	}
 
 	private AutoCompleter createAutoCompleter(Class<? extends AutoCompleter> completerClass) {
+		// TODO: the duplication here is immense
 		for (Constructor<?> constructor : completerClass.getConstructors()) {
 			if (constructor.getParameterCount() == 0) {
 				try {
@@ -418,12 +425,12 @@ public final class AnnotationParser {
 				Class<?> argClass = constructor.getParameterTypes()[0];
 				// get arg to construct with
 				Object arg;
-				if (argClass.isAssignableFrom(cog.getLibrary().getClass()))
-					arg = cog.getLibrary();
-				else if (argClass.isAssignableFrom(cog.getClass()))
-					arg = cog;
+				if (argClass.isAssignableFrom(commandManager.getLibrary().getClass()))
+					arg = commandManager.getLibrary();
+				else if (argClass.isAssignableFrom(commandManager.getClass()))
+					arg = commandManager;
 				else
-					throw new IllegalArgumentException("Auto-completer constructor must take Quasicord or Cog as an argument");
+					throw new IllegalArgumentException("Auto-completer constructor must take Quasicord as an argument");
 				// construct
 				try {
 					return (AutoCompleter) constructor.newInstance(arg);
@@ -434,7 +441,7 @@ public final class AnnotationParser {
 				throw new IllegalArgumentException("Auto-completer constructor must have 0 or 1 parameters; see @"); // TODO: ?
 			}
 		}
-		throw new IllegalArgumentException("Auto-completer must have a no-arg or Quasicord/Cog constructor");
+		throw new IllegalArgumentException("Auto-completer must have a no-arg or Quasicord constructor");
 	}
 
 	private AutoCompleter registerAutoCompleter(Class<? extends AutoCompleter> autoCompleter) {

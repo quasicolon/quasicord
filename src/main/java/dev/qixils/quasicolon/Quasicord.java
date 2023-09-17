@@ -152,6 +152,7 @@ public class Quasicord {
 	 * Use this to register commands in {@link #getCommandManager()} in preparation for the initial upsert.
 	 */
 	protected void preRegisterCommands() {
+		// TODO: maybe move to an event? timings issues might pose an issue for this but probably not
 	}
 
 	/**

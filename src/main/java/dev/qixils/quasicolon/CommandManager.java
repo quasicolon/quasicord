@@ -9,6 +9,7 @@ package dev.qixils.quasicolon;
 import dev.qixils.quasicolon.cogs.Command;
 import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
+import lombok.Getter;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
@@ -23,6 +24,7 @@ import static dev.qixils.quasicolon.locale.Context.fromInteraction;
 import static dev.qixils.quasicolon.text.Text.single;
 
 public class CommandManager {
+	@Getter
 	private final @NonNull Quasicord library;
 	protected final @NonNull Map<String, Command<?>> commands = new HashMap<>();
 	private boolean initialUpsertDone = false;

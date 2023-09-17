@@ -7,7 +7,6 @@
 package dev.qixils.quasicolon.registry.core;
 
 import dev.qixils.quasicolon.Quasicord;
-import dev.qixils.quasicolon.cogs.GlobalCog;
 import dev.qixils.quasicolon.converter.ConverterRegistry;
 import dev.qixils.quasicolon.registry.ClosableRegistry;
 import dev.qixils.quasicolon.registry.Registry;
@@ -28,11 +27,6 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	public final VariableRegistry VARIABLE_REGISTRY;
 
 	/**
-	 * The registry of {@link dev.qixils.quasicolon.cogs.GlobalCog global cogs}.
-	 */
-	public final ClosableRegistry<GlobalCog> GLOBAL_COG_REGISTRY;
-
-	/**
 	 * The registry of {@link dev.qixils.quasicolon.converter.Converter converters}.
 	 */
 	public final ConverterRegistry CONVERTER_REGISTRY;
@@ -48,7 +42,6 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 		this.quasicord = quasicord;
 		register(this);
 		VARIABLE_REGISTRY = register(new VariableRegistry());
-		GLOBAL_COG_REGISTRY = register(new GlobalCogRegistry(quasicord));
 		CONVERTER_REGISTRY = register(new ConverterRegistry(quasicord));
 		close();
 	}
