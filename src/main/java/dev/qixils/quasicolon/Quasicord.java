@@ -62,7 +62,6 @@ public class Quasicord {
 	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
 		// misc initialization
 		this.namespace = namespace;
-		this.commandManager = new CommandManager(this);
 
 		// register default event handler
 		if (eventHandler != null)
@@ -90,8 +89,9 @@ public class Quasicord {
 		botId = jda.getSelfUser().getIdLong();
 		ownerId = jda.retrieveApplicationInfo().complete().getOwner().getIdLong();
 
-		// initialize registry (depends on JDA)
+		// late initialize (depends on JDA)
 		rootRegistry = new RegistryRegistry(this);
+		this.commandManager = new CommandManager(this);
 	}
 
 	@NonNull
