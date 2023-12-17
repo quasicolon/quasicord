@@ -17,6 +17,7 @@ import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +40,11 @@ public class CommandManager {
 
 	private static void sendEphemeral(@NonNull IReplyCallback event, @NonNull Text text) {
 		text.asString(fromInteraction(event)).subscribe(string -> event.reply(string).setEphemeral(true).queue());
+	}
+
+	@Nullable
+	public Command<?> getCommand(String discordName) {
+		return commands.get(discordName);
 	}
 
 	public void upsertCommands(JDA jda) {

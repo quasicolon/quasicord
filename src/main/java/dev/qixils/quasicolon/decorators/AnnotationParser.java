@@ -232,17 +232,22 @@ public final class AnnotationParser {
 	@SubscribeEvent
 	public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
 		// TODO: move to Command class maybe>?? also just like cleanup i think
-		String id = event.getFullCommandName().replace(' ', '/') + ".options." + event.getFocusedOption().getName();
-		AutoCompleter completer = autoCompletersByCommand.get(id);
+		Command<?> command = commandManager.getCommand(event.getFullCommandName());
 
 		Collection<net.dv8tion.jda.api.interactions.commands.Command.Choice> response = Collections.emptyList();
-		if (completer != null) {
-			try {
-				response = completer.getSuggestions(event);
-			} catch (Exception e) {
-				logger.error("Autocompleter threw exception handling " + event, e);
+		if (command != null) {
+			String id = command.getName() + ".options." + event.getFocusedOption().getName();
+			AutoCompleter completer = autoCompletersByCommand.get(id);
+
+			if (completer != null) {
+				try {
+					response = completer.getSuggestions(event);
+				} catch (Exception e) {
+					logger.error("Autocompleter threw exception handling " + event, e);
+				}
 			}
 		}
+
 		event.replyChoices(response).queue();
 	}
 }
