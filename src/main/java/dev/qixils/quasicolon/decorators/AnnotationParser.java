@@ -159,10 +159,6 @@ public final class AnnotationParser {
 		return commands;
 	}
 
-	private Command<ContextInteraction<?>> parseApplicationCommand(Object object, Method method, ApplicationCommand annotation) {
-		throw new UnsupportedOperationException("TODO"); // TODO
-	}
-
 	@NonNull
 	private String getNamespace(@Nullable AnnotatedElement @Nullable ... objects) {
 		if (objects != null) {
@@ -175,18 +171,23 @@ public final class AnnotationParser {
 		return commandManager.getLibrary().getNamespace();
 	}
 
+	private Command<ContextInteraction<?>> parseApplicationCommand(Object object, Method method, ApplicationCommand annotation) {
+
+		throw new UnsupportedOperationException("TODO"); // TODO
+	}
+
 	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
 		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
 		SlashCommandData command = createSlashCommandData(annotation, method, object.getClass());
 		SlashCommandDataBranch branch = new SlashCommandDataBranchImpl(command, null, null);
-		return new ParserCommand(annotation.value(), this, i18n, branch, object, method);
+		return new ParserSlashCommand(annotation.value(), this, i18n, branch, object, method);
 	}
 
 	private Command<SlashCommandInteraction> parseSlashSubCommand(Object object, Method method, SlashCommandData command, SlashCommand parent, SlashSubCommand annotation) {
 		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
 		String id = parent.value() + '/' + annotation.value();
 		SlashCommandDataBranch branch = createSlashSubCommandData(command, id, method, object.getClass());
-		return new ParserCommand(id, this, i18n, branch, object, method);
+		return new ParserSlashCommand(id, this, i18n, branch, object, method);
 	}
 
 	private AutoCompleter createAutoCompleter(Class<? extends AutoCompleter> completerClass) {

@@ -19,10 +19,11 @@ import java.lang.annotation.Target;
 /**
  * Annotation for methods that represent interaction commands.
  * <p>
- * This command can have parameters annotated with {@link Contextual}.
- * Alongside those, there should be exactly one parameter without this annotation. This parameter should represent the
- * subject of the interaction, i.e. a {@link net.dv8tion.jda.api.interactions.components.buttons.Button Button} object
- * for a {@link net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction ButtonInteraction}.
+ * It is generally expected that the command have only one paramter representing the interaction or its subject,
+ * i.e. a {@link net.dv8tion.jda.api.entities.User User} object
+ * for a {@link net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction UserContextInteraction}.
+ * However, this is not a strict limit, and other parameters may be added if applicable, and will be treated similarly
+ * to {@link Contextual} parameters in {@link SlashCommand}.
  * </p>
  * The name of this command is taken from the translation file(s) using the {@link #value() provided ID}.
  *
