@@ -9,11 +9,14 @@ package dev.qixils.quasicolon.cogs;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.function.Consumer;
 
 /**
  * A wrapper for {@link CommandData} which defines an executor for the command.
+ *
+ * @param <I> The expected interaction type.
  */
 public interface Command<I extends CommandInteraction> extends Consumer<I> {
 
@@ -27,10 +30,11 @@ public interface Command<I extends CommandInteraction> extends Consumer<I> {
 
 	/**
 	 * Gets the data (i.e. the defined arguments) for the command.
+	 * May be null for subcommands.
 	 *
 	 * @return command data
 	 */
-	@NonNull
+	@Nullable
 	CommandData getCommandData();
 
 	/**

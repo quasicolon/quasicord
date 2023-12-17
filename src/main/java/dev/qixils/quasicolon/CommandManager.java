@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.HashMap;
@@ -41,16 +42,22 @@ public class CommandManager {
 		if (initialUpsertDone) return;
 		initialUpsertDone = true;
 		var updater = jda.updateCommands();
-		for (Command<?> command : commands.values())
-			//noinspection ResultOfMethodCallIgnored
-			updater.addCommands(command.getCommandData());
+		for (Command<?> command : commands.values()) {
+			CommandData cmd = command.getCommandData();
+			if (cmd != null) {
+				//noinspection ResultOfMethodCallIgnored
+				updater.addCommands(cmd);
+			}
+		}
 		updater.queue();
 	}
 
 	public void registerCommand(@NonNull Command<?> command) {
 		commands.put(command.getName(), command);
-		if (initialUpsertDone)
-			library.getJDA().upsertCommand(command.getCommandData()).queue();
+		if (!initialUpsertDone) return;
+		CommandData cmd = command.getCommandData();
+		if (cmd == null) return;
+		library.getJDA().upsertCommand(cmd).queue();
 	}
 
 	public void discoverCommands(@NonNull Object object) {

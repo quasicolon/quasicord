@@ -9,6 +9,8 @@ package dev.qixils.quasicolon.decorators;
 import dev.qixils.quasicolon.converter.Converter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.ApiStatus;
 
-record ConverterData(@NonNull Converter<?, ?> converter, @Nullable String optName) {
+@ApiStatus.Internal
+public record ConverterData(@NonNull Converter<?, ?> converter, @Nullable String optName) {
 }

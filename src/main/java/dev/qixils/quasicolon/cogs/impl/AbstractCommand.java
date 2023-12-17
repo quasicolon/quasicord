@@ -10,18 +10,19 @@ import dev.qixils.quasicolon.cogs.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractCommand<I extends CommandInteraction> implements Command<I> {
-	private final @NonNull CommandData commandData;
+	private final @Nullable CommandData commandData;
 	private final @NonNull Class<I> interactionClass;
 
-	public AbstractCommand(@NonNull CommandData commandData, @NonNull Class<I> interactionClass) {
+	public AbstractCommand(@Nullable CommandData commandData, @NonNull Class<I> interactionClass) {
 		this.commandData = commandData;
 		this.interactionClass = interactionClass;
 	}
 
-	@NotNull
+	@Nullable
 	@Override
 	public CommandData getCommandData() {
 		return commandData;
