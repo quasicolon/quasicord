@@ -7,6 +7,7 @@
 package dev.qixils.quasicolon;
 
 import dev.qixils.quasicolon.cogs.Command;
+import dev.qixils.quasicolon.decorators.AnnotationParser;
 import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.text.Text;
 import lombok.Getter;
@@ -28,10 +29,12 @@ public class CommandManager {
 	@Getter
 	private final @NonNull Quasicord library;
 	protected final @NonNull Map<String, Command<?>> commands = new HashMap<>();
+	private final AnnotationParser parser;
 	private boolean initialUpsertDone = false;
 
 	public CommandManager(@NonNull Quasicord library) {
 		this.library = library;
+		this.parser = new AnnotationParser(this);
 	}
 
 	private static void sendEphemeral(@NonNull IReplyCallback event, @NonNull Text text) {
@@ -53,7 +56,7 @@ public class CommandManager {
 	}
 
 	public void registerCommand(@NonNull Command<?> command) {
-		commands.put(command.getName(), command);
+		commands.put(command.getDiscordName(), command);
 		if (!initialUpsertDone) return;
 		CommandData cmd = command.getCommandData();
 		if (cmd == null) return;
@@ -61,27 +64,25 @@ public class CommandManager {
 	}
 
 	public void discoverCommands(@NonNull Object object) {
-		// TODO: use AnnotationParser
+		parser.parse(object).forEach(this::registerCommand);
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	@SubscribeEvent
 	public void onCommandInteraction(@NonNull GenericCommandInteractionEvent event) {
-		commands.entrySet().stream()
-				.filter(entry -> entry.getKey().equals(event.getFullCommandName()))
-				.findFirst()
-				.ifPresentOrElse(entry -> {
-					try {
-						((Command) entry.getValue()).accept(event);
-					} catch (UserError e) {
-						sendEphemeral(event, e);
-					} catch (Exception e) {
-						library.getLogger().error("Failed to execute command " + entry.getKey(), e);
-						sendEphemeral(event, single(library("exception.command_error")));
-					}
-				}, () -> {
-					library.getLogger().error("Could not find an executor for command " + event.getFullCommandName());
-					sendEphemeral(event, single(library("exception.command_error")));
-				});
+		Command command = commands.get(event.getFullCommandName());
+		if (command == null) {
+			library.getLogger().error("Could not find an executor for command " + event.getFullCommandName());
+			sendEphemeral(event, single(library("exception.command_error")));
+			return;
+		}
+		try {
+			command.accept(event);
+		} catch (UserError e) {
+			sendEphemeral(event, e);
+		} catch (Exception e) {
+			library.getLogger().error("Failed to execute command " + event.getFullCommandName(), e);
+			sendEphemeral(event, single(library("exception.command_error")));
+		}
 	}
 }

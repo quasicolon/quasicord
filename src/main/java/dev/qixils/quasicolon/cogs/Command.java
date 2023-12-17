@@ -29,6 +29,14 @@ public interface Command<I extends CommandInteraction> extends Consumer<I> {
 	String getName();
 
 	/**
+	 * Gets the full name of the command according to JDA.
+	 *
+	 * @return JDA command name
+	 */
+	@NonNull
+	String getDiscordName();
+
+	/**
 	 * Gets the data (i.e. the defined arguments) for the command.
 	 * May be null for subcommands.
 	 *

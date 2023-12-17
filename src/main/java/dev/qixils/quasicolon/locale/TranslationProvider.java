@@ -10,6 +10,7 @@ import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.locale.translation.PluralTranslation;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
 import dev.qixils.quasicolon.locale.translation.Translation;
+import dev.qixils.quasicolon.locale.translation.UnknownTranslation;
 import dev.qixils.quasicolon.locale.translation.impl.PluralTranslationImpl;
 import dev.qixils.quasicolon.locale.translation.impl.SingleTranslationImpl;
 import dev.qixils.quasicolon.locale.translation.impl.UnknownTranslationImpl;
@@ -27,13 +28,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -249,6 +244,44 @@ public final class TranslationProvider {
 	}
 
 	/**
+	 * Gets the single translation (i.e. non-plural) for the given key and default locale.
+	 *
+	 * @param key    the translation key
+	 * @return the translation
+	 * @throws IllegalArgumentException if the translation is not a single translation
+	 */
+	public @NonNull SingleTranslation getSingleDefault(@NonNull String key) throws IllegalArgumentException {
+		return getSingle(key, getDefaultLocale());
+	}
+
+	/**
+	 * Gets the single translation (i.e. non-plural) for the given key and locale, or throws if not present.
+	 *
+	 * @param key    the translation key
+	 * @param locale the locale to get the translation for
+	 * @return the translation
+	 * @throws IllegalArgumentException if the translation is not a single translation or is not present
+	 */
+	public @NonNull SingleTranslation getSingleOrThrow(@NonNull String key, @NonNull Locale locale) throws IllegalArgumentException {
+		SingleTranslation translation = getSingle(key, locale);
+		if (translation instanceof UnknownTranslation) {
+			throw new IllegalStateException("Missing " + locale + " translation for " + namespace + ":" + key);
+		}
+		return translation;
+	}
+
+	/**
+	 * Gets the single translation (i.e. non-plural) for the given key and default locale, or throws if not present.
+	 *
+	 * @param key    the translation key
+	 * @return the translation
+	 * @throws IllegalArgumentException if the translation is not a single translation or is not present
+	 */
+	public @NonNull SingleTranslation getSingleDefaultOrThrow(@NonNull String key) throws IllegalArgumentException {
+		return getSingleOrThrow(key, getDefaultLocale());
+	}
+
+	/**
 	 * Gets the plural translation for the given key and locale.
 	 *
 	 * @param key    the translation key
@@ -261,6 +294,44 @@ public final class TranslationProvider {
 		if (translation instanceof PluralTranslation value)
 			return value;
 		throw new IllegalArgumentException("Translation for key " + key + " is not a plural map");
+	}
+
+	/**
+	 * Gets the plural translation for the given key and default locale.
+	 *
+	 * @param key    the translation key
+	 * @return the translation
+	 * @throws IllegalArgumentException if the translation is not a plural translation
+	 */
+	public @NonNull PluralTranslation getPluralDefault(@NonNull String key) throws IllegalArgumentException {
+		return getPlural(key, getDefaultLocale());
+	}
+
+	/**
+	 * Gets the plural translation for the given key and locale, or throws if not present.
+	 *
+	 * @param key    the translation key
+	 * @param locale the locale to get the translation for
+	 * @return the translation
+	 * @throws IllegalArgumentException if the translation is not a single translation or is not present
+	 */
+	public @NonNull PluralTranslation getPluralOrThrow(@NonNull String key, @NonNull Locale locale) throws IllegalArgumentException {
+		PluralTranslation translation = getPlural(key, locale);
+		if (translation instanceof UnknownTranslation) {
+			throw new IllegalStateException("Missing " + locale + " translation for " + namespace + ":" + key);
+		}
+		return translation;
+	}
+
+	/**
+	 * Gets the plural translation for the given key and default locale, or throws if not present.
+	 *
+	 * @param key    the translation key
+	 * @return the translation
+	 * @throws IllegalArgumentException if the translation is not a single translation or is not present
+	 */
+	public @NonNull PluralTranslation getPluralDefaultOrThrow(@NonNull String key) throws IllegalArgumentException {
+		return getPluralOrThrow(key, getDefaultLocale());
 	}
 
 	/**

@@ -41,6 +41,7 @@ import java.util.function.Function;
 
 class ParserCommand extends AbstractCommand<SlashCommandInteraction> {
 
+	private final String id;
 	private final AnnotationParser parser;
 	private final TranslationProvider i18n;
 	private final SlashCommandDataBranch branch;
@@ -48,8 +49,9 @@ class ParserCommand extends AbstractCommand<SlashCommandInteraction> {
 	private final Object object;
 	private final Method method;
 
-	public ParserCommand(AnnotationParser parser, TranslationProvider i18n, SlashCommandDataBranch branch, Object object, Method method) {
+	public ParserCommand(String id, AnnotationParser parser, TranslationProvider i18n, SlashCommandDataBranch branch, Object object, Method method) {
 		super(branch.rootIfStandalone(), SlashCommandInteraction.class);
+		this.id = id;
 		this.parser = parser;
 		CommandManager commandManager = parser.getCommandManager();
 		this.i18n = i18n;
@@ -59,7 +61,6 @@ class ParserCommand extends AbstractCommand<SlashCommandInteraction> {
 		this.method = method;
 
 		// parameters
-		String id = branch.getId();
 		converters = new ConverterData[method.getParameterCount()];
 		for (int i = 0; i < method.getParameterCount(); i++) {
 			// set converter
@@ -172,7 +173,12 @@ class ParserCommand extends AbstractCommand<SlashCommandInteraction> {
 
 	@Override
 	public @NonNull String getName() {
-		return branch.getId();
+		return id;
+	}
+
+	@Override
+	public @NonNull String getDiscordName() {
+		return branch.name();
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})

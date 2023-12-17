@@ -40,15 +40,20 @@ public interface SlashCommandDataBranch {
     @Nullable SubcommandData subcommand();
 
 	/**
-	 * The full ID of this command.
+	 * The full name of this command according to Discord.
 	 *
-	 * @return the command ID
+	 * @return the command name
 	 */
 	@NonNull
-	default String getId() {
+	default String name() {
 		String id = root().getName();
-		if (group() != null) id += "." + group().getName();
-		if (subcommand() != null) id += "." + subcommand().getName();
+
+		SubcommandGroupData group = group();
+		if (group != null) id += ' ' + group.getName();
+
+		SubcommandData subcommand = subcommand();
+		if (subcommand != null) id += ' ' + subcommand.getName();
+
 		return id;
 	}
 

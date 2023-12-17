@@ -13,17 +13,18 @@ import dev.qixils.quasicolon.cogs.SlashCommandDataBranch;
 import dev.qixils.quasicolon.cogs.impl.SlashCommandDataBranchImpl;
 import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
+import dev.qixils.quasicolon.decorators.slash.SlashSubCommand;
 import dev.qixils.quasicolon.locale.TranslationProvider;
 import dev.qixils.quasicolon.locale.translation.SingleTranslation;
-import dev.qixils.quasicolon.locale.translation.UnknownTranslation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -36,6 +37,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.stream.Stream;
 
 public final class AnnotationParser {
 
@@ -56,28 +58,12 @@ public final class AnnotationParser {
 
 	private SlashCommandData createSlashCommandData(@NotNull SlashCommand annotation, @NotNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
 		String id = annotation.value();
-
-		// get i18n
-		String namespace;
-		if (owner.isAnnotationPresent(Namespace.class))
-			namespace = owner.getAnnotation(Namespace.class).value();
-		else if (parent != null && parent.getClass().isAnnotationPresent(Namespace.class))
-			namespace = parent.getClass().getAnnotation(Namespace.class).value();
-		else
-			namespace = commandManager.getLibrary().getNamespace();
+		String namespace = getNamespace(owner, parent);
 		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
 
-		// name
-		SingleTranslation name = i18n.getSingle(id + ".name", i18n.getDefaultLocale());
-		if (name instanceof UnknownTranslation)
-			throw new IllegalStateException("Missing translation for command " + namespace + ":" + id + ".name");
-
-		// description
-		SingleTranslation description = i18n.getSingle(id + ".description", i18n.getDefaultLocale());
-		if (description instanceof UnknownTranslation)
-			throw new IllegalStateException("Missing translation for command " + namespace + ":" + id + ".description");
-
 		// basic data
+		SingleTranslation name = i18n.getSingleDefaultOrThrow(id + ".name");
+		SingleTranslation description = i18n.getSingleDefaultOrThrow(id + ".description");
 		SlashCommandData command = Commands.slash(name.get(), description.get());
 		command.setGuildOnly(annotation.guildOnly());
 		command.setNSFW(annotation.ageRestricted());
@@ -98,10 +84,42 @@ public final class AnnotationParser {
 		return command;
 	}
 
+	private SlashCommandDataBranch createSlashSubCommandData(@NotNull SlashCommandData command, @NotNull String id, @NotNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
+		String[] parts = id.split("/");
+		if (parts.length < 2 || parts.length > 3) {
+			throw new IllegalArgumentException("Subcommand ID " + id + " should be 2-3 parts long, not " + parts.length);
+		}
+		String namespace = getNamespace(owner, parent);
+		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
+		String name = i18n.getSingleDefaultOrThrow(id + ".name").get();
+		String description = i18n.getSingleDefaultOrThrow(id + ".description").get();
+		SubcommandData subcommand = new SubcommandData(name, description);
+		subcommand.setNameLocalizations(i18n.getDiscordTranslations(id + ".name"));
+		subcommand.setDescriptionLocalizations(i18n.getDiscordTranslations(id + ".description"));
+
+		if (parts.length == 2) {
+			command.addSubcommands(subcommand);
+			return new SlashCommandDataBranchImpl(command, null, subcommand);
+		} else {
+			String groupId = parts[0] + '/' + parts[1];
+			String groupName = i18n.getSingleDefaultOrThrow(groupId + ".name").get();
+			SubcommandGroupData group = command.getSubcommandGroups().stream().filter(g -> g.getName().equals(groupName)).findFirst().orElseGet(() -> {
+				String groupDescription = i18n.getSingleDefaultOrThrow(groupId + ".description").get();
+				SubcommandGroupData g = new SubcommandGroupData(groupName, groupDescription);
+				g.setNameLocalizations(i18n.getDiscordTranslations(groupId + ".name"));
+				g.setDescriptionLocalizations(i18n.getDiscordTranslations(groupId + ".description"));
+				command.addSubcommandGroups(g);
+				return g;
+			});
+			group.addSubcommands(subcommand);
+			return new SlashCommandDataBranchImpl(command, group, subcommand);
+		}
+	}
+
 	public Collection<Command<?>> parse(Object object) {
 		Class<?> parentClass = object.getClass();
 		SlashCommand parentCommandData = parentClass.getAnnotation(SlashCommand.class);
-		CommandData parentCommand = parentCommandData == null
+		SlashCommandData parentCommand = parentCommandData == null
 			? null
 			: createSlashCommandData(parentCommandData, parentClass, null);
 
@@ -109,10 +127,15 @@ public final class AnnotationParser {
 		for (final Method method : object.getClass().getDeclaredMethods()) {
 			ApplicationCommand applicationAnnotation = method.getAnnotation(ApplicationCommand.class);
 			SlashCommand slashAnnotation = method.getAnnotation(SlashCommand.class);
-			if (applicationAnnotation == null && slashAnnotation == null)
+			SlashSubCommand slashSubAnnotation = method.getAnnotation(SlashSubCommand.class);
+
+			long nonnull = Stream.of(applicationAnnotation, slashAnnotation, slashSubAnnotation)
+				.filter(Objects::nonNull)
+				.count();
+			if (nonnull == 0)
 				continue;
-			if (applicationAnnotation != null && slashAnnotation != null)
-				throw new IllegalArgumentException("Cannot have both @ApplicationCommand and @SlashCommand on the same method");
+			if (nonnull > 1)
+				throw new IllegalArgumentException("Cannot have multiple of @ApplicationCommand, @SlashCommand, and @SlashSubCommand on the same method");
 
 			if (!Modifier.isPublic(method.getModifiers()))
 				throw new IllegalArgumentException("Command method must be public");
@@ -122,8 +145,13 @@ public final class AnnotationParser {
 			try {
 				if (applicationAnnotation != null)
 					commands.add(parseApplicationCommand(object, method, applicationAnnotation));
-				else
+				else if (slashAnnotation != null)
 					commands.add(parseSlashCommand(object, method, slashAnnotation));
+				else if (slashSubAnnotation != null) {
+					if (parentCommandData == null)
+						throw new IllegalArgumentException("@SlashSubCommand was applied to method " + method.getName() + ", but owning class " + object.getClass().getName() + " lacks @SlashCommand");
+					commands.add(parseSlashSubCommand(object, method, parentCommand, parentCommandData, slashSubAnnotation));
+				}
 			} catch (Exception e) {
 				logger.warn("Failed to parse command " + method.getName() + " in " + object.getClass().getName(), e);
 			}
@@ -135,20 +163,30 @@ public final class AnnotationParser {
 		throw new UnsupportedOperationException("TODO"); // TODO
 	}
 
-	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
-		// get i18n
-		String namespace;
-		if (method.isAnnotationPresent(Namespace.class))
-			namespace = method.getAnnotation(Namespace.class).value();
-		else if (object.getClass().isAnnotationPresent(Namespace.class))
-			namespace = object.getClass().getAnnotation(Namespace.class).value();
-		else
-			namespace = commandManager.getLibrary().getNamespace();
-		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
+	@NonNull
+	private String getNamespace(@Nullable AnnotatedElement @Nullable ... objects) {
+		if (objects != null) {
+			for (AnnotatedElement obj : objects) {
+				if (obj != null && obj.isAnnotationPresent(Namespace.class)) {
+					return obj.getAnnotation(Namespace.class).value();
+				}
+			}
+		}
+		return commandManager.getLibrary().getNamespace();
+	}
 
+	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
+		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
 		SlashCommandData command = createSlashCommandData(annotation, method, object.getClass());
 		SlashCommandDataBranch branch = new SlashCommandDataBranchImpl(command, null, null);
-		return new ParserCommand(this, i18n, branch, object, method);
+		return new ParserCommand(annotation.value(), this, i18n, branch, object, method);
+	}
+
+	private Command<SlashCommandInteraction> parseSlashSubCommand(Object object, Method method, SlashCommandData command, SlashCommand parent, SlashSubCommand annotation) {
+		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
+		String id = parent.value() + '/' + annotation.value();
+		SlashCommandDataBranch branch = createSlashSubCommandData(command, id, method, object.getClass());
+		return new ParserCommand(id, this, i18n, branch, object, method);
 	}
 
 	private AutoCompleter createAutoCompleter(Class<? extends AutoCompleter> completerClass) {
@@ -194,12 +232,17 @@ public final class AnnotationParser {
 	@SubscribeEvent
 	public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
 		// TODO: move to Command class maybe>?? also just like cleanup i think
-		String id = event.getFullCommandName() /* TODO: wrong format! */ + ".options." + event.getFocusedOption().getName();
+		String id = event.getFullCommandName().replace(' ', '/') + ".options." + event.getFocusedOption().getName();
 		AutoCompleter completer = autoCompletersByCommand.get(id);
-		if (completer == null) {
-			event.replyChoices(Collections.emptyList()).queue();
-			return;
+
+		Collection<net.dv8tion.jda.api.interactions.commands.Command.Choice> response = Collections.emptyList();
+		if (completer != null) {
+			try {
+				response = completer.getSuggestions(event);
+			} catch (Exception e) {
+				logger.error("Autocompleter threw exception handling " + event, e);
+			}
 		}
-		event.replyChoices(completer.getSuggestions(event)).queue();
+		event.replyChoices(response).queue();
 	}
 }
