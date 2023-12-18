@@ -26,6 +26,7 @@ import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -41,8 +42,8 @@ class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> {
 	private final Object object;
 	private final Method method;
 
-	public ParserSlashCommand(String id, AnnotationParser parser, TranslationProvider i18n, SlashCommandDataBranch branch, Object object, Method method) {
-		super(parser, branch.rootIfStandalone(), SlashCommandInteraction.class);
+	public ParserSlashCommand(String id, AnnotationParser parser, TranslationProvider i18n, SlashCommandDataBranch branch, Object object, Method method, @Nullable String guildId) {
+		super(parser, branch.rootIfStandalone(), SlashCommandInteraction.class, guildId);
 		this.id = id;
 		CommandManager commandManager = parser.getCommandManager();
 		this.i18n = i18n;

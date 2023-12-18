@@ -24,8 +24,8 @@ abstract class ParserCommand<I extends CommandInteraction> extends AbstractComma
 
 	protected final AnnotationParser parser;
 
-	protected ParserCommand(@NonNull AnnotationParser parser, @Nullable CommandData commandData, @NonNull Class<I> interactionClass) {
-		super(commandData, interactionClass);
+	protected ParserCommand(@NonNull AnnotationParser parser, @Nullable CommandData commandData, @NonNull Class<I> interactionClass, @Nullable String guildId) {
+		super(commandData, interactionClass, guildId);
 		this.parser = parser;
 	}
 

@@ -14,6 +14,7 @@ import net.dv8tion.jda.api.interactions.Interaction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -26,8 +27,8 @@ class ParserContextCommand extends ParserCommand<ContextInteraction> {
 	private final Object object;
 	private final Method method;
 
-	public ParserContextCommand(@NonNull String id, @NonNull AnnotationParser parser, @NonNull CommandData command, @NonNull Object object, @NonNull Method method) {
-		super(parser, command, ContextInteraction.class);
+	public ParserContextCommand(@NonNull String id, @NonNull AnnotationParser parser, @NonNull CommandData command, @NonNull Object object, @NonNull Method method, @Nullable String guildId) {
+		super(parser, command, ContextInteraction.class, guildId);
 		this.id = id;
 		CommandManager commandManager = parser.getCommandManager();
 		this.object = object;

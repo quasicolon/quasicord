@@ -15,6 +15,7 @@ import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 import dev.qixils.quasicolon.decorators.slash.SlashSubCommand;
 import dev.qixils.quasicolon.locale.TranslationProvider;
+import dev.qixils.quasicolon.utils.OptionalUtil;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
@@ -135,12 +136,18 @@ public final class AnnotationParser {
 		SlashCommandData parentCommand = parentCommandData == null
 			? null
 			: createSlashCommandData(parentCommandData, parentClass, null);
+		Optional<Guild> parentGuild = Optional.ofNullable(parentClass.getAnnotation(Guild.class));
 
 		List<Command<?>> commands = new ArrayList<>();
 		for (final Method method : object.getClass().getDeclaredMethods()) {
 			ContextCommand contextAnnotation = method.getAnnotation(ContextCommand.class);
 			SlashCommand slashAnnotation = method.getAnnotation(SlashCommand.class);
 			SlashSubCommand slashSubAnnotation = method.getAnnotation(SlashSubCommand.class);
+			String guildId = OptionalUtil.or(
+					Optional.ofNullable(method.getAnnotation(Guild.class)),
+					parentGuild
+				).map(Guild::value)
+				.orElse(null);
 
 			long nonnull = Stream.of(contextAnnotation, slashAnnotation, slashSubAnnotation)
 				.filter(Objects::nonNull)
@@ -157,9 +164,9 @@ public final class AnnotationParser {
 
 			try {
 				if (contextAnnotation != null)
-					commands.add(parseContextCommand(object, method, contextAnnotation));
+					commands.add(parseContextCommand(object, method, contextAnnotation, guildId));
 				else if (slashAnnotation != null)
-					commands.add(parseSlashCommand(object, method, slashAnnotation));
+					commands.add(parseSlashCommand(object, method, slashAnnotation, guildId));
 				else if (slashSubAnnotation != null) {
 					if (parentCommandData == null)
 						throw new IllegalArgumentException("@SlashSubCommand was applied to method " + method.getName() + ", but owning class " + object.getClass().getName() + " lacks @SlashCommand");
@@ -184,23 +191,23 @@ public final class AnnotationParser {
 		return commandManager.getLibrary().getNamespace();
 	}
 
-	private Command<ContextInteraction> parseContextCommand(Object object, Method method, ContextCommand annotation) {
+	private Command<ContextInteraction> parseContextCommand(Object object, Method method, ContextCommand annotation, @Nullable String guildId) {
 		CommandData command = createContextCommandData(annotation, method, object.getClass());
-		return new ParserContextCommand(annotation.value(), this, command, object, method);
+		return new ParserContextCommand(annotation.value(), this, command, object, method, guildId);
 	}
 
-	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {
+	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation, @Nullable String guildId) {
 		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
 		SlashCommandData command = createSlashCommandData(annotation, method, object.getClass());
 		SlashCommandDataBranch branch = new SlashCommandDataBranchImpl(command, null, null);
-		return new ParserSlashCommand(annotation.value(), this, i18n, branch, object, method);
+		return new ParserSlashCommand(annotation.value(), this, i18n, branch, object, method, guildId);
 	}
 
 	private Command<SlashCommandInteraction> parseSlashSubCommand(Object object, Method method, SlashCommandData command, SlashCommand parent, SlashSubCommand annotation) {
 		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
 		String id = parent.value() + '/' + annotation.value();
 		SlashCommandDataBranch branch = createSlashSubCommandData(command, id, method, object.getClass());
-		return new ParserSlashCommand(id, this, i18n, branch, object, method);
+		return new ParserSlashCommand(id, this, i18n, branch, object, method, null);
 	}
 
 	private AutoCompleter createAutoCompleter(Class<? extends AutoCompleter> completerClass) {
@@ -246,7 +253,8 @@ public final class AnnotationParser {
 	@SubscribeEvent
 	public void onAutoComplete(CommandAutoCompleteInteractionEvent event) {
 		// TODO: move to Command class maybe>?? also just like cleanup i think
-		Command<?> command = commandManager.getCommand(event.getFullCommandName());
+		String guildId = event.getGuild() == null ? event.getGuild().getId() : null;
+		Command<?> command = commandManager.getCommand(event.getFullCommandName(), guildId);
 
 		Collection<net.dv8tion.jda.api.interactions.commands.Command.Choice> response = Collections.emptyList();
 		if (command != null) {

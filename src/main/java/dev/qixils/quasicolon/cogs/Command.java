@@ -37,6 +37,15 @@ public interface Command<I extends CommandInteraction> extends Consumer<I> {
 	String getDiscordName();
 
 	/**
+	 * Gets the guild that this command should be created in.
+	 * Global commands return null.
+	 *
+	 * @return guild id or null
+	 */
+	@Nullable
+	String getGuildId();
+
+	/**
 	 * Gets the data (i.e. the defined arguments) for the command.
 	 * May be null for subcommands.
 	 *

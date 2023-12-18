@@ -11,15 +11,17 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractCommand<I extends CommandInteraction> implements Command<I> {
-	private final @Nullable CommandData commandData;
-	private final @NonNull Class<I> interactionClass;
 
-	public AbstractCommand(@Nullable CommandData commandData, @NonNull Class<I> interactionClass) {
+	protected final @Nullable CommandData commandData;
+	protected final @NonNull Class<I> interactionClass;
+	protected final @Nullable String guildId;
+
+	public AbstractCommand(@Nullable CommandData commandData, @NonNull Class<I> interactionClass, @Nullable String guildId) {
 		this.commandData = commandData;
 		this.interactionClass = interactionClass;
+		this.guildId = guildId;
 	}
 
 	@Nullable
@@ -28,9 +30,15 @@ public abstract class AbstractCommand<I extends CommandInteraction> implements C
 		return commandData;
 	}
 
-	@NotNull
+	@NonNull
 	@Override
 	public Class<I> getInteractionClass() {
 		return interactionClass;
+	}
+
+	@Nullable
+	@Override
+	public String getGuildId() {
+		return guildId;
 	}
 }
