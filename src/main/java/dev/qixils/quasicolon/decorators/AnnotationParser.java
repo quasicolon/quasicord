@@ -15,20 +15,15 @@ import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 import dev.qixils.quasicolon.decorators.slash.SlashSubCommand;
 import dev.qixils.quasicolon.locale.TranslationProvider;
-import dev.qixils.quasicolon.locale.translation.SingleTranslation;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions;
 import net.dv8tion.jda.api.interactions.commands.SlashCommandInteraction;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
-import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
+import net.dv8tion.jda.api.interactions.commands.build.*;
 import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,18 +50,16 @@ public final class AnnotationParser {
 	CommandManager getCommandManager() {
 		return commandManager;
 	}
-
-	private SlashCommandData createSlashCommandData(@NotNull SlashCommand annotation, @NotNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
+	
+	private CommandData createContextCommandData(@NonNull ContextCommand annotation, @NonNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
 		String id = annotation.value();
 		String namespace = getNamespace(owner, parent);
 		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
-
-		// basic data
-		SingleTranslation name = i18n.getSingleDefaultOrThrow(id + ".name");
-		SingleTranslation description = i18n.getSingleDefaultOrThrow(id + ".description");
-		SlashCommandData command = Commands.slash(name.get(), description.get());
+		String name = i18n.getSingleDefaultOrThrow(id + ".name").get();
+		CommandData command = Commands.context(annotation.type(), name);
 		command.setGuildOnly(annotation.guildOnly());
 		command.setNSFW(annotation.ageRestricted());
+		command.setNameLocalizations(i18n.getDiscordTranslations(id + ".name"));
 
 		// default permissions
 		DefaultPermissions perms = owner.getAnnotation(DefaultPermissions.class);
@@ -77,14 +70,34 @@ public final class AnnotationParser {
 				: DefaultMemberPermissions.enabledFor(value));
 		}
 
-		// localizations
+		return command;
+	}
+
+	private SlashCommandData createSlashCommandData(@NonNull SlashCommand annotation, @NonNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
+		String id = annotation.value();
+		String namespace = getNamespace(owner, parent);
+		TranslationProvider i18n = TranslationProvider.getInstance(namespace);
+		String name = i18n.getSingleDefaultOrThrow(id + ".name").get();
+		String description = i18n.getSingleDefaultOrThrow(id + ".description").get();
+		SlashCommandData command = Commands.slash(name, description);
+		command.setGuildOnly(annotation.guildOnly());
+		command.setNSFW(annotation.ageRestricted());
 		command.setNameLocalizations(i18n.getDiscordTranslations(id + ".name"));
 		command.setDescriptionLocalizations(i18n.getDiscordTranslations(id + ".description"));
+
+		// default permissions
+		DefaultPermissions perms = owner.getAnnotation(DefaultPermissions.class);
+		if (perms != null) {
+			Permission[] value = perms.value();
+			command.setDefaultPermissions(value.length == 0
+				? DefaultMemberPermissions.DISABLED
+				: DefaultMemberPermissions.enabledFor(value));
+		}
 
 		return command;
 	}
 
-	private SlashCommandDataBranch createSlashSubCommandData(@NotNull SlashCommandData command, @NotNull String id, @NotNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
+	private SlashCommandDataBranch createSlashSubCommandData(@NonNull SlashCommandData command, @NonNull String id, @NonNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
 		String[] parts = id.split("/");
 		if (parts.length < 2 || parts.length > 3) {
 			throw new IllegalArgumentException("Subcommand ID " + id + " should be 2-3 parts long, not " + parts.length);
@@ -125,17 +138,17 @@ public final class AnnotationParser {
 
 		List<Command<?>> commands = new ArrayList<>();
 		for (final Method method : object.getClass().getDeclaredMethods()) {
-			ApplicationCommand applicationAnnotation = method.getAnnotation(ApplicationCommand.class);
+			ContextCommand contextAnnotation = method.getAnnotation(ContextCommand.class);
 			SlashCommand slashAnnotation = method.getAnnotation(SlashCommand.class);
 			SlashSubCommand slashSubAnnotation = method.getAnnotation(SlashSubCommand.class);
 
-			long nonnull = Stream.of(applicationAnnotation, slashAnnotation, slashSubAnnotation)
+			long nonnull = Stream.of(contextAnnotation, slashAnnotation, slashSubAnnotation)
 				.filter(Objects::nonNull)
 				.count();
 			if (nonnull == 0)
 				continue;
 			if (nonnull > 1)
-				throw new IllegalArgumentException("Cannot have multiple of @ApplicationCommand, @SlashCommand, and @SlashSubCommand on the same method");
+				throw new IllegalArgumentException("Cannot have multiple of @ContextCommand, @SlashCommand, and @SlashSubCommand on the same method");
 
 			if (!Modifier.isPublic(method.getModifiers()))
 				throw new IllegalArgumentException("Command method must be public");
@@ -143,8 +156,8 @@ public final class AnnotationParser {
 				throw new IllegalArgumentException("Decorator methods must not be static");
 
 			try {
-				if (applicationAnnotation != null)
-					commands.add(parseApplicationCommand(object, method, applicationAnnotation));
+				if (contextAnnotation != null)
+					commands.add(parseContextCommand(object, method, contextAnnotation));
 				else if (slashAnnotation != null)
 					commands.add(parseSlashCommand(object, method, slashAnnotation));
 				else if (slashSubAnnotation != null) {
@@ -171,9 +184,9 @@ public final class AnnotationParser {
 		return commandManager.getLibrary().getNamespace();
 	}
 
-	private Command<ContextInteraction<?>> parseApplicationCommand(Object object, Method method, ApplicationCommand annotation) {
-
-		throw new UnsupportedOperationException("TODO"); // TODO
+	private Command<ContextInteraction> parseContextCommand(Object object, Method method, ContextCommand annotation) {
+		CommandData command = createContextCommandData(annotation, method, object.getClass());
+		return new ParserContextCommand(annotation.value(), this, command, object, method);
 	}
 
 	private Command<SlashCommandInteraction> parseSlashCommand(Object object, Method method, SlashCommand annotation) {

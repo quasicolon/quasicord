@@ -17,7 +17,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for methods that represent interaction commands.
+ * Annotation for methods that represent context commands.
  * <p>
  * It is generally expected that the command have only one paramter representing the interaction or its subject,
  * i.e. a {@link net.dv8tion.jda.api.entities.User User} object
@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ApplicationCommand {
+public @interface ContextCommand {
 
 	/**
 	 * The ID of the command in your translation file.
