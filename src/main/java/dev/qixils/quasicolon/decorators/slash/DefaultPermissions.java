@@ -16,7 +16,7 @@ import java.lang.annotation.*;
  * Note that moderators can override these permissions.
  */
 @Inherited
-@Target(ElementType.METHOD)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DefaultPermissions {
 

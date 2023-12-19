@@ -6,6 +6,7 @@
 
 package dev.qixils.quasicolon;
 
+import dev.qixils.quasicolon.commands.GuildConfigCommand;
 import dev.qixils.quasicolon.commands.UserConfigCommand;
 import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.events.EventDispatcher;
@@ -48,7 +49,6 @@ public class Quasicord {
 	protected final @NonNull DatabaseManager database;
 	protected final @NonNull RegistryRegistry rootRegistry;
 	protected final @NonNull EventDispatcher eventDispatcher = new EventDispatcher();
-	protected final @NonNull HashMap<Long, EventDispatcher> guildDispatchers = new HashMap<>();
 	protected final @NonNull TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
 	protected final @NonNull String namespace;
 	protected final long ownerId;
@@ -165,6 +165,7 @@ public class Quasicord {
 	 */
 	protected void registerCommands() {
 		commandManager.discoverCommands(new UserConfigCommand(this));
+		commandManager.discoverCommands(new GuildConfigCommand(this));
 	}
 
 	/**

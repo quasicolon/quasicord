@@ -23,3 +23,14 @@ en:
   user-config.language.description: Set the language the bot should use in its outputs for you
   user-config.language.options.language.name: language
   user-config.language.options.language.description: The name or code of the language to use
+  user-config.language.output.updated: Your language has been set to {0}.
+  user-config.language.output.removed: Your language has been reset.
+
+  server-config.name: server-config
+  server-config.description: Configure this server's settings for the bot
+  server-config.language.name: language
+  server-config.language.description: Set the language the bot should use in its outputs by default
+  server-config.language.options.language.name: language
+  server-config.language.options.language.description: The name or code of the language to use
+  server-config.language.output.updated: This server's language has been set to {0}.
+  server-config.language.output.removed: This server's language has been reset.

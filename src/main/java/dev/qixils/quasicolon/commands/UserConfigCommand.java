@@ -6,38 +6,44 @@
 
 package dev.qixils.quasicolon.commands;
 
+import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.autocomplete.impl.LocaleAutoCompleter;
 import dev.qixils.quasicolon.decorators.Namespace;
 import dev.qixils.quasicolon.decorators.option.AutoCompleteWith;
+import dev.qixils.quasicolon.decorators.option.Contextual;
 import dev.qixils.quasicolon.decorators.option.Option;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 import dev.qixils.quasicolon.decorators.slash.SlashSubCommand;
+import dev.qixils.quasicolon.locale.LocaleConfig;
+import dev.qixils.quasicolon.text.Text;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 
 @Namespace("quasicord")
 @SlashCommand("user-config")
-public class UserConfigCommand {
-
-	protected final Quasicord library;
+public class UserConfigCommand extends ConfigCommand {
 
 	public UserConfigCommand(Quasicord library) {
-		this.library = library;
+		super(library);
 	}
 
 	@SlashSubCommand("language")
-	public void setLocale(
+	public Mono<Text> setLocaleCommand(
 		@Option(value = "language", type = OptionType.STRING)
 		@AutoCompleteWith(LocaleAutoCompleter.class)
-		Locale locale
+		Locale locale,
+		@Contextual
+		User user
 	) {
-		// TODO: handle diacritics
-		// TODO: handle null ? idk i dont think so
-		// TODO: save to DB (add some Mono<Void> setter to LocaleConverter maybe)
+		return setLocale(locale, LocaleConfig.EntryType.USER, user).map($ -> locale == null
+			? Text.single(Key.library("user-config.language.output.removed"))
+			: Text.single(Key.library("user-config.language.output.updated"), locale.getDisplayName(locale)));
 	}
 
-	// TODO: probably remove per-channel locale config i think
+
 	// TODO: timezone command
 }

@@ -56,7 +56,7 @@ public class LocaleConverter implements Converter<String, Locale> {
 			if (engMatch.isPresent())
 				return engMatch.get();
 
-			throw new UserError(Key.key(Key.LIBRARY_NAMESPACE, "exception.invalid_locale"), input);
+			throw new UserError(Key.library("exception.invalid_locale"), input);
 		}
 	}
 }
