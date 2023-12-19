@@ -404,6 +404,12 @@ public class DummyJDA implements JDA {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
+	@NotNull
+	@Override
+	public SnowflakeCacheView<MediaChannel> getMediaChannelCache() {
+		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
 	@NonNull
 	@Override
 	public SnowflakeCacheView<PrivateChannel> getPrivateChannelCache() {

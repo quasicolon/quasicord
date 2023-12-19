@@ -8,7 +8,7 @@ package dev.qixils.quasicolon.converter;
 
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.internal.utils.Helpers;
+import net.dv8tion.jda.internal.utils.ChannelUtil;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.function.BiFunction;
@@ -33,7 +33,7 @@ public class ConverterImpl<I, O> extends AbstractConverter<I, O> {
 
 	@NonNull
 	public static <O extends Channel> Converter<Channel, O> channel(@NonNull Class<O> outputClass) {
-		return new ConverterImpl<>(Channel.class, outputClass, (it, channel) -> Helpers.safeChannelCast(channel, outputClass));
+		return new ConverterImpl<>(Channel.class, outputClass, (it, channel) -> ChannelUtil.safeChannelCast(channel, outputClass));
 	}
 
 	@NonNull
