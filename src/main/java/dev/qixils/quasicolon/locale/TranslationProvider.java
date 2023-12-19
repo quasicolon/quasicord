@@ -19,9 +19,6 @@ import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFuncti
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
-import org.reflections.Reflections;
-import org.reflections.scanners.Scanners;
-import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
@@ -29,19 +26,40 @@ import org.yaml.snakeyaml.Yaml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * Provides the translation(s) for a key inside the configured namespace.
- * @see TranslationProvider#TranslationProvider(String, Locale)  TranslationProvider constructor
  * @see LocalizationFunction
  */
 public final class TranslationProvider {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(TranslationProvider.class);
 	private final @NonNull String namespace;
 	private final @NonNull Locale defaultLocale;
+	private final @NonNull Set<Locale> locales;
 	private final @NonNull Map<String, Map<Locale, ?>> allTranslations = new HashMap<>();
 	private final @NonNull Map<String, Map<DiscordLocale, String>> discordTranslations = new HashMap<>();
+
+	/**
+	 * Creates a new translation provider for the given resource source and default locale.
+	 * <p>
+	 * Your bot or plugin should store its language files inside the directory
+	 * {@code src/main/resources/langs/<namespace>}, where {@code <namespace>} is the
+	 * same as the string you pass in to the {@code namespace} parameter.
+	 * The names of the files should end in {@code .yaml}, i.e. {@code en_US.yaml}.
+	 * </p>
+	 * <b>Note:</b> The {@code namespace} parameter is converted to lowercase. Usage of
+	 * non-alphanumeric characters is discouraged, though not explicitly forbidden.
+	 *
+	 * @param namespace        the directory in which the translations are stored
+	 * @param defaultLocale    the default locale to use if no translation is found for the current locale
+	 * @param supportedLocales the locales to load
+	 */
+	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Collection<Locale> supportedLocales) throws IOException {
+		this.namespace = namespace.toLowerCase(Locale.ROOT);
+		this.defaultLocale = defaultLocale;
+		this.locales = new HashSet<>(supportedLocales);
+		loadTranslations();
+	}
 
 	/**
 	 * Creates a new translation provider for the given resource source and default locale.
@@ -53,13 +71,20 @@ public final class TranslationProvider {
 	 * <b>Note:</b> The {@code namespace} parameter is converted to lowercase. Usage of
 	 * non-alphanumeric characters is discouraged, though not explicitly forbidden.
 	 *
-	 * @param namespace     the directory in which the translations are stored
-	 * @param defaultLocale the default locale to use if no translation is found for the current locale
+	 * @param namespace        the directory in which the translations are stored
+	 * @param supportedLocales the locales to load, with the first element being treated as the default locale
 	 */
-	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale) throws IOException {
-		this.namespace = namespace.toLowerCase(Locale.ROOT);
-		this.defaultLocale = defaultLocale;
-		loadTranslations();
+	public TranslationProvider(@NonNull String namespace, @NonNull List<Locale> supportedLocales) throws IOException {
+		this(namespace, supportedLocales.get(0), supportedLocales);
+	}
+
+	/**
+	 * Returns a view of the supported locales.
+	 *
+	 * @return locale view
+	 */
+	public Set<Locale> getLocales() {
+		return Collections.unmodifiableSet(locales);
 	}
 
 	/**
@@ -112,22 +137,14 @@ public final class TranslationProvider {
 		// reset maps
 		allTranslations.clear();
 		discordTranslations.clear();
-
-		// iterate through all .yaml files in the `langs/$namespace` resource directory
-		// TODO: if this fails, try moving the langs folder into META-INF (and updating the corresponding code paths).
-		//  seems to be working for now tho
 		Yaml yaml = new Yaml();
-		Reflections reflections = new Reflections(new ConfigurationBuilder()
-				.addScanners(Scanners.Resources)
-				.forPackage("langs." + namespace));
-		for (String file : reflections.getResources(Pattern.compile(".+\\.ya?ml"))) {
-			// parse locale from filename
-			String languageTag = file.substring(file.lastIndexOf('/') + 1, file.lastIndexOf('.'));
-			Locale locale = Locale.forLanguageTag(languageTag);
+
+		for (Locale locale : locales) {
+			String languageTag = locale.toLanguageTag();
 			DiscordLocale discordLocale = getDiscordLocale(locale);
 
 			// load file
-			try (InputStream inputStream = ClassLoader.getSystemResourceAsStream(file)) {
+			try (InputStream inputStream = ClassLoader.getSystemResourceAsStream("langs/" + namespace + '/' + languageTag + ".yaml")) {
 				if (inputStream == null) {
 					logger.warn("Failed to load translations for locale {} in namespace {}: file not found", locale, namespace);
 					continue;
@@ -159,7 +176,7 @@ public final class TranslationProvider {
 						translations.put(locale, (Map<String, String>) value);
 						// (discord doesn't support plural translations)
 					} else {
-						logger.warn("Invalid translation value for key '{}' in {} file '{}': {}", key, namespace, file, value);
+						logger.warn("Invalid translation value for key '{}' in {} file {}: {}", key, namespace, languageTag, value);
 					}
 				}
 

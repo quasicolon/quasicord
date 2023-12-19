@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
+import net.dv8tion.jda.api.interactions.Interaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -272,7 +273,7 @@ public class LocaleProvider {
 	 * @param context the {@link Context} to get the {@link Locale} for
 	 * @return a {@link Mono} that will emit the {@link Locale} corresponding to the given {@link Context}
 	 */
-	public @NonNull Mono<Locale> forContext(@NonNull Context context) {
+	public @NonNull Mono<@NonNull Locale> forContext(@NonNull Context context) {
 		Mono<Locale> user = forUser(context);
 		Mono<Locale> userLocale = Mono.justOrEmpty(context.userLocale())
 				.map(locale -> Locale.forLanguageTag(locale.getLocale()));
@@ -287,6 +288,25 @@ public class LocaleProvider {
 				.switchIfEmpty(guild)
 				.switchIfEmpty(guildLocale)
 				.switchIfEmpty(defaultLocale);
+	}
+
+	/**
+	 * Returns a {@link Mono} that will emit the {@link Locale} corresponding to the given {@link Interaction Interaction}.
+	 * This searches for a configured {@link Locale} in the following order:
+	 * <ul>
+	 *     <li>User</li>
+	 *     <li>User (via Discord)</li>
+	 *     <li>Channel</li>
+	 *     <li>Guild</li>
+	 *     <li>Guild (via Discord)</li>
+	 *     <li>{@link #defaultLocale() Default}</li>
+	 * </ul>
+	 *
+	 * @param interaction the {@link Interaction} to get the {@link Locale} for
+	 * @return a {@link Mono} that will emit the {@link Locale} corresponding to the given {@link Interaction}
+	 */
+	public @NonNull Mono<@NonNull Locale> forInteraction(@NonNull Interaction interaction) {
+		return forContext(Context.fromInteraction(interaction));
 	}
 
 	/**

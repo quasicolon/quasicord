@@ -6,6 +6,7 @@
 
 package dev.qixils.quasicolon;
 
+import dev.qixils.quasicolon.commands.UserConfigCommand;
 import dev.qixils.quasicolon.db.DatabaseManager;
 import dev.qixils.quasicolon.events.EventDispatcher;
 import dev.qixils.quasicolon.locale.LocaleProvider;
@@ -32,10 +33,7 @@ import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Managing class for a <a href="https://discord.com/">Discord</a> bot which utilizes a
@@ -59,7 +57,22 @@ public class Quasicord {
 	protected final @NonNull LocaleProvider localeProvider;
 	protected final @NonNull CommandManager commandManager;
 
-	protected Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
+	/**
+	 *
+	 * @param namespace
+	 * @param locales The list of supported locales, with the first locale being treated as the default.
+	 * @param configRoot
+	 * @param activity
+	 * @param eventHandler
+	 * @throws LoginException
+	 * @throws InterruptedException
+	 * @throws IOException
+	 */
+	protected Quasicord(@NonNull String namespace, @NonNull List<Locale> locales, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
+		if (locales.isEmpty()) {
+			throw new IllegalArgumentException("'locales' parameter must have at least one object");
+		}
+
 		// misc initialization
 		this.namespace = namespace;
 
@@ -68,9 +81,9 @@ public class Quasicord {
 			eventDispatcher.registerListeners(eventHandler);
 
 		// register translation providers
-		translationProvider = new TranslationProvider(namespace, defaultLocale);
+		translationProvider = new TranslationProvider(namespace, locales);
 		TranslationProvider.registerInstance(translationProvider);
-		TranslationProvider.registerInstance(new TranslationProvider(Key.LIBRARY_NAMESPACE, defaultLocale));
+		TranslationProvider.registerInstance(new TranslationProvider(Key.LIBRARY_NAMESPACE, Locale.ENGLISH, locales));
 
 		// load configuration
 		YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
@@ -82,7 +95,7 @@ public class Quasicord {
 
 		// load database and locale provider
 		database = new DatabaseManager(namespace, config.environment());
-		localeProvider = new LocaleProvider(defaultLocale, database);
+		localeProvider = new LocaleProvider(locales.get(0), database);
 
 		// initialize JDA and relevant data
 		jda = initJDA(activity); // should be executed last-ish
@@ -92,6 +105,8 @@ public class Quasicord {
 		// late initialize (depends on JDA)
 		rootRegistry = new RegistryRegistry(this);
 		this.commandManager = new CommandManager(this);
+		registerCommands();
+		commandManager.upsertCommands(jda);
 	}
 
 	@NonNull
@@ -130,8 +145,6 @@ public class Quasicord {
 		});
 		try {
 			jda.awaitReady();
-			preRegisterCommands();
-			commandManager.upsertCommands(jda);
 		} catch (InterruptedException ignored) {
 		}
 		return jda;
@@ -148,11 +161,10 @@ public class Quasicord {
 	}
 
 	/**
-	 * Called before commands are registered.
-	 * Use this to register commands in {@link #getCommandManager()} in preparation for the initial upsert.
+	 * Registers commands just before the initial upsert.
 	 */
-	protected void preRegisterCommands() {
-		// TODO: maybe move to an event? timings issues might pose an issue for this but probably not
+	protected void registerCommands() {
+		commandManager.discoverCommands(new UserConfigCommand(this));
 	}
 
 	/**
@@ -275,7 +287,7 @@ public class Quasicord {
 	 */
 	public static class Builder {
 		protected @Nullable String namespace;
-		protected @NonNull Locale defaultLocale = Locale.ENGLISH;
+		protected @NonNull List<Locale> locales = new ArrayList<>();
 		protected @NonNull Path configRoot = Paths.get(".").toAbsolutePath();
 		protected @Nullable Activity activity;
 		protected @Nullable Object eventHandler;
@@ -284,6 +296,7 @@ public class Quasicord {
 		 * Creates a new builder.
 		 */
 		public Builder() {
+
 		}
 
 		/**
@@ -306,7 +319,30 @@ public class Quasicord {
 		 */
 		@Contract("_ -> this")
 		public Builder defaultLocale(@NonNull Locale locale) {
-			this.defaultLocale = locale;
+			locales.add(0, locale);
+			return this;
+		}
+
+		/**
+		 * Sets the locales for the bot. The first element is treated as the default.
+		 *
+		 * @param locales the locales to set
+		 * @return this builder
+		 */
+		@Contract("_ -> this")
+		public Builder setLocales(@NonNull Locale... locales) {
+			this.locales.clear();
+			return addLocales(locales);
+		}
+
+		/**
+		 * Adds locales to the bot.
+		 *
+		 * @param locales the locales to add
+		 */
+		@Contract("_ -> this")
+		public Builder addLocales(@NonNull Locale... locales) {
+			this.locales.addAll(Arrays.asList(locales));
 			return this;
 		}
 
@@ -359,7 +395,8 @@ public class Quasicord {
 		public @NonNull Quasicord build() throws IllegalStateException, LoginException, InterruptedException, IOException {
 			if (namespace == null)
 				throw new IllegalStateException("namespace must be set");
-			return new Quasicord(namespace, defaultLocale, configRoot, activity, eventHandler);
+			List<Locale> locales = this.locales.isEmpty() ? Collections.singletonList(Locale.ENGLISH) : this.locales;
+			return new Quasicord(namespace, locales, configRoot, activity, eventHandler);
 		}
 	}
 }

@@ -15,11 +15,12 @@ import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Locale;
 
 public class MockBot extends Quasicord {
     public MockBot() throws LoginException, IOException, InterruptedException {
-        super("mockbot", Locale.ROOT, Paths.get(".").toAbsolutePath(), null, null);
+        super("mockbot", Collections.singletonList(Locale.ENGLISH), Paths.get(".").toAbsolutePath(), null, null);
     }
 
     @Override

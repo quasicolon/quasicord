@@ -11,10 +11,7 @@ import dev.qixils.quasicolon.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 import net.dv8tion.jda.api.interactions.commands.Command;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation for methods that represent context commands.
@@ -29,6 +26,7 @@ import java.lang.annotation.Target;
  *
  * @see DefaultPermissions
  */
+@Inherited
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ContextCommand {

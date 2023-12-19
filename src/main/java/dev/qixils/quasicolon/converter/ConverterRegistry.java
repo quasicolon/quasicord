@@ -7,6 +7,7 @@
 package dev.qixils.quasicolon.converter;
 
 import dev.qixils.quasicolon.Quasicord;
+import dev.qixils.quasicolon.converter.impl.LocaleConverter;
 import dev.qixils.quasicolon.converter.impl.ZonedDateTimeConverter;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.registry.impl.RegistryImpl;
@@ -15,24 +16,13 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.ChannelType;
-import net.dv8tion.jda.api.entities.channel.concrete.Category;
-import net.dv8tion.jda.api.entities.channel.concrete.ForumChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.NewsChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.StageChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.ThreadChannel;
-import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -55,6 +45,9 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new VoidConverterImpl<>(Context.class, Context::fromInteraction));
 		register(new VoidConverterImpl<>(DiscordLocale.class, Interaction::getUserLocale));
 		register(new ConverterImpl<>(Context.class, Locale.class, (it, ctx) -> ctx.locale(library.getLocaleProvider()).block())); // TODO: async
+		register(new LocaleConverter(library));
+		register(new ConverterImpl<>(Locale.class, DiscordLocale.class, (it, locale) -> DiscordLocale.from(locale)));
+		register(new ConverterImpl<>(DiscordLocale.class, Locale.class, (it, locale) -> locale.toLocale()));
 		// channels
 		register(ConverterImpl.channel(TextChannel.class));
 		register(ConverterImpl.channel(PrivateChannel.class));

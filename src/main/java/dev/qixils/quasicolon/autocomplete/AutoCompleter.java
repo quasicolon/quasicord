@@ -10,8 +10,7 @@ import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Collection;
+import reactor.core.publisher.Flux;
 
 /**
  * An object which supplies auto-complete suggestions for {@link IAutoCompleteCallback}s.
@@ -25,5 +24,5 @@ public interface AutoCompleter {
 	 * @param event event to get suggestions for
 	 * @return list of suggestions
 	 */
-	@NonNull Collection<Command.@NotNull Choice> getSuggestions(@NonNull IAutoCompleteCallback event);
+	@NonNull Flux<Command.@NotNull Choice> getSuggestions(@NonNull IAutoCompleteCallback event);
 }

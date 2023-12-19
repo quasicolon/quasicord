@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 /**
  * The holder for {@link Choice} annotations.
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Choices {
 

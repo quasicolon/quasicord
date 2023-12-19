@@ -8,11 +8,7 @@ package dev.qixils.quasicolon.decorators.option;
 
 import dev.qixils.quasicolon.decorators.slash.SlashCommand;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Denotes a pre-defined choice that a user may select for this {@link Option} in a
@@ -23,7 +19,7 @@ import java.lang.annotation.Target;
  * </p>
  * The name of this choice is taken from the translation file(s) using the {@link #id() provided ID}.
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Repeatable(Choices.class)
 public @interface Choice {

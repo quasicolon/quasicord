@@ -99,7 +99,7 @@ public final class AnnotationParser {
 	}
 
 	private SlashCommandDataBranch createSlashSubCommandData(@NonNull SlashCommandData command, @NonNull String id, @NonNull AnnotatedElement owner, @Nullable AnnotatedElement parent) {
-		String[] parts = id.split("/");
+		String[] parts = id.split("\\.");
 		if (parts.length < 2 || parts.length > 3) {
 			throw new IllegalArgumentException("Subcommand ID " + id + " should be 2-3 parts long, not " + parts.length);
 		}
@@ -115,7 +115,7 @@ public final class AnnotationParser {
 			command.addSubcommands(subcommand);
 			return new SlashCommandDataBranchImpl(command, null, subcommand);
 		} else {
-			String groupId = parts[0] + '/' + parts[1];
+			String groupId = parts[0] + '.' + parts[1];
 			String groupName = i18n.getSingleDefaultOrThrow(groupId + ".name").get();
 			SubcommandGroupData group = command.getSubcommandGroups().stream().filter(g -> g.getName().equals(groupName)).findFirst().orElseGet(() -> {
 				String groupDescription = i18n.getSingleDefaultOrThrow(groupId + ".description").get();
@@ -205,7 +205,7 @@ public final class AnnotationParser {
 
 	private Command<SlashCommandInteraction> parseSlashSubCommand(Object object, Method method, SlashCommandData command, SlashCommand parent, SlashSubCommand annotation) {
 		TranslationProvider i18n = TranslationProvider.getInstance(getNamespace(method, object.getClass()));
-		String id = parent.value() + '/' + annotation.value();
+		String id = parent.value() + '.' + annotation.value();
 		SlashCommandDataBranch branch = createSlashSubCommandData(command, id, method, object.getClass());
 		return new ParserSlashCommand(id, this, i18n, branch, object, method, null);
 	}
@@ -256,20 +256,22 @@ public final class AnnotationParser {
 		String guildId = event.getGuild() == null ? event.getGuild().getId() : null;
 		Command<?> command = commandManager.getCommand(event.getFullCommandName(), guildId);
 
-		Collection<net.dv8tion.jda.api.interactions.commands.Command.Choice> response = Collections.emptyList();
-		if (command != null) {
-			String id = command.getName() + ".options." + event.getFocusedOption().getName();
-			AutoCompleter completer = autoCompletersByCommand.get(id);
-
-			if (completer != null) {
-				try {
-					response = completer.getSuggestions(event);
-				} catch (Exception e) {
-					logger.error("Autocompleter threw exception handling " + event, e);
-				}
-			}
+		if (command == null) {
+			event.replyChoices(Collections.emptyList()).queue();
+			return;
 		}
 
-		event.replyChoices(response).queue();
+		String id = command.getName() + ".options." + event.getFocusedOption().getName();
+		AutoCompleter completer = autoCompletersByCommand.get(id);
+
+		if (completer == null) {
+			event.replyChoices(Collections.emptyList()).queue();
+			return;
+		}
+
+		completer.getSuggestions(event).collectList().subscribe(
+			suggestions -> event.replyChoices(suggestions).queue(),
+			e -> logger.error("Autocompleter threw exception handling " + event, e)
+		);
 	}
 }

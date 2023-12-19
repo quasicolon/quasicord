@@ -8,16 +8,14 @@ package dev.qixils.quasicolon.decorators.slash;
 
 import net.dv8tion.jda.api.Permission;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Annotation used to specify the default permissions required to use a {@link SlashCommand}.
  * Any slash command that is not annotated with this will be available to everyone by default.
  * Note that moderators can override these permissions.
  */
+@Inherited
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DefaultPermissions {

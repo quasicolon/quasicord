@@ -14,4 +14,12 @@ en:
   exception.bot_missing_perm: Bot is missing permission `{0}`
   exception.user_missing_perm: User is missing permission `{0}`
   exception.command_error: An internal error occurred while executing this command. The issue has been reported to the developers.
+  exception.invalid_locale: Could not find a language by the name of `{0}`
   snowflake_confirm: "{0}: Did you mean {1}?"
+
+  user-config.name: user-config
+  user-config.description: Configure your personal settings for the bot
+  user-config.language.name: language
+  user-config.language.description: Set the language the bot should use in its outputs for you
+  user-config.language.options.language.name: language
+  user-config.language.options.language.description: The name or code of the language to use
