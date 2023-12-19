@@ -6,7 +6,7 @@
 
 package dev.qixils.quasicolon.commands;
 
-import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.locale.LocaleConfig;
 import net.dv8tion.jda.api.entities.ISnowflake;
@@ -18,7 +18,6 @@ import java.util.Locale;
 
 import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
-import static com.mongodb.client.model.Updates.set;
 
 public abstract class ConfigCommand {
 
@@ -42,10 +41,10 @@ public abstract class ConfigCommand {
 		if (locale == null) {
 			result = collection.deleteOne(filter);
 		} else {
-			result = collection.updateOne(
+			result = collection.replaceOne(
 				filter,
-				set("languageCode", locale.toLanguageTag()),
-				new UpdateOptions().upsert(true)
+				new LocaleConfig(snowflake.getIdLong(), entryType, locale.toLanguageTag()),
+				new ReplaceOptions().upsert(true)
 			);
 		}
 		return Mono.from(result);
