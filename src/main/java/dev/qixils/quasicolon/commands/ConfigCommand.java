@@ -8,7 +8,7 @@ package dev.qixils.quasicolon.commands;
 
 import com.mongodb.client.model.ReplaceOptions;
 import dev.qixils.quasicolon.Quasicord;
-import dev.qixils.quasicolon.locale.LocaleConfig;
+import dev.qixils.quasicolon.db.collection.LocaleConfig;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.reactivestreams.Publisher;

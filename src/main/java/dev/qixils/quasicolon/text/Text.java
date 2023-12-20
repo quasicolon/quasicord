@@ -20,6 +20,7 @@ import java.util.Locale;
 /**
  * A container for text which may optionally be localized into other languages.
  */
+@FunctionalInterface
 public interface Text {
 
 	/**

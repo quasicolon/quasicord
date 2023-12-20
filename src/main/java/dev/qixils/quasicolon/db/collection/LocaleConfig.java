@@ -4,7 +4,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicolon.locale;
+package dev.qixils.quasicolon.db.collection;
 
 import dev.qixils.quasicolon.db.CollectionName;
 import net.dv8tion.jda.api.entities.ISnowflake;

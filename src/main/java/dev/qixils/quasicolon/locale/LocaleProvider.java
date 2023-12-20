@@ -7,7 +7,8 @@
 package dev.qixils.quasicolon.locale;
 
 import dev.qixils.quasicolon.db.DatabaseManager;
-import dev.qixils.quasicolon.locale.LocaleConfig.EntryType;
+import dev.qixils.quasicolon.db.collection.LocaleConfig;
+import dev.qixils.quasicolon.db.collection.LocaleConfig.EntryType;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.User;

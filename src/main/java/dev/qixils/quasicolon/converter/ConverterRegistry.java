@@ -6,9 +6,11 @@
 
 package dev.qixils.quasicolon.converter;
 
+import dev.qixils.quasicolon.Key;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.converter.impl.LocaleConverter;
 import dev.qixils.quasicolon.converter.impl.ZonedDateTimeConverter;
+import dev.qixils.quasicolon.error.UserError;
 import dev.qixils.quasicolon.locale.Context;
 import dev.qixils.quasicolon.registry.impl.RegistryImpl;
 import net.dv8tion.jda.api.entities.Guild;
@@ -48,6 +50,13 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new LocaleConverter(library));
 		register(new ConverterImpl<>(Locale.class, DiscordLocale.class, (it, locale) -> DiscordLocale.from(locale)));
 		register(new ConverterImpl<>(DiscordLocale.class, Locale.class, (it, locale) -> locale.toLocale()));
+		register(new ConverterImpl<>(String.class, ZoneId.class, (it, input) -> {
+			try {
+				return ZoneId.of(input);
+			} catch (Exception ignored) {
+				throw new UserError(Key.library("exception.invalid_timezone"), input);
+			}
+		}));
 		// channels
 		register(ConverterImpl.channel(TextChannel.class));
 		register(ConverterImpl.channel(PrivateChannel.class));
