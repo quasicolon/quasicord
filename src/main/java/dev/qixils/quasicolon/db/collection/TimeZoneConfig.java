@@ -34,7 +34,7 @@ public class TimeZoneConfig implements ISnowflake {
 	 * @param snowflake     the user's snowflake ID
 	 * @param tzCode the user's configured timezone
 	 */
-	public TimeZoneConfig(long snowflake, @NonNull String tzCode) {
+	TimeZoneConfig(long snowflake, @NonNull String tzCode) {
 		this.snowflake = snowflake;
 		this.tzCode = tzCode;
 	}

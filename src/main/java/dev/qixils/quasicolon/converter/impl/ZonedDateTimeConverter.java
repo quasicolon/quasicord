@@ -8,6 +8,7 @@ package dev.qixils.quasicolon.converter.impl;
 
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.converter.Converter;
+import dev.qixils.quasicolon.db.collection.TimeZoneConfig;
 import dev.qixils.quasicolon.error.LocalizedRuntimeException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +42,8 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 	@Override
 	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input) {
 		// TODO: allow users to set their timezone in a /preference command (needs PreferenceRegistry + db collection)
-		ZoneId zone = ZoneOffset.UTC;
+		TimeZoneConfig config = library.getDatabaseManager().getBySnowflake(interaction.getUser(), TimeZoneConfig.class).block();
+		ZoneId zone = config == null ? ZoneOffset.UTC : config.getTimeZone();
 		int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, nanos = 0;
 		char meridiem = 'x';
 
