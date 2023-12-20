@@ -38,16 +38,16 @@ public class LocaleAutoCompleter implements AutoCompleter {
 			.getLocaleProvider()
 			.forContext(Context.fromInteraction(event))
 			.flatMapMany(displayLocale -> {
-				String input = interaction.getFocusedOption().getValue().toLowerCase(displayLocale);
-				return Flux.fromStream(commandManager.getLibrary()
-					.getTranslationProvider()
-					.getLocales()
-					.stream()
-					.filter(locale -> locale.getDisplayName(displayLocale).toLowerCase(displayLocale).contains(input) || locale.getDisplayName(Locale.ENGLISH).toLowerCase(Locale.ENGLISH).contains(input) || locale.toLanguageTag().toLowerCase(Locale.ENGLISH).contains(input))
-					.sorted(Comparator.comparing(locale -> locale.getDisplayName(displayLocale)))
-					.map(locale -> new Command.Choice(locale.getDisplayName(displayLocale), locale.toLanguageTag()))
-				);
-			})
-			.take(OptionData.MAX_CHOICES);
+				String rawInput = interaction.getFocusedOption().getValue();
+				String enInput = rawInput.toLowerCase(Locale.ENGLISH);
+				String input = rawInput.toLowerCase(displayLocale);
+				return Flux.fromIterable(commandManager.getLibrary()
+						.getTranslationProvider()
+						.getLocales())
+					.filter(locale -> locale.getDisplayName(displayLocale).toLowerCase(displayLocale).contains(input) || locale.getDisplayName(Locale.ENGLISH).toLowerCase(Locale.ENGLISH).contains(enInput) || locale.toLanguageTag().toLowerCase(Locale.ENGLISH).contains(enInput))
+					.sort(Comparator.comparing(locale -> locale.getDisplayName(displayLocale)))
+					.take(OptionData.MAX_CHOICES)
+					.map(locale -> new Command.Choice(locale.getDisplayName(displayLocale), locale.toLanguageTag()));
+			});
 	}
 }

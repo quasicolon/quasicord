@@ -8,6 +8,7 @@ package dev.qixils.quasicolon.autocomplete.impl;
 
 import dev.qixils.quasicolon.CommandManager;
 import dev.qixils.quasicolon.autocomplete.AutoCompleter;
+import dev.qixils.quasicolon.locale.Context;
 import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
@@ -17,6 +18,8 @@ import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
 
 import java.time.ZoneId;
+import java.time.format.TextStyle;
+import java.util.Comparator;
 import java.util.Locale;
 
 /**
@@ -33,13 +36,19 @@ public class TimeZoneAutoCompleter implements AutoCompleter {
 	@Override
 	public @NonNull Flux<Command.@NotNull Choice> getSuggestions(@NonNull IAutoCompleteCallback event) {
 		if (!(event instanceof CommandAutoCompleteInteraction interaction)) return Flux.empty();
-		String input = interaction.getFocusedOption().getValue().toLowerCase(Locale.ENGLISH);
-		// TODO: display name auirhaujfdnmjs
-		return Flux.fromStream(ZoneId.getAvailableZoneIds()
-				.stream()
-				.filter(id -> id.toLowerCase(Locale.ENGLISH).contains(input))
-				.sorted()
-				.map(id -> new Command.Choice(id, id)))
-			.take(OptionData.MAX_CHOICES);
+		return commandManager.getLibrary()
+			.getLocaleProvider()
+			.forContext(Context.fromInteraction(event))
+			.flatMapMany(locale -> {
+				String rawInput = interaction.getFocusedOption().getValue();
+				String enInput = rawInput.toLowerCase(Locale.ENGLISH);
+				String input = rawInput.toLowerCase(locale);
+				return Flux.fromIterable(ZoneId.getAvailableZoneIds())
+					.map(ZoneId::of)
+					.filter(id -> id.getId().toLowerCase(Locale.ENGLISH).contains(enInput) || id.getDisplayName(TextStyle.FULL_STANDALONE, Locale.ENGLISH).toLowerCase(Locale.ENGLISH).contains(enInput) || id.getDisplayName(TextStyle.FULL_STANDALONE, locale).toLowerCase(locale).contains(input))
+					.sort(Comparator.comparing(id -> id.getDisplayName(TextStyle.FULL_STANDALONE, locale).toLowerCase(locale)))
+					.take(OptionData.MAX_CHOICES)
+					.map(id -> new Command.Choice(id.getDisplayName(TextStyle.FULL_STANDALONE, locale), id.getId()));
+			});
 	}
 }
