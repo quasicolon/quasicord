@@ -19,7 +19,7 @@ import java.time.ZoneId;
  */
 @CollectionName(name = "timezone")
 public class TimeZoneConfig implements ISnowflake {
-	private long id;
+	private long snowflake;
 	private @Nullable String tzCode;
 
 	/**
@@ -31,27 +31,27 @@ public class TimeZoneConfig implements ISnowflake {
 	/**
 	 * Constructs a new TimeZoneConfig entry.
 	 *
-	 * @param id     the user's snowflake ID
+	 * @param snowflake     the user's snowflake ID
 	 * @param tzCode the user's configured timezone
 	 */
-	public TimeZoneConfig(long id, @NonNull String tzCode) {
-		this.id = id;
+	public TimeZoneConfig(long snowflake, @NonNull String tzCode) {
+		this.snowflake = snowflake;
 		this.tzCode = tzCode;
 	}
 
 	/**
 	 * Constructs a new TimeZoneConfig entry.
 	 *
-	 * @param id the user's snowflake ID
+	 * @param snowflake the user's snowflake ID
 	 * @param tz the user's configured timezone
 	 */
-	public TimeZoneConfig(long id, @NonNull ZoneId tz) {
-		this(id, tz.getId());
+	public TimeZoneConfig(long snowflake, @NonNull ZoneId tz) {
+		this(snowflake, tz.getId());
 	}
 
 	@Override
 	public long getIdLong() {
-		return id;
+		return snowflake;
 	}
 
 	public @NonNull String getTimeZoneCode() {

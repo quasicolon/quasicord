@@ -17,7 +17,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 @CollectionName(name = "locale")
 public class LocaleConfig implements ISnowflake {
-	private long id;
+	private long snowflake;
 	private @Nullable EntryType entryType;
 	private @Nullable String languageCode;
 
@@ -30,19 +30,19 @@ public class LocaleConfig implements ISnowflake {
 	/**
 	 * Constructs a new LocaleConfig entry.
 	 *
-	 * @param id           the object's snowflake ID
+	 * @param snowflake           the object's snowflake ID
 	 * @param entryType    the type of entry
 	 * @param languageCode the object's configured language code
 	 */
-	public LocaleConfig(long id, @NonNull EntryType entryType, @NonNull String languageCode) {
-		this.id = id;
+	public LocaleConfig(long snowflake, @NonNull EntryType entryType, @NonNull String languageCode) {
+		this.snowflake = snowflake;
 		this.entryType = entryType;
 		this.languageCode = languageCode;
 	}
 
 	@Override
 	public long getIdLong() {
-		return id;
+		return snowflake;
 	}
 
 	public @NonNull EntryType getEntryType() {
