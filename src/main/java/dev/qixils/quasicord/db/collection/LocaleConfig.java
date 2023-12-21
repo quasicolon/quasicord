@@ -19,7 +19,7 @@ import java.util.Locale;
  * An entry in the locale configuration database collection.
  * This stores the selected locale for a user, channel, or guild.
  */
-@CollectionName(name = "locale")
+@CollectionName("locale")
 public class LocaleConfig {
 
 	@BsonId
