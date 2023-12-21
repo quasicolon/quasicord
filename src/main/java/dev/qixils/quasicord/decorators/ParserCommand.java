@@ -16,6 +16,7 @@ import net.dv8tion.jda.api.interactions.commands.CommandInteraction;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Constructor;
 import java.util.concurrent.CompletableFuture;
@@ -63,6 +64,7 @@ abstract class ParserCommand<I extends CommandInteraction> extends AbstractComma
 
 	public static void consumeCommandResult(@NonNull CommandInteraction interaction, Object result) {
 		switch (result) {
+			case Mono<?> mono -> mono.subscribe(res -> consumeCommandResult(interaction, res));
 			case CompletableFuture<?> fut -> fut.thenAccept(res -> consumeCommandResult(interaction, res));
 			// terminal cases:
 			case null -> {}

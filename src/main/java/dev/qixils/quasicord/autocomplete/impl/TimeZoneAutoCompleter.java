@@ -7,8 +7,10 @@
 package dev.qixils.quasicord.autocomplete.impl;
 
 import dev.qixils.quasicord.CommandManager;
+import dev.qixils.quasicord.Key;
 import dev.qixils.quasicord.autocomplete.AutoCompleter;
 import dev.qixils.quasicord.locale.Context;
+import dev.qixils.quasicord.text.Text;
 import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction;
@@ -33,6 +35,10 @@ public class TimeZoneAutoCompleter implements AutoCompleter {
 		this.commandManager = commandManager;
 	}
 
+	protected static String format(ZoneId zone, Locale locale) {
+		return Text.single(Key.library("timezone_display"), zone.getDisplayName(TextStyle.FULL_STANDALONE, locale), zone.getId()).asString(locale);
+	}
+
 	@Override
 	public @NonNull Flux<Command.@NotNull Choice> getSuggestions(@NonNull IAutoCompleteCallback event) {
 		if (!(event instanceof CommandAutoCompleteInteraction interaction)) return Flux.empty();
@@ -40,15 +46,16 @@ public class TimeZoneAutoCompleter implements AutoCompleter {
 			.getLocaleProvider()
 			.forContext(Context.fromInteraction(event))
 			.flatMapMany(locale -> {
-				String rawInput = interaction.getFocusedOption().getValue();
-				String enInput = rawInput.toLowerCase(Locale.ENGLISH);
-				String input = rawInput.toLowerCase(locale);
+				String input = interaction.getFocusedOption().getValue().toLowerCase(locale);
 				return Flux.fromIterable(ZoneId.getAvailableZoneIds())
 					.map(ZoneId::of)
-					.filter(id -> id.getId().toLowerCase(Locale.ENGLISH).contains(enInput) || id.getDisplayName(TextStyle.FULL_STANDALONE, Locale.ENGLISH).toLowerCase(Locale.ENGLISH).contains(enInput) || id.getDisplayName(TextStyle.FULL_STANDALONE, locale).toLowerCase(locale).contains(input))
-					.sort(Comparator.comparing(id -> id.getDisplayName(TextStyle.FULL_STANDALONE, locale).toLowerCase(locale)))
+					.filter(id -> {
+						String compare = format(id, locale).toLowerCase(locale);
+						return compare.contains(input) || compare.replaceAll("[/_]", " ").contains(input);
+					})
+					.sort(Comparator.comparing(id -> format(id, locale)))
 					.take(OptionData.MAX_CHOICES)
-					.map(id -> new Command.Choice(id.getDisplayName(TextStyle.FULL_STANDALONE, locale), id.getId()));
+					.map(id -> new Command.Choice(format(id, locale), id.getId()));
 			});
 	}
 }

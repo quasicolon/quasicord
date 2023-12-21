@@ -49,7 +49,7 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new LocaleConverter(library));
 		register(new ConverterImpl<>(Locale.class, DiscordLocale.class, (it, locale) -> DiscordLocale.from(locale)));
 		register(new ConverterImpl<>(DiscordLocale.class, Locale.class, (it, locale) -> locale.toLocale()));
-		register(new ZoneIdConverter(library));
+		register(new ZoneIdConverter());
 		// channels
 		register(ConverterImpl.channel(TextChannel.class));
 		register(ConverterImpl.channel(PrivateChannel.class));

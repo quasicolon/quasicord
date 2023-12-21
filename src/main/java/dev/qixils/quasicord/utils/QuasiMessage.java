@@ -19,7 +19,7 @@ import java.util.function.Consumer;
  * which alters the {@link MessageCreateAction} created when sending the message.
  * <p>
  * This wrapper is useful for sending embeds or attachments
- * from an {@code @AutoSend}-annotated method.
+ * from a {@link dev.qixils.quasicord.cogs.SlashCommand SlashCommand} method.
  */
 public record QuasiMessage(@NonNull Text text, @NonNull Consumer<MessageCreateRequest<?>> modifier) {
 

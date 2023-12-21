@@ -15,8 +15,9 @@ en:
   "exception.user_missing_perm": User is missing permission `{0}`
   "exception.command_error": An internal error occurred while executing this command. The issue has been reported to the developers.
   "exception.invalid_locale": Could not find a language by the name of `{0}`
-  "exception.invalid_timezone": Could not find a timezone by the name of `{0}`
+  "exception.invalid_timezone": Could not find a timezone by the ID of `{0}`
   "snowflake_confirm": "{0}: Did you mean {1}?"
+  "timezone_display": "{0} ({1})"
 
   "user-config.name": user-config
   "user-config.description": Configure your personal settings for the bot
@@ -32,7 +33,6 @@ en:
   "user-config.timezone.options.timezone.description": The name or code of the timezone to use
   "user-config.timezone.output.updated": Your timezone has been set to {0}.
   "user-config.timezone.output.removed": Your timezone has been reset.
-
 
   "server-config.name": server-config
   "server-config.description": Configure this server's settings for the bot

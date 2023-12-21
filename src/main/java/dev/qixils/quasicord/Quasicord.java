@@ -96,6 +96,7 @@ public class Quasicord {
 		// load database and locale provider
 		database = new DatabaseManager(namespace, config.environment());
 		localeProvider = new LocaleProvider(locales.get(0), database);
+		LocaleProvider.setInstance(localeProvider);
 
 		// initialize JDA and relevant data
 		jda = initJDA(activity); // should be executed last-ish

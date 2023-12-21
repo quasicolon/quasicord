@@ -20,8 +20,12 @@ import dev.qixils.quasicord.decorators.option.Option;
 import dev.qixils.quasicord.decorators.slash.SlashCommand;
 import dev.qixils.quasicord.decorators.slash.SlashSubCommand;
 import dev.qixils.quasicord.text.Text;
+import dev.qixils.quasicord.utils.QuasiMessage;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.ChannelType;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
@@ -40,25 +44,35 @@ public class UserConfigCommand extends ConfigCommand {
 	}
 
 	@SlashSubCommand("language")
-	public Mono<Text> setLocaleCommand(
+	public Mono<QuasiMessage> setLocaleCommand(
 		@Option(value = "language", type = OptionType.STRING)
 		@AutoCompleteWith(LocaleAutoCompleter.class)
 		Locale locale,
 		@Contextual
-		User user
+		User user,
+		@Contextual
+		Channel channel
 	) {
 		return setLocale(locale, LocaleConfig.EntryType.USER, user).map($ -> locale == null
 			? Text.single(Key.library("user-config.language.output.removed"))
-			: Text.single(Key.library("user-config.language.output.updated"), locale.getDisplayName(locale)));
+			: Text.single(Key.library("user-config.language.output.updated"), locale.getDisplayName(locale)))
+			.map(text -> new QuasiMessage(text, request -> {
+				if (request instanceof ReplyCallbackAction action && channel.getType() == ChannelType.PRIVATE) {
+					//noinspection ResultOfMethodCallIgnored
+					action.setEphemeral(true);
+				}
+			}));
 	}
 
 	@SlashSubCommand("timezone")
-	public Mono<Text> setTimeZoneCommand(
+	public Mono<QuasiMessage> setTimeZoneCommand(
 		@Option(value = "timezone", type = OptionType.STRING)
 		@AutoCompleteWith(TimeZoneAutoCompleter.class)
 		ZoneId tz,
 		@Contextual
-		User user
+		User user,
+		@Contextual
+		Channel channel
 	) {
 		var collection = library.getDatabaseManager().collection(TimeZoneConfig.class);
 		var filter = eq("id", user.getIdLong());
@@ -74,6 +88,12 @@ public class UserConfigCommand extends ConfigCommand {
 		}
 		return Mono.from(result).map($ -> tz == null
 			? Text.single(Key.library("user-config.timezone.output.removed"))
-			: Text.single(Key.library("user-config.timezone.output.updated"), (Text) locale -> tz.getDisplayName(TextStyle.FULL_STANDALONE, locale)));
+			: Text.single(Key.library("user-config.timezone.output.updated"), (Text) locale -> tz.getDisplayName(TextStyle.FULL_STANDALONE, locale)))
+			.map(text -> new QuasiMessage(text, request -> {
+				if (request instanceof ReplyCallbackAction action && channel.getType() == ChannelType.PRIVATE) {
+					//noinspection ResultOfMethodCallIgnored
+					action.setEphemeral(true);
+				}
+			}));
 	}
 }

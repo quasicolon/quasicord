@@ -41,6 +41,7 @@ public abstract class ConfigCommand {
 		if (locale == null) {
 			result = collection.deleteOne(filter);
 		} else {
+			// TODO: duplicate error ???
 			result = collection.replaceOne(
 				filter,
 				new LocaleConfig(snowflake.getIdLong(), entryType, locale.toLanguageTag()),

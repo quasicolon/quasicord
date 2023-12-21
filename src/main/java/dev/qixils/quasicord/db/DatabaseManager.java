@@ -65,7 +65,7 @@ public class DatabaseManager implements Closeable {
 			collectionName = clazz.getAnnotation(CollectionName.class).name();
 		else
 			collectionName = clazz.getSimpleName();
-		return collectionName.substring(0, 127);
+		return collectionName.substring(0, Math.min(collectionName.length(), 127));
 	}
 
 	// collection

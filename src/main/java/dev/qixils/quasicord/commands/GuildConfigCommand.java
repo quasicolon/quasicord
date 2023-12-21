@@ -18,9 +18,11 @@ import dev.qixils.quasicord.decorators.slash.DefaultPermissions;
 import dev.qixils.quasicord.decorators.slash.SlashCommand;
 import dev.qixils.quasicord.decorators.slash.SlashSubCommand;
 import dev.qixils.quasicord.text.Text;
+import dev.qixils.quasicord.utils.QuasiMessage;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import reactor.core.publisher.Mono;
 
@@ -36,7 +38,7 @@ public class GuildConfigCommand extends ConfigCommand {
 	}
 
 	@SlashSubCommand("language")
-	public Mono<Text> setLocaleCommand(
+	public Mono<QuasiMessage> setLocaleCommand(
 		@Option(value = "language", type = OptionType.STRING)
 		@AutoCompleteWith(LocaleAutoCompleter.class)
 		Locale locale,
@@ -45,7 +47,13 @@ public class GuildConfigCommand extends ConfigCommand {
 	) {
 		return setLocale(locale, LocaleConfig.EntryType.GUILD, guild).map($ -> locale == null
 			? Text.single(Key.library("guild-config.language.output.removed"))
-			: Text.single(Key.library("guild-config.language.output.updated"), locale.getDisplayName(locale)));
+			: Text.single(Key.library("guild-config.language.output.updated"), locale.getDisplayName(locale)))
+			.map(text -> new QuasiMessage(text, request -> {
+				if (request instanceof ReplyCallbackAction action) {
+					//noinspection ResultOfMethodCallIgnored
+					action.setEphemeral(true);
+				}
+			}));
 	}
 
 }
