@@ -149,7 +149,12 @@ public final class TranslationProvider {
 					logger.warn("Failed to load translations for locale {} in namespace {}: file not found", locale, namespace);
 					continue;
 				}
+
 				Map<String, Object> translationMap = yaml.load(inputStream);
+				if (translationMap == null) {
+					logger.warn("Failed to load translations for locale {} in namespace {}: yaml returned null", locale, namespace);
+					continue;
+				}
 
 				// some language files are nested inside the language code, so we need to extract
 				// the inner map

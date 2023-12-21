@@ -105,6 +105,7 @@ public class Quasicord {
 		// late initialize (depends on JDA)
 		rootRegistry = new RegistryRegistry(this);
 		this.commandManager = new CommandManager(this);
+		jda.addEventListener(commandManager);
 		registerCommands();
 		commandManager.upsertCommands(jda);
 	}
@@ -136,7 +137,6 @@ public class Quasicord {
 		JDA jda = builder.build();
 		jda.setRequiredScopes("applications.commands");
 		jda.addEventListener(tempListenerExecutor);
-		jda.addEventListener(commandManager);
 		jda.addEventListener(new Object() {
 			@net.dv8tion.jda.api.hooks.SubscribeEvent
 			public void on(net.dv8tion.jda.api.events.Event event) {
