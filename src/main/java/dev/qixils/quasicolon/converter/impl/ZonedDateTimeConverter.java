@@ -9,7 +9,7 @@ package dev.qixils.quasicolon.converter.impl;
 import dev.qixils.quasicolon.Quasicord;
 import dev.qixils.quasicolon.converter.Converter;
 import dev.qixils.quasicolon.db.collection.TimeZoneConfig;
-import dev.qixils.quasicolon.error.LocalizedRuntimeException;
+import dev.qixils.quasicolon.error.UserError;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -35,13 +35,12 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 			Pattern.compile("(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})"),
 			Pattern.compile("(?<date1>\\d{1,2})/(?<date2>\\d{1,2})/(?<year>\\d{4})"),
 			Pattern.compile("(?<month>\\p{L}{3,}) (?<day>\\d{1,2}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
-			// TODO: Pattern.compile("(?<day>\\d{1,2}) (?<month>\\p{L}{3,}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
+			Pattern.compile("(?<day>\\d{1,2}) (?<month>\\p{L}{3,}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
 	};
 	private static final Pattern TIME_PATTERN = Pattern.compile("(?<hour>\\d{2}):(?<minute>\\d{2})(?::(?<second>\\d{2})(?:\\.(?<nanos>\\d{1,9}))?)?(?: (?<meridiem>[Aa]|[Pp])\\.?M\\.?)?");
 
 	@Override
 	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input) {
-		// TODO: allow users to set their timezone in a /preference command (needs PreferenceRegistry + db collection)
 		TimeZoneConfig config = library.getDatabaseManager().getBySnowflake(interaction.getUser(), TimeZoneConfig.class).block();
 		ZoneId zone = config == null ? ZoneOffset.UTC : config.getTimeZone();
 		int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, nanos = 0;
@@ -65,8 +64,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 
 		// error if date is invalid
 		if (month == 0 || day == 0 || month > 12 || day > 31)
-			// TODO: ensure this is caught and wrapped into an InvalidSyntaxException by the caller
-			throw new LocalizedRuntimeException(library("exception.invalid_date"));
+			throw new UserError(library("exception.invalid_date"));
 
 		// get time
 		Matcher timeMatcher = TIME_PATTERN.matcher(input);
@@ -84,8 +82,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 
 		// error if time is invalid
 		if (hour > 23 || minute > 59 || second > 59 || nanos > 999999999 || (meridiem != 'x' && hour > 12))
-			// TODO: ensure this is caught and wrapped into an InvalidSyntaxException by the caller
-			throw new LocalizedRuntimeException(library("exception.invalid_time"));
+			throw new UserError(library("exception.invalid_time"));
 
 		// handle meridiem
 		if (meridiem == 'p' && hour != 12)

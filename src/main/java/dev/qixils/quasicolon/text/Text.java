@@ -13,9 +13,12 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.requests.restaction.MessageCreateAction;
 import net.xyzsd.plurals.PluralRuleType;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Contract;
 import reactor.core.publisher.Mono;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 /**
  * A container for text which may optionally be localized into other languages.
@@ -179,14 +182,27 @@ public interface Text {
 	 */
 	static Object @NonNull [] localizeArgs(Object @NonNull [] args, @NonNull Locale locale) {
 		Object[] localizedArgs = new Object[args.length];
-		for (int i = 0; i < args.length; i++) {
-			Object arg = args[i];
-			if (arg instanceof Text text) {
-				localizedArgs[i] = text.asString(locale);
-			} else {
-				localizedArgs[i] = arg;
-			}
-		}
+		for (int i = 0; i < args.length; i++)
+			localizedArgs[i] = localizeArg(args[i], locale);
 		return localizedArgs;
+	}
+
+	/**
+	 * Localizes an object.
+	 * <p>
+	 * This converts any {@link Text} instances to their localized string equivalents.
+	 * Other objects are left untouched.
+	 *
+	 * @param arg    the object to localize
+	 * @param locale the {@link Locale} to localize with
+	 * @return the localized string
+	 */
+	@Contract("null, _ -> null")
+	static @Nullable Object localizeArg(@Nullable Object arg, @NonNull Locale locale) {
+		if (arg instanceof Text text)
+			return text.asString(locale);
+		if (arg instanceof Supplier<?> supplier)
+			return localizeArg(supplier.get(), locale);
+		return arg;
 	}
 }
