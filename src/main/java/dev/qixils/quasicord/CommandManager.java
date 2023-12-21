@@ -7,6 +7,7 @@
 package dev.qixils.quasicord;
 
 import dev.qixils.quasicord.cogs.Command;
+import dev.qixils.quasicord.cogs.SlashCommand;
 import dev.qixils.quasicord.decorators.AnnotationParser;
 import dev.qixils.quasicord.error.UserError;
 import dev.qixils.quasicord.text.Text;
@@ -21,9 +22,13 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static dev.qixils.quasicord.Key.library;
 import static dev.qixils.quasicord.locale.Context.fromInteraction;
@@ -32,6 +37,7 @@ import static dev.qixils.quasicord.text.Text.single;
 public class CommandManager {
 	@Getter
 	private final @NonNull Quasicord library;
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	protected final @NonNull Map<@Nullable String, Map<String, Command<?>>> commands = new HashMap<>();
 	private final AnnotationParser parser;
 	private boolean initialUpsertDone = false;
@@ -58,6 +64,7 @@ public class CommandManager {
 	public void upsertCommands(JDA jda) {
 		if (initialUpsertDone) return;
 		initialUpsertDone = true;
+		logger.info("Upserting commands");
 		for (Map.Entry<String, Map<String, Command<?>>> entry : commands.entrySet()) {
 			String guildId = entry.getKey();
 			Map<String, Command<?>> guildCommands = entry.getValue();
@@ -68,16 +75,28 @@ public class CommandManager {
 			} else {
 				Guild guild = jda.getGuildById(guildId);
 				if (guild == null)
-					return;
+					continue;
 				updater = guild.updateCommands();
 			}
 
+			Set<String> rootSlashCommands = new HashSet<>();
+
 			for (Command<?> command : guildCommands.values()) {
-				CommandData commandData = command.getCommandData();
-				if (commandData != null) {
-					//noinspection ResultOfMethodCallIgnored
-					updater.addCommands(commandData);
+				CommandData commandData;
+				if (command instanceof SlashCommand slashCommand) {
+					commandData = slashCommand.getBranch().root();
+					if (rootSlashCommands.contains(commandData.getName()))
+						continue;
+					rootSlashCommands.add(commandData.getName());
+				} else {
+					commandData = command.getCommandData();
 				}
+
+				if (commandData == null)
+					continue; // i don't think this should happen but just in case
+				logger.debug("Upserting command {} to guild {}", commandData.getName(), guildId);
+				//noinspection ResultOfMethodCallIgnored
+				updater.addCommands(commandData);
 			}
 
 			updater.queue();

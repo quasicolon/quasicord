@@ -9,6 +9,7 @@ package dev.qixils.quasicord.decorators;
 import dev.qixils.quasicord.CommandManager;
 import dev.qixils.quasicord.autocomplete.AutoCompleter;
 import dev.qixils.quasicord.autocomplete.AutoCompleterFrom;
+import dev.qixils.quasicord.cogs.SlashCommand;
 import dev.qixils.quasicord.cogs.SlashCommandDataBranch;
 import dev.qixils.quasicord.converter.Converter;
 import dev.qixils.quasicord.converter.VoidConverter;
@@ -33,7 +34,7 @@ import java.lang.reflect.Parameter;
 import java.util.Objects;
 import java.util.function.Function;
 
-class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> {
+class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> implements SlashCommand {
 
 	private final String id;
 	private final TranslationProvider i18n;
@@ -171,6 +172,12 @@ class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> {
 	@Override
 	public @NonNull String getDiscordName() {
 		return branch.name();
+	}
+
+	@Override
+	@NonNull
+	public SlashCommandDataBranch getBranch() {
+		return branch;
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
