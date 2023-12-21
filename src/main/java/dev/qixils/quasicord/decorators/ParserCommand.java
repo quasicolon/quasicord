@@ -67,7 +67,8 @@ abstract class ParserCommand<I extends CommandInteraction> extends AbstractComma
 			case Mono<?> mono -> mono.subscribe(res -> consumeCommandResult(interaction, res));
 			case CompletableFuture<?> fut -> fut.thenAccept(res -> consumeCommandResult(interaction, res));
 			// terminal cases:
-			case null -> {}
+			case null -> interaction.deferReply().queue();
+			case Boolean ephemeral -> interaction.deferReply(ephemeral).queue();
 			case QuasiMessage message -> message.text().asString(Context.fromInteraction(interaction)).subscribe(string -> {
 				var action = interaction.reply(string);
 				message.modifier().accept(action);

@@ -7,9 +7,11 @@
 package dev.qixils.quasicord.db.collection;
 
 import dev.qixils.quasicord.db.CollectionName;
-import net.dv8tion.jda.api.entities.ISnowflake;
+import org.bson.codecs.pojo.annotations.BsonId;
+import org.bson.codecs.pojo.annotations.BsonIgnore;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.time.ZoneId;
 
@@ -18,23 +20,23 @@ import java.time.ZoneId;
  * This stores the selected timezone for a user.
  */
 @CollectionName(name = "timezone")
-public class TimeZoneConfig implements ISnowflake {
-	private long snowflake;
-	private @Nullable String tzCode;
+public class TimeZoneConfig {
 
-	/**
-	 * No-arg constructor for MongoDB.
-	 */
-	TimeZoneConfig() {
-	}
+	@BsonId
+	private final long snowflake; // _id
+	private final @NonNull String tzCode;
 
 	/**
 	 * Constructs a new TimeZoneConfig entry.
 	 *
-	 * @param snowflake     the user's snowflake ID
-	 * @param tzCode the user's configured timezone
+	 * @param snowflake the user's snowflake ID
+	 * @param tzCode    the user's configured timezone
 	 */
-	TimeZoneConfig(long snowflake, @NonNull String tzCode) {
+	@ApiStatus.Internal
+	public TimeZoneConfig(
+		@BsonId long snowflake,
+		@BsonProperty("tzCode") @NonNull String tzCode
+	) {
 		this.snowflake = snowflake;
 		this.tzCode = tzCode;
 	}
@@ -49,20 +51,33 @@ public class TimeZoneConfig implements ISnowflake {
 		this(snowflake, tz.getId());
 	}
 
-	@Override
-	public long getIdLong() {
+	/**
+	 * Gets the snowflake/ID of this config.
+	 *
+	 * @return snowflake/ID
+	 */
+	@BsonId
+	public long getId() {
 		return snowflake;
 	}
 
+	/**
+	 * Gets the timezone code of this config.
+	 *
+	 * @return timezone code
+	 */
+	@BsonProperty("tzCode")
 	public @NonNull String getTimeZoneCode() {
-		if (tzCode == null)
-			throw new IllegalStateException("Language code is null");
 		return tzCode;
 	}
 
+	/**
+	 * Gets the timezone of this config.
+	 *
+	 * @return timezone
+	 */
+	@BsonIgnore
 	public @NonNull ZoneId getTimeZone() {
-		if (tzCode == null)
-			throw new IllegalStateException("Time zone code is null");
 		return ZoneId.of(tzCode);
 	}
 }

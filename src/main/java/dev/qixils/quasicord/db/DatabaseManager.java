@@ -15,11 +15,11 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 import dev.qixils.quasicord.Environment;
 import dev.qixils.quasicord.Quasicord;
-import net.dv8tion.jda.api.entities.ISnowflake;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.codecs.pojo.PojoCodecProvider;
 import org.bson.conversions.Bson;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -97,18 +97,10 @@ public class DatabaseManager implements Closeable {
 		return getAllBy(filter, tClass);
 	}
 
-	// getBySnowflake
+	// getById
 
-	public <T extends ISnowflake> @NotNull Mono<T> getBySnowflake(String snowflake, Class<T> tClass) {
-		return Mono.from(collection(tClass).find(Filters.eq("snowflake", snowflake)).first());
-	}
-
-	public <T extends ISnowflake> @NotNull Mono<T> getBySnowflake(long snowflake, Class<T> tClass) {
-		return getBySnowflake(String.valueOf(snowflake), tClass);
-	}
-
-	public <T extends ISnowflake> @NotNull Mono<T> getBySnowflake(ISnowflake snowflake, Class<T> tClass) {
-		return getBySnowflake(snowflake.getId(), tClass);
+	public <T> @NonNull Mono<T> getById(Object id, Class<T> tClass) {
+		return Mono.from(collection(tClass).find(Filters.eq("_id", id)));
 	}
 
 	// misc

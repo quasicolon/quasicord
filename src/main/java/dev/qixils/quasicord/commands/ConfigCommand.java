@@ -16,7 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Locale;
 
-import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
 
 public abstract class ConfigCommand {
@@ -36,7 +35,7 @@ public abstract class ConfigCommand {
 		// TODO: probably remove per-channel locale config i think
 
 		var collection = library.getDatabaseManager().collection(LocaleConfig.class);
-		var filter = and(eq("id", snowflake.getIdLong()), eq("entryType", entryType));
+		var filter = eq("_id", LocaleConfig.createId(entryType, snowflake.getIdLong()));
 		Publisher<?> result;
 		if (locale == null) {
 			result = collection.deleteOne(filter);

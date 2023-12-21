@@ -57,7 +57,7 @@ public class UserConfigCommand extends ConfigCommand {
 			? Text.single(Key.library("user-config.language.output.removed"))
 			: Text.single(Key.library("user-config.language.output.updated"), locale.getDisplayName(locale)))
 			.map(text -> new QuasiMessage(text, request -> {
-				if (request instanceof ReplyCallbackAction action && channel.getType() == ChannelType.PRIVATE) {
+				if (request instanceof ReplyCallbackAction action && channel.getType() != ChannelType.PRIVATE) {
 					//noinspection ResultOfMethodCallIgnored
 					action.setEphemeral(true);
 				}
@@ -90,7 +90,7 @@ public class UserConfigCommand extends ConfigCommand {
 			? Text.single(Key.library("user-config.timezone.output.removed"))
 			: Text.single(Key.library("user-config.timezone.output.updated"), (Text) locale -> tz.getDisplayName(TextStyle.FULL_STANDALONE, locale)))
 			.map(text -> new QuasiMessage(text, request -> {
-				if (request instanceof ReplyCallbackAction action && channel.getType() == ChannelType.PRIVATE) {
+				if (request instanceof ReplyCallbackAction action && channel.getType() != ChannelType.PRIVATE) {
 					//noinspection ResultOfMethodCallIgnored
 					action.setEphemeral(true);
 				}

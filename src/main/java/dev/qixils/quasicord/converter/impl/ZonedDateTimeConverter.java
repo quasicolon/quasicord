@@ -41,7 +41,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 
 	@Override
 	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input) {
-		TimeZoneConfig config = library.getDatabaseManager().getBySnowflake(interaction.getUser(), TimeZoneConfig.class).block();
+		TimeZoneConfig config = library.getDatabaseManager().getById(interaction.getUser().getIdLong(), TimeZoneConfig.class).block();
 		ZoneId zone = config == null ? ZoneOffset.UTC : config.getTimeZone();
 		int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, nanos = 0;
 		char meridiem = 'x';
