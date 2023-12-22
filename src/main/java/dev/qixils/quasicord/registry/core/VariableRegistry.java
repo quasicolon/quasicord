@@ -6,17 +6,17 @@
 
 package dev.qixils.quasicord.registry.core;
 
-import dev.qixils.quasicord.registry.impl.ClosableMappedRegistryImpl;
+import dev.qixils.quasicord.registry.impl.MappedRegistryImpl;
 import dev.qixils.quasicord.variables.parsers.VariableParser;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * The registry of {@link VariableParser variables}.
  */
-public final class VariableRegistry extends ClosableMappedRegistryImpl<VariableParser<?>> {
+public final class VariableRegistry extends MappedRegistryImpl<VariableParser<?>> {
 
 	VariableRegistry() {
-		super("variables", true);
+		super("variables");
 	}
 
 	public <R extends VariableParser<?>> R typedRegister(@NonNull String key, @NonNull R value) {

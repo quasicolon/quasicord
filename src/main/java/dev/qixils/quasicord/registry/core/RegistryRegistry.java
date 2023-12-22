@@ -8,16 +8,15 @@ package dev.qixils.quasicord.registry.core;
 
 import dev.qixils.quasicord.Quasicord;
 import dev.qixils.quasicord.converter.ConverterRegistry;
-import dev.qixils.quasicord.registry.ClosableRegistry;
 import dev.qixils.quasicord.registry.Registry;
-import dev.qixils.quasicord.registry.impl.ClosableMappedRegistryImpl;
+import dev.qixils.quasicord.registry.impl.MappedRegistryImpl;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 /**
  * The registry of registries.
  */
-public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<?>> {
+public final class RegistryRegistry extends MappedRegistryImpl<Registry<?>> {
 
 	private final @NonNull Quasicord quasicord;
 
@@ -38,12 +37,11 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	 */
 	@Internal
 	public RegistryRegistry(@NonNull Quasicord quasicord) {
-		super("registries", false);
+		super("registries");
 		this.quasicord = quasicord;
 		register(this);
 		VARIABLE_REGISTRY = register(new VariableRegistry());
 		CONVERTER_REGISTRY = register(new ConverterRegistry(quasicord));
-		close();
 	}
 
 	/**
@@ -72,8 +70,6 @@ public final class RegistryRegistry extends ClosableMappedRegistryImpl<Registry<
 	public Registry<?> register(@NonNull String key, @NonNull Registry<?> value) throws IllegalArgumentException {
 		super.register(key, value);
 		quasicord.getEventDispatcher().dispatchRegistryInit(value);
-		if (value instanceof ClosableRegistry<?> closable && closable.shouldClose() && !closable.isClosed())
-			closable.close();
 		return value;
 	}
 }
