@@ -6,8 +6,6 @@
 
 package dev.qixils.quasicord.locale;
 
-import dev.qixils.quasicord.locale.impl.ImmutableContextImpl;
-import dev.qixils.quasicord.locale.impl.MutableContextImpl;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -26,7 +24,6 @@ import java.util.Objects;
  * Stores information about the author and location of a message to determine the {@link Locale}
  * to use for localizing response messages.
  */
-// TODO: the interface should not be pseudo-mutable... it should be immutable with a mutable builder.
 public interface Context {
 
 	/**
@@ -38,13 +35,6 @@ public interface Context {
 	default @NonNull Mono<Locale> locale(@NonNull LocaleProvider localeProvider) {
 		return localeProvider.forContext(this);
 	}
-
-	/**
-	 * Determines if this context is mutable.
-	 *
-	 * @return true if this context is mutable
-	 */
-	boolean isMutable();
 
 	// getters
 
@@ -83,149 +73,24 @@ public interface Context {
 	 */
 	@Nullable DiscordLocale guildLocale();
 
-	// user setter
-
-	/**
-	 * Sets the user ID of this context.
-	 *
-	 * @param user the user ID
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	@NonNull Context user(long user);
-
-	/**
-	 * Sets the user ID of this context.
-	 *
-	 * @param user the user
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	default @NonNull Context user(@NonNull User user) {
-		return user(Objects.requireNonNull(user, "user").getIdLong());
-	}
-
-	/**
-	 * Sets the user ID of this context.
-	 *
-	 * @param member the member
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	default @NonNull Context user(@NonNull Member member) {
-		return user(Objects.requireNonNull(member, "member").getIdLong());
-	}
-
-	// user locale setter
-
-	/**
-	 * Sets the user locale of this context.
-	 *
-	 * @param locale the locale
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	@NonNull Context userLocale(@Nullable DiscordLocale locale);
-
-	/**
-	 * Sets the user locale of this context.
-	 *
-	 * @param interaction an interaction triggered by the user
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	default @NonNull Context userLocale(@NonNull Interaction interaction) {
-		return userLocale(Objects.requireNonNull(interaction, "interaction").getUserLocale());
-	}
-
-	// channel setter
-
-	/**
-	 * Sets the channel ID of this context.
-	 *
-	 * @param channel the channel ID
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	@NonNull Context channel(long channel);
-
-	/**
-	 * Sets the channel ID of this context.
-	 *
-	 * @param channel the channel
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	default @NonNull Context channel(@NonNull MessageChannel channel) {
-		return channel(Objects.requireNonNull(channel, "channel").getIdLong());
-	}
-
-	// guild setter
-
-	/**
-	 * Sets the guild ID of this context.
-	 *
-	 * @param guild the guild ID
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	@NonNull Context guild(long guild);
-
-	/**
-	 * Sets the guild ID of this context.
-	 *
-	 * @param guild the guild
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	default @NonNull Context guild(@NonNull Guild guild) {
-		return guild(Objects.requireNonNull(guild, "guild").getIdLong());
-	}
-
-	// guild locale setter
-
-	/**
-	 * Sets the guild locale of this context.
-	 *
-	 * @param locale the locale
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	@NonNull Context guildLocale(@Nullable DiscordLocale locale);
-
-	/**
-	 * Sets the guild locale of this context.
-	 *
-	 * @param guild the guild
-	 * @return this context
-	 * @throws UnsupportedOperationException if this context is immutable
-	 */
-	default @NonNull Context guildLocale(@NonNull Guild guild) {
-		Objects.requireNonNull(guild, "guild");
-		DiscordLocale locale = guild.getFeatures().contains("COMMUNITY")
-				? guild.getLocale()
-				: null;
-		return guildLocale(locale);
-	}
-
 	// copy
 
 	/**
-	 * Creates a mutable copy of this context.
+	 * Creates a {@link Builder} from this context.
 	 *
-	 * @return a mutable copy of this context
+	 * @return a builder from this context
 	 */
-	default @NonNull Context mutableCopy() {
-		return new MutableContextImpl(user(), userLocale(), channel(), guild(), guildLocale());
+	default @NonNull Context toBuilder() {
+		return builder().user(user()).userLocale(userLocale()).channel(channel()).guild(guild()).guildLocale(guildLocale()).build();
 	}
 
 	/**
-	 * Creates an immutable copy of this context.
+	 * Creates a new {@link Builder}.
 	 *
-	 * @return an immutable copy of this context
+	 * @return new builder
 	 */
-	default @NonNull Context immutableCopy() {
-		return new ImmutableContextImpl(user(), userLocale(), channel(), guild(), guildLocale());
+	static @NonNull Builder builder() {
+		return new ContextBuilderImpl();
 	}
 
 	/**
@@ -235,12 +100,12 @@ public interface Context {
 	 * @return a context
 	 */
 	static @NonNull Context fromMessage(@NonNull Message message) {
-		Context context = new MutableContextImpl()
+		Builder context = builder()
 				.user(message.getAuthor())
 				.channel(message.getChannel());
 		if (message.isFromGuild())
 			context.guild(message.getGuild()).guildLocale(message.getGuild());
-		return context.immutableCopy();
+		return context.build();
 	}
 
 	/**
@@ -250,16 +115,142 @@ public interface Context {
 	 * @return a context
 	 */
 	static @NonNull Context fromInteraction(@NonNull Interaction interaction) {
-		Context context = new MutableContextImpl().user(interaction.getUser());
+		Builder context = new ContextBuilderImpl().user(interaction.getUser());
 		if (interaction.getChannel() instanceof MessageChannel channel)
 			context.channel(channel);
 		if (interaction.getGuild() != null)
 			context.guild(interaction.getGuild()).guildLocale(interaction.getGuild());
-		return context.immutableCopy();
+		return context.build();
 	}
 
 	/**
 	 * An empty context.
 	 */
-	@NonNull Context EMPTY = new ImmutableContextImpl(0, null, 0, 0, null);
+	@NonNull Context EMPTY = builder().build();
+
+	/**
+	 * Builder for a {@link Context}.
+	 */
+	@SuppressWarnings("UnusedReturnValue")
+	interface Builder {
+
+		// user setter
+
+		/**
+		 * Sets the user ID of this context.
+		 *
+		 * @param user the user ID
+		 * @return this context
+		 */
+		@NonNull Builder user(long user);
+
+		/**
+		 * Sets the user ID of this context.
+		 *
+		 * @param user the user
+		 * @return this context
+		 */
+		default @NonNull Builder user(@NonNull User user) {
+			return user(Objects.requireNonNull(user, "user").getIdLong());
+		}
+
+		/**
+		 * Sets the user ID of this context.
+		 *
+		 * @param member the member
+		 * @return this context
+		 */
+		default @NonNull Builder user(@NonNull Member member) {
+			return user(Objects.requireNonNull(member, "member").getIdLong());
+		}
+
+		// user locale setter
+
+		/**
+		 * Sets the user locale of this context.
+		 *
+		 * @param locale the locale
+		 * @return this context
+		 */
+		@NonNull Builder userLocale(@Nullable DiscordLocale locale);
+
+		/**
+		 * Sets the user locale of this context.
+		 *
+		 * @param interaction an interaction triggered by the user
+		 * @return this context
+		 */
+		default @NonNull Builder userLocale(@NonNull Interaction interaction) {
+			return userLocale(Objects.requireNonNull(interaction, "interaction").getUserLocale());
+		}
+
+		// channel setter
+
+		/**
+		 * Sets the channel ID of this context.
+		 *
+		 * @param channel the channel ID
+		 * @return this context
+		 */
+		@NonNull Builder channel(long channel);
+
+		/**
+		 * Sets the channel ID of this context.
+		 *
+		 * @param channel the channel
+		 * @return this context
+		 */
+		default @NonNull Builder channel(@NonNull MessageChannel channel) {
+			return channel(Objects.requireNonNull(channel, "channel").getIdLong());
+		}
+
+		// guild setter
+
+		/**
+		 * Sets the guild ID of this context.
+		 *
+		 * @param guild the guild ID
+		 * @return this context
+		 */
+		@NonNull Builder guild(long guild);
+
+		/**
+		 * Sets the guild ID of this context.
+		 *
+		 * @param guild the guild
+		 * @return this context
+		 */
+		default @NonNull Builder guild(@NonNull Guild guild) {
+			return guild(Objects.requireNonNull(guild, "guild").getIdLong());
+		}
+
+		// guild locale setter
+
+		/**
+		 * Sets the guild locale of this context.
+		 *
+		 * @param locale the locale
+		 * @return this context
+		 */
+		@NonNull Builder guildLocale(@Nullable DiscordLocale locale);
+
+		/**
+		 * Sets the guild locale of this context.
+		 *
+		 * @param guild the guild
+		 * @return this context
+		 */
+		default @NonNull Builder guildLocale(@NonNull Guild guild) {
+			Objects.requireNonNull(guild, "guild");
+			DiscordLocale locale = guild.getFeatures().contains("COMMUNITY")
+				? guild.getLocale()
+				: null;
+			return guildLocale(locale);
+		}
+
+		/**
+		 * Builds the {@link Context}.
+		 */
+		@NonNull Context build();
+	}
 }

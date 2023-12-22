@@ -4,23 +4,19 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-package dev.qixils.quasicord.locale.impl;
+package dev.qixils.quasicord.locale;
 
-import dev.qixils.quasicord.locale.Context;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Objects;
-
 @Accessors(fluent = true, chain = true)
-@AllArgsConstructor
 @NoArgsConstructor
 @Data
-public final class MutableContextImpl implements Context {
+final class ContextBuilderImpl implements Context.Builder {
 	private long user;
 	private @Nullable DiscordLocale userLocale;
 	private long channel;
@@ -28,20 +24,7 @@ public final class MutableContextImpl implements Context {
 	private @Nullable DiscordLocale guildLocale;
 
 	@Override
-	public boolean isMutable() {
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(user, userLocale, channel, guild, guildLocale);
-	}
-
-	public boolean equals(@Nullable Object obj) {
-		if (obj == null) return false;
-		if (!(obj instanceof Context other)) return false;
-		if (user != other.user()) return false;
-		if (channel != other.channel()) return false;
-		return guild == other.guild();
+	public @NonNull Context build() {
+		return new ContextImpl(user, userLocale, channel, guild, guildLocale);
 	}
 }
