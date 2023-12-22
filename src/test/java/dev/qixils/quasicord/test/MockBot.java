@@ -20,7 +20,7 @@ import java.util.Locale;
 
 public class MockBot extends Quasicord {
     public MockBot() throws LoginException, IOException, InterruptedException {
-        super("mockbot", Collections.singletonList(Locale.ENGLISH), Paths.get(".").toAbsolutePath(), null, null);
+        super("mockbot", Locale.ENGLISH, Paths.get(".").toAbsolutePath(), null, null);
     }
 
     @Override

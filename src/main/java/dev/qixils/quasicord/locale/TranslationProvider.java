@@ -18,14 +18,15 @@ import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.commands.localization.LocalizationFunction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
+import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 
 /**
  * Provides the translation(s) for a key inside the configured namespace.
@@ -35,8 +36,8 @@ public final class TranslationProvider {
 	private static final @NonNull Logger logger = LoggerFactory.getLogger(TranslationProvider.class);
 	private final @NonNull String namespace;
 	private final @NonNull Locale defaultLocale;
-	private final @NonNull Set<Locale> locales;
-	private final @NonNull Map<String, Map<Locale, ?>> allTranslations = new HashMap<>();
+	private final @NonNull Set<Locale> locales = new HashSet<>();
+	private final @NonNull Map<String, Map<Locale, Object>> allTranslations = new HashMap<>();
 	private final @NonNull Map<String, Map<DiscordLocale, String>> discordTranslations = new HashMap<>();
 
 	/**
@@ -52,30 +53,11 @@ public final class TranslationProvider {
 	 *
 	 * @param namespace        the directory in which the translations are stored
 	 * @param defaultLocale    the default locale to use if no translation is found for the current locale
-	 * @param supportedLocales the locales to load
 	 */
-	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Collection<Locale> supportedLocales) throws IOException {
+	public TranslationProvider(@NonNull String namespace, @NonNull Locale defaultLocale) throws IOException {
 		this.namespace = namespace.toLowerCase(Locale.ROOT);
 		this.defaultLocale = defaultLocale;
-		this.locales = new HashSet<>(supportedLocales);
 		loadTranslations();
-	}
-
-	/**
-	 * Creates a new translation provider for the given resource source and default locale.
-	 * <p>
-	 * Your bot or plugin should store its language files inside the directory
-	 * {@code src/main/resources/langs/<namespace>}, where {@code <namespace>} is the
-	 * same as the string you pass in to the {@code namespace} parameter.
-	 * </p>
-	 * <b>Note:</b> The {@code namespace} parameter is converted to lowercase. Usage of
-	 * non-alphanumeric characters is discouraged, though not explicitly forbidden.
-	 *
-	 * @param namespace        the directory in which the translations are stored
-	 * @param supportedLocales the locales to load, with the first element being treated as the default locale
-	 */
-	public TranslationProvider(@NonNull String namespace, @NonNull List<Locale> supportedLocales) throws IOException {
-		this(namespace, supportedLocales.get(0), supportedLocales);
 	}
 
 	/**
@@ -129,65 +111,84 @@ public final class TranslationProvider {
 		return DiscordLocale.UNKNOWN;
 	}
 
+	private static final Set<String> PLURAL_KEYS = new HashSet<>(List.of("zero", "one", "two", "few", "many", "other"));
+
+	// Gets all the translations contained in a (maybe nested) yaml value
+	@SuppressWarnings("unchecked")
+	private HashMap<String, Object> flattenKeys(String prefix, Map<String, ?> keys) {
+		var results = new HashMap<String, Object>();
+		for (var entry : keys.entrySet()) {
+			var key = prefix + entry.getKey();
+			switch (entry.getValue()) {
+				case String single ->
+					results.put(key, single);
+				case Map<?, ?> map when PLURAL_KEYS.containsAll((Set<String>)map.keySet()) ->
+					results.put(key, map);
+				case Map<?, ?> map ->
+					results.putAll(flattenKeys(key + ".", (Map<String, ?>) map));
+				case Object other ->
+					throw new RuntimeException("Invalid translation value: " + key + ": " + other);
+			}
+		}
+		return results;
+	}
+
+	private static final Pattern LANGUAGE_FILE = Pattern.compile("(?<languageTag>\\w{2})\\.ya?ml");
+
+	// Find all the items in the JVM resource path
+	private List<String> listResourcesIn(String path) throws IOException {
+		var url = ClassLoader.getSystemResource(path);
+		if (url.getProtocol().equals("file")) { // OS dir
+			return Arrays.stream(new File(url.getPath()).list()).toList();
+		} else { // packed in jar
+			try (var jar = new JarFile(url.getPath().substring(5, url.getPath().indexOf("!")))) {
+				return Collections.list(jar.entries()).stream()
+					.filter(entry -> entry.getName().startsWith(path)         )
+					.map(   entry -> entry.getName().substring(path.length()) )
+					.toList();
+			}
+		}
+	}
+
 	/**
 	 * Loads translations from the configured namespace.
 	 */
 	@SuppressWarnings("unchecked")
 	public void loadTranslations() throws IOException {
-		// reset maps
-		allTranslations.clear();
-		discordTranslations.clear();
 		Yaml yaml = new Yaml();
 
-		for (Locale locale : locales) {
-			String languageTag = locale.toLanguageTag();
-			DiscordLocale discordLocale = getDiscordLocale(locale);
+		// each language yaml file
+		for (var filename : listResourcesIn("langs/" + namespace + "/")) {
+			var matcher = LANGUAGE_FILE.matcher(filename);
+			if (!matcher.find()) continue;
 
-			// load file
-			try (InputStream inputStream = ClassLoader.getSystemResourceAsStream("langs/" + namespace + '/' + languageTag + ".yaml")) {
-				if (inputStream == null) {
-					logger.warn("Failed to load translations for locale {} in namespace {}: file not found", locale, namespace);
-					continue;
-				}
+			// tag from filename (e.g. en)
+			var languageTag = matcher.group("languageTag");
+			var locale = Locale.forLanguageTag(languageTag);
+			locales.add(locale);
+			var discordLocale = getDiscordLocale(locale);
 
-				Map<String, Object> translationMap = yaml.load(inputStream);
-				if (translationMap == null) {
-					logger.warn("Failed to load translations for locale {} in namespace {}: yaml returned null", locale, namespace);
-					continue;
-				}
+			var file = ClassLoader.getSystemResourceAsStream("langs/" + namespace + "/" + filename);
+			Map<String, Object> data = yaml.load(file);
 
-				// some language files are nested inside the language code, so we need to extract
-				// the inner map
-				if (translationMap.containsKey(languageTag))
-					translationMap = (Map<String, Object>) translationMap.get(languageTag);
+			// some language files are nested inside the language tag
+			if (data.containsKey(languageTag))
+				data = (Map<String, Object>) data.get(languageTag);
+			// convert to flat keys for dotted string access
+			data = flattenKeys("", data);
 
-				// add translations to maps
-				for (Map.Entry<String, Object> entry : translationMap.entrySet()) {
-					String key = entry.getKey();
-					Object value = entry.getValue();
-					// type-checking here feels kinda redundant, but I suppose it's good
-					//  to warn developers of improper i18n files earlier rather than later
-					if (value instanceof String translation) {
-						// single translation
-						Map<Locale, String> translations = (Map<Locale, String>) this.allTranslations.computeIfAbsent(key, k -> new HashMap<>());
-						translations.put(locale, translation);
-						if (discordLocale == DiscordLocale.UNKNOWN)
-							continue;
-						Map<DiscordLocale, String> discordTranslations = this.discordTranslations.computeIfAbsent(key, k -> new HashMap<>());
-						discordTranslations.put(discordLocale, translation);
-					} else if (value instanceof Map) {
-						// plural translation
-						Map<Locale, Map<String, String>> translations = (Map<Locale, Map<String, String>>) allTranslations.computeIfAbsent(key, k -> new HashMap<>());
-						translations.put(locale, (Map<String, String>) value);
-						// (discord doesn't support plural translations)
-					} else {
-						logger.warn("Invalid translation value for key '{}' in {} file {}: {}", key, namespace, languageTag, value);
-					}
-				}
+			for (var entry : data.entrySet()) {
+				String key = entry.getKey();
+				Object value = entry.getValue();
 
-				// log
-				logger.info("Loaded {} translations for locale {} in namespace {}", translationMap.size(), locale, namespace);
+				allTranslations.computeIfAbsent(key, k -> new HashMap<>()).put(locale, value);
+
+				if (discordLocale != DiscordLocale.UNKNOWN // not all locales are Discord-supported
+					&& value instanceof String single)     // only singular translations
+					discordTranslations.computeIfAbsent(key, k -> new HashMap<>()).put(discordLocale, single);
 			}
+
+			logger.info("Loaded {} translations for locale {} in namespace {}", data.size(), locale, namespace);
 		}
 	}
 
@@ -362,8 +363,8 @@ public final class TranslationProvider {
 	 * @param key the translation key
 	 * @return the translation map
 	 */
-	@NotNull
-	public Map<DiscordLocale, String> getDiscordTranslations(@NotNull String key) {
+	@NonNull
+	public Map<DiscordLocale, String> getDiscordTranslations(@NonNull String key) {
 		return discordTranslations.getOrDefault(key, Collections.emptyMap());
 	}
 
