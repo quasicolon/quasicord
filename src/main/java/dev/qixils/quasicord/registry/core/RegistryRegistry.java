@@ -21,11 +21,6 @@ public final class RegistryRegistry extends MappedRegistryImpl<Registry<?>> {
 	private final @NonNull Quasicord quasicord;
 
 	/**
-	 * The registry of {@link dev.qixils.quasicord.variables.parsers.VariableParser variables}.
-	 */
-	public final VariableRegistry VARIABLE_REGISTRY;
-
-	/**
 	 * The registry of {@link dev.qixils.quasicord.converter.Converter converters}.
 	 */
 	public final ConverterRegistry CONVERTER_REGISTRY;
@@ -40,7 +35,6 @@ public final class RegistryRegistry extends MappedRegistryImpl<Registry<?>> {
 		super("registries");
 		this.quasicord = quasicord;
 		register(this);
-		VARIABLE_REGISTRY = register(new VariableRegistry());
 		CONVERTER_REGISTRY = register(new ConverterRegistry(quasicord));
 	}
 
