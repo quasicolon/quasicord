@@ -68,14 +68,13 @@ public class Quasicord {
 	 * @throws InterruptedException
 	 * @throws IOException
 	 */
-	protected Quasicord(@NonNull String namespace, @NonNull List<Locale> locales, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
+	public Quasicord(@NonNull String namespace, @NonNull List<Locale> locales, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
 		if (locales.isEmpty()) {
 			throw new IllegalArgumentException("'locales' parameter must have at least one object");
 		}
 
 		// misc initialization
 		this.namespace = namespace;
-
 		// register default event handler
 		if (eventHandler != null)
 			eventDispatcher.registerListeners(eventHandler);
