@@ -212,7 +212,7 @@ public class LocaleProvider {
 	 * @return a {@link Mono} that may emit a {@link Locale}
 	 */
 	public @NonNull Mono<@NonNull Locale> forGuild(long guildId) {
-		return forObject(guildId, EntryType.CHANNEL);
+		return forObject(guildId, EntryType.GUILD);
 	}
 
 	/**
