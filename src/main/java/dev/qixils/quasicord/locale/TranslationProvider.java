@@ -154,7 +154,7 @@ public final class TranslationProvider {
 	 * Loads translations from the configured namespace.
 	 */
 	@SuppressWarnings("unchecked")
-	public void loadTranslations() throws IOException {
+	private void loadTranslations() throws IOException {
 		Yaml yaml = new Yaml();
 
 		// each language yaml file
