@@ -37,7 +37,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 			Pattern.compile("(?<month>\\p{L}{3,}) (?<day>\\d{1,2}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
 			Pattern.compile("(?<day>\\d{1,2}) (?<month>\\p{L}{3,}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
 	};
-	private static final Pattern TIME_PATTERN = Pattern.compile("(?<hour>\\d{2}):(?<minute>\\d{2})(?::(?<second>\\d{2})(?:\\.(?<nanos>\\d{1,9}))?)?(?: (?<meridiem>[Aa]|[Pp])\\.?M\\.?)?");
+	private static final Pattern TIME_PATTERN = Pattern.compile("(?<hour>\\d{1,2})(?::(?<minute>\\d{2})(?::(?<second>\\d{2})(?:\\.(?<nanos>\\d{1,9}))?)?)?(?: ?(?<meridiem>[Aa]|[Pp])\\.?[Mm]\\.?)?");
 
 	@Override
 	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input) {
