@@ -19,7 +19,7 @@ import java.time.ZoneId;
  * An entry in the timezone configuration database collection.
  * This stores the selected timezone for a user.
  */
-@CollectionName(name = "timezone")
+@CollectionName("timezone")
 public class TimeZoneConfig {
 
 	@BsonId

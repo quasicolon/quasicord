@@ -75,7 +75,7 @@ public class UserConfigCommand extends ConfigCommand {
 		Channel channel
 	) {
 		var collection = library.getDatabaseManager().collection(TimeZoneConfig.class);
-		var filter = eq("id", user.getIdLong());
+		var filter = eq("_id", user.getIdLong());
 		Publisher<?> result;
 		if (tz == null) {
 			result = collection.deleteOne(filter);
