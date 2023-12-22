@@ -7,6 +7,7 @@
 package dev.qixils.quasicord.db.collection;
 
 import dev.qixils.quasicord.db.CollectionName;
+import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonId;
 import org.bson.codecs.pojo.annotations.BsonIgnore;
 import org.bson.codecs.pojo.annotations.BsonProperty;
@@ -33,6 +34,7 @@ public class TimeZoneConfig {
 	 * @param tzCode    the user's configured timezone
 	 */
 	@ApiStatus.Internal
+	@BsonCreator
 	public TimeZoneConfig(
 		@BsonId long snowflake,
 		@BsonProperty("tzCode") @NonNull String tzCode
