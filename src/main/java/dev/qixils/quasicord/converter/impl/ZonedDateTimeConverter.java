@@ -63,7 +63,14 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 		}
 
 		// error if date is invalid
-		if (month == 0 || day == 0 || month > 12 || day > 31)
+		var now = ZonedDateTime.now(zone);
+		boolean autoDate = month == 0 && day == 0 && year == 0;
+		if (autoDate) {
+			year = now.getYear();
+			month = now.getMonthValue();
+			day = now.getDayOfMonth();
+		}
+		else if (month < 1 || day < 1 || year == 0 || month > 12 || day > 31)
 			throw new UserError(library("exception.invalid_date"));
 
 		// get time
@@ -91,6 +98,9 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 			hour = 0;
 
 		// return
-		return ZonedDateTime.of(year, month, day, hour, minute, second, nanos, zone);
+		var zdt = ZonedDateTime.of(year, month, day, hour, minute, second, nanos, zone);
+		if (zdt.isBefore(now) && autoDate)
+			zdt = zdt.plusDays(1); // TODO: this might pose accuracy issues around daylight savings crossovers?
+		return zdt;
 	}
 }
