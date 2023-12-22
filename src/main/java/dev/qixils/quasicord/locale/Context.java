@@ -26,9 +26,6 @@ import java.util.Objects;
  * Stores information about the author and location of a message to determine the {@link Locale}
  * to use for localizing response messages.
  */
-// TODO: discord now exposes the user's selected locale in the slash command event object.
-//  this should be checked after the user config check but before the channel config check.
-// TODO: discord also exposes the guild's locale! that should be checked after the guild config check.
 // TODO: the interface should not be pseudo-mutable... it should be immutable with a mutable builder.
 public interface Context {
 
