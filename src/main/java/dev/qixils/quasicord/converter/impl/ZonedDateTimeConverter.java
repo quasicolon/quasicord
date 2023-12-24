@@ -11,10 +11,10 @@ import dev.qixils.quasicord.converter.Converter;
 import dev.qixils.quasicord.db.collection.TimeZoneConfig;
 import dev.qixils.quasicord.error.UserError;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -24,25 +24,39 @@ import java.util.regex.Pattern;
 import static dev.qixils.quasicord.Key.library;
 
 @Getter
-@RequiredArgsConstructor
 public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> {
 	private final @NonNull Class<? extends Interaction> interactionClass = Interaction.class;
 	private final @NonNull Class<String> inputClass = String.class;
 	private final @NonNull Class<ZonedDateTime> outputClass = ZonedDateTime.class;
 	private final @NonNull Quasicord library;
+	private final @NonNull DurationConverter durationConverter;
 
 	private static final Pattern[] DATE_PATTERNS = {
-			Pattern.compile("(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})"),
-			Pattern.compile("(?<date1>\\d{1,2})/(?<date2>\\d{1,2})/(?<year>\\d{4})"),
-			Pattern.compile("(?<month>\\p{L}{3,}) (?<day>\\d{1,2}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
-			Pattern.compile("(?<day>\\d{1,2}) (?<month>\\p{L}{3,}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
+		Pattern.compile("(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})"),
+		Pattern.compile("(?<date1>\\d{1,2})/(?<date2>\\d{1,2})/(?<year>\\d{4})"),
+		// TODO month name parse
+		//Pattern.compile("(?<month>\\p{L}{3,}) (?<day>\\d{1,2}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
+		//Pattern.compile("(?<day>\\d{1,2}) (?<month>\\p{L}{3,}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
 	};
 	private static final Pattern TIME_PATTERN = Pattern.compile("(?<hour>\\d{1,2})(?::(?<minute>\\d{2})(?::(?<second>\\d{2})(?:\\.(?<nanos>\\d{1,9}))?)?)?(?: ?(?<meridiem>[Aa]|[Pp])\\.?[Mm]\\.?)?");
+
+	public ZonedDateTimeConverter(@NonNull Quasicord library) {
+		this.library = library;
+		durationConverter = new DurationConverter(library);
+	}
 
 	@Override
 	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input) {
 		TimeZoneConfig config = library.getDatabaseManager().getById(interaction.getUser().getIdLong(), TimeZoneConfig.class).block();
 		ZoneId zone = config == null ? ZoneOffset.UTC : config.getTimeZone();
+		ZonedDateTime now = ZonedDateTime.now(zone);
+
+		try {
+			Duration add = durationConverter.convert(interaction, input);
+			return now.plus(add);
+		} catch (Exception ignored) {
+		}
+
 		int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, nanos = 0;
 		char meridiem = 'x';
 
@@ -53,6 +67,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 				continue;
 			year = Integer.parseInt(dateMatcher.group("year"));
 			if (dateMatcher.group("month") != null) {
+				// TODO month name parse
 				month = Integer.parseInt(dateMatcher.group("month"));
 				day = Integer.parseInt(dateMatcher.group("day"));
 			} else {
@@ -63,14 +78,12 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 		}
 
 		// error if date is invalid
-		var now = ZonedDateTime.now(zone);
 		boolean autoDate = month == 0 && day == 0 && year == 0;
 		if (autoDate) {
 			year = now.getYear();
 			month = now.getMonthValue();
 			day = now.getDayOfMonth();
-		}
-		else if (month < 1 || day < 1 || year == 0 || month > 12 || day > 31)
+		} else if (month < 1 || day < 1 || year == 0 || month > 12 || day > 31)
 			throw new UserError(library("exception.invalid_date"));
 
 		// get time

@@ -7,6 +7,7 @@
 package dev.qixils.quasicord.converter;
 
 import dev.qixils.quasicord.Quasicord;
+import dev.qixils.quasicord.converter.impl.DurationConverter;
 import dev.qixils.quasicord.converter.impl.LocaleConverter;
 import dev.qixils.quasicord.converter.impl.ZoneIdConverter;
 import dev.qixils.quasicord.converter.impl.ZonedDateTimeConverter;
@@ -50,6 +51,7 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new ConverterImpl<>(Locale.class, DiscordLocale.class, (it, locale) -> DiscordLocale.from(locale)));
 		register(new ConverterImpl<>(DiscordLocale.class, Locale.class, (it, locale) -> locale.toLocale()));
 		register(new ZoneIdConverter());
+		register(new DurationConverter(library));
 		// channels
 		register(ConverterImpl.channel(TextChannel.class));
 		register(ConverterImpl.channel(PrivateChannel.class));

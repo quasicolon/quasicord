@@ -16,6 +16,8 @@ en:
   "exception.command_error": An internal error occurred while executing this command. The issue has been reported to the developers.
   "exception.invalid_locale": Could not find a language by the name of `{0}`
   "exception.invalid_timezone": Could not find a timezone by the ID of `{0}`
+  "exception.duration.regex": Duration should contain only numbers, letters, and spaces
+  "exception.duration.unit": Could not find a unit of time by the name `{0}`
   "snowflake_confirm": "{0}: Did you mean {1}?"
   "timezone_display": "{0} ({1})"
 
