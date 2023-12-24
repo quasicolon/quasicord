@@ -33,7 +33,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 
 	private static final Pattern[] DATE_PATTERNS = {
 		Pattern.compile("(?<year>\\d{4})-(?<month>\\d{1,2})-(?<day>\\d{1,2})"),
-		Pattern.compile("(?<date1>\\d{1,2})/(?<date2>\\d{1,2})/(?<year>\\d{4})"),
+		Pattern.compile("(?<date1>\\d{1,2})/(?<date2>\\d{1,2})(?:/(?<year>\\d{4}))?"),
 		// TODO month name parse
 		//Pattern.compile("(?<month>\\p{L}{3,}) (?<day>\\d{1,2}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
 		//Pattern.compile("(?<day>\\d{1,2}) (?<month>\\p{L}{3,}) (?<year>\\d{4})", Pattern.UNICODE_CHARACTER_CLASS),
@@ -57,7 +57,8 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 		} catch (Exception ignored) {
 		}
 
-		int year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0, nanos = 0;
+		boolean autoYear = true;
+		int year = now.getYear(), month = 0, day = 0, hour = 0, minute = 0, second = 0, nanos = 0;
 		char meridiem = 'x';
 
 		// get date
@@ -65,20 +66,24 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 			Matcher dateMatcher = pattern.matcher(input);
 			if (!dateMatcher.find())
 				continue;
-			year = Integer.parseInt(dateMatcher.group("year"));
+			if (dateMatcher.group("year") != null) {
+				year = Integer.parseInt(dateMatcher.group("year"));
+				autoYear = false;
+			}
 			if (dateMatcher.group("month") != null) {
 				// TODO month name parse
 				month = Integer.parseInt(dateMatcher.group("month"));
 				day = Integer.parseInt(dateMatcher.group("day"));
 			} else {
-				// TODO: allow users to toggle between MM/DD and DD/MM in a /preference command
+				// TODO: allow users to toggle between MM/DD and DD/MM in a /preference command (or just guess from locale)
 				month = Integer.parseInt(dateMatcher.group("date1"));
 				day = Integer.parseInt(dateMatcher.group("date2"));
 			}
+			break;
 		}
 
 		// error if date is invalid
-		boolean autoDate = month == 0 && day == 0 && year == 0;
+		boolean autoDate = month == 0 && day == 0;
 		if (autoDate) {
 			year = now.getYear();
 			month = now.getMonthValue();
@@ -112,8 +117,12 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 
 		// return
 		var zdt = ZonedDateTime.of(year, month, day, hour, minute, second, nanos, zone);
-		if (zdt.isBefore(now) && autoDate)
-			zdt = zdt.plusDays(1); // TODO: this might pose accuracy issues around daylight savings crossovers?
+		if (zdt.isBefore(now)) {
+			if (autoYear)
+				zdt = ZonedDateTime.of(year+1, month, day, hour, minute, second, nanos, zone);
+			else if (autoDate)
+				zdt = zdt.plusDays(1); // TODO: this might pose accuracy issues around daylight savings crossovers? idfk
+		}
 		return zdt;
 	}
 }
