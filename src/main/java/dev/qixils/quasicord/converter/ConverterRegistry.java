@@ -51,7 +51,6 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new ConverterImpl<>(Locale.class, DiscordLocale.class, (it, locale) -> DiscordLocale.from(locale)));
 		register(new ConverterImpl<>(DiscordLocale.class, Locale.class, (it, locale) -> locale.toLocale()));
 		register(new ZoneIdConverter());
-		register(new DurationConverter(library));
 		// channels
 		register(ConverterImpl.channel(TextChannel.class));
 		register(ConverterImpl.channel(PrivateChannel.class));
@@ -62,6 +61,7 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(ConverterImpl.channel(ThreadChannel.class));
 		register(ConverterImpl.channel(ForumChannel.class));
 		// zoned date time and misc conversions to other java time types
+		register(new DurationConverter(library));
 		ZONED_DATE_TIME = typedRegister(new ZonedDateTimeConverter(library));
 		register(new ConverterImpl<>(ZonedDateTime.class, Instant.class, (it, zdt) -> zdt.toInstant()));
 		register(new ConverterImpl<>(ZonedDateTime.class, LocalDateTime.class, (it, zdt) -> zdt.toLocalDateTime()));
