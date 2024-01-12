@@ -8,6 +8,7 @@ package dev.qixils.quasicord.converter;
 
 import net.dv8tion.jda.api.interactions.Interaction;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * An interface for converting a user-provided value to a different type.
@@ -38,10 +39,24 @@ public interface Converter<I, O> {
 	 *
 	 * @param interaction the interaction being invoked
 	 * @param input       the user input
+	 * @param targetClass the class to convert to
 	 * @return converted value
 	 */
 	@NonNull
-	O convert(@NonNull Interaction interaction, @NonNull I input);
+	O convert(@NonNull Interaction interaction, @NonNull I input, @NonNull Class<? extends O> targetClass);
+
+	/**
+	 * Converts an input to the output type.
+	 *
+	 * @param interaction the interaction being invoked
+	 * @param input       the user input
+	 * @return converted value
+	 */
+	@NonNull
+	@ApiStatus.NonExtendable
+	default O convert(@NonNull Interaction interaction, @NonNull I input) {
+		return convert(interaction, input, getOutputClass());
+	}
 
 	/**
 	 * Determines whether this converter can be converted to in a converter chain.

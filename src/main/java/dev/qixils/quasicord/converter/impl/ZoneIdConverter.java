@@ -28,7 +28,7 @@ public class ZoneIdConverter implements Converter<String, ZoneId> {
 	private final @NonNull Class<ZoneId> outputClass = ZoneId.class;
 
 	@Override
-	public @NonNull ZoneId convert(@NonNull Interaction it, @NonNull String input) {
+	public @NonNull ZoneId convert(@NonNull Interaction it, @NonNull String input, @org.checkerframework.checker.nullness.qual.NonNull Class<? extends ZoneId> targetClass) {
 		try {
 			return ZoneId.of(input);
 		} catch (Exception ignored) {

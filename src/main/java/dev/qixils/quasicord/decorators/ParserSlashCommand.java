@@ -160,7 +160,7 @@ class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> implemen
 					branch.root().addOptions(opt);
 			}
 
-			converters[i] = new ConverterData(converter, optNameStr);
+			converters[i] = new ConverterData(converter, optNameStr, parameter.getType());
 		}
 	}
 
@@ -224,7 +224,7 @@ class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> implemen
 			}
 
 			else throw new IllegalArgumentException("Could not accept interaction option of type " + option.getType() + " for a converter from " + inputClass.getName());
-			args[i] = converter.convert(interaction, input);
+			args[i] = converter.convert(interaction, input, converterData.targetClass());
 		}
 
 		// invoke and handle

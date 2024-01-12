@@ -12,5 +12,5 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-public record ConverterData(@NonNull Converter<?, ?> converter, @Nullable String optName) {
+public record ConverterData(@NonNull Converter<?, ?> converter, @Nullable String optName, @NonNull Class<?> targetClass) {
 }

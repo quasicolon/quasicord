@@ -25,10 +25,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 
 import static dev.qixils.quasicord.converter.ConverterImpl.identity;
 
@@ -76,6 +73,8 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 		register(new ConverterImpl<>(Number.class, Byte.class, (it, b) -> b.byteValue()));
 		// misc
 		register(new ConverterImpl<>(User.class, Member.class, (it, u) -> Objects.requireNonNull(Objects.requireNonNull(it.getGuild()).getMember(u))));
+		register(new ConverterImpl<>(Integer.class, Enum.class, (ctx, i, tc) -> tc.getEnumConstants()[i]));
+		register(new ConverterImpl<>(String.class, Enum.class, (ctx, i, tc) -> Arrays.stream(tc.getEnumConstants()).filter(e -> e.name().equals(i)).findFirst().orElseThrow()));
 	}
 
 	@NonNull
@@ -180,10 +179,10 @@ public final class ConverterRegistry extends RegistryImpl<Converter<?, ?>> {
 
 		@SuppressWarnings({"unchecked", "rawtypes"}) // i'm sorry JVM
 		@Override
-		public @NonNull O convert(@NonNull Interaction interaction, @NonNull I input) {
+		public @NonNull O convert(@NonNull Interaction interaction, @NonNull I input, @NonNull Class<? extends O> targetClass) {
 			Object result = input;
 			for (Converter converter : converters)
-				result = converter.convert(interaction, result);
+				result = converter.convert(interaction, result, targetClass); // TODO: does passing targetClass unconditionally make sense here?
 			return (O) result;
 		}
 	}

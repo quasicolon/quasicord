@@ -35,7 +35,7 @@ public class LocaleConverter implements Converter<String, Locale> {
 	}
 
 	@Override
-	public @NonNull Locale convert(@NonNull Interaction it, @NonNull String input) {
+	public @NonNull Locale convert(@NonNull Interaction it, @NonNull String input, @org.checkerframework.checker.nullness.qual.NonNull Class<? extends Locale> targetClass) {
 		try {
 			return new Locale.Builder().setLanguageTag(input).build();
 		} catch (IllformedLocaleException ignored) {

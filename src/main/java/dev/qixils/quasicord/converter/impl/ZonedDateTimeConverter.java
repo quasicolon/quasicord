@@ -46,7 +46,7 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 	}
 
 	@Override
-	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input) {
+	public @NonNull ZonedDateTime convert(@NonNull Interaction interaction, @NonNull String input, @NonNull Class<? extends ZonedDateTime> targetClass) {
 		TimeZoneConfig config = library.getDatabaseManager().getById(interaction.getUser().getIdLong(), TimeZoneConfig.class).block();
 		ZoneId zone = config == null ? ZoneOffset.UTC : config.getTimeZone();
 		ZonedDateTime now = ZonedDateTime.now(zone);

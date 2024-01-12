@@ -32,7 +32,7 @@ public class DurationConverter implements Converter<String, Duration> {
 	private static final @NonNull Pattern RELATIVE_TIME_PATTERN = Pattern.compile("^\\d+[A-Za-z]+");
 
 	@Override
-	public @NonNull Duration convert(@NonNull Interaction interaction, @NonNull String input) {
+	public @NonNull Duration convert(@NonNull Interaction interaction, @NonNull String input, @NonNull Class<? extends Duration> targetClass) {
 		List<String> arguments = new ArrayList<>(Arrays.asList(input.split(" ")));
 		arguments.removeIf(s -> RELATIVE_TIME_IGNORED_TOKENS.contains(s.toLowerCase(Locale.ENGLISH)));
 		String strippedInput = String.join("", arguments);

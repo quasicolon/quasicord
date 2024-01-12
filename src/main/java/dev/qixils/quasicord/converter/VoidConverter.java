@@ -16,7 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public interface VoidConverter<O> extends Converter<Void, O> {
 
 	@Override
-	default @NonNull O convert(@NonNull Interaction interaction, @Nullable Void input) {
+	default @NonNull O convert(@NonNull Interaction interaction, @Nullable Void input, @NonNull Class<? extends O> targetClass) {
 		return convert(interaction);
 	}
 

@@ -15,20 +15,42 @@ import java.util.function.BiFunction;
 
 public class ConverterImpl<I, O> extends AbstractConverter<I, O> {
 
-	private final @NonNull BiFunction<Interaction, I, O> converter;
+	@FunctionalInterface
+	public interface ConverterImplStep<I, O> {
+		/**
+		 * Converts an input to the output type.
+		 *
+		 * @param interaction the interaction being invoked
+		 * @param input       the user input
+		 * @param targetClass the class to convert to
+		 * @return converted value
+		 */
+		@NonNull
+		O convert(@NonNull Interaction interaction, @NonNull I input, @NonNull Class<? extends O> targetClass);
+	}
+
+	private final @NonNull ConverterImplStep<I, O> converter;
+
+	public ConverterImpl(
+		@NonNull Class<I> inputClass,
+		@NonNull Class<O> outputClass,
+		@NonNull ConverterImplStep<I, O> converter
+	) {
+		super(inputClass, outputClass);
+		this.converter = converter;
+	}
 
 	public ConverterImpl(
 			@NonNull Class<I> inputClass,
 			@NonNull Class<O> outputClass,
 			@NonNull BiFunction<Interaction, I, O> converter
 	) {
-		super(inputClass, outputClass);
-		this.converter = converter;
+		this(inputClass, outputClass, (ctx, i, t) -> converter.apply(ctx, i));
 	}
 
 	@Override
-	public @NonNull O convert(@NonNull Interaction interaction, @NonNull I input) {
-		return converter.apply(interaction, input);
+	public @NonNull O convert(@NonNull Interaction interaction, @NonNull I input, @NonNull Class<? extends O> targetClass) {
+		return converter.convert(interaction, input, targetClass);
 	}
 
 	@NonNull
