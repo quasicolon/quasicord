@@ -131,6 +131,9 @@ public final class AnnotationParser {
 	}
 
 	public Collection<Command<?>> parse(Object object) {
+		commandManager.getLibrary().getJDA().addEventListener(object);
+		commandManager.getLibrary().getEventDispatcher().registerListeners(object);
+
 		Class<?> parentClass = object.getClass();
 		SlashCommand parentCommandData = parentClass.getAnnotation(SlashCommand.class);
 		SlashCommandData parentCommand = parentCommandData == null
