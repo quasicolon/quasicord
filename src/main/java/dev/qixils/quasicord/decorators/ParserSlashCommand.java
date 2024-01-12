@@ -272,7 +272,7 @@ class ParserSlashCommand extends ParserCommand<SlashCommandInteraction> implemen
 		net.dv8tion.jda.api.interactions.commands.Command.Choice[] jdaChoices = new net.dv8tion.jda.api.interactions.commands.Command.Choice[choices.length];
 		for (int i = 0; i < choices.length; i++) {
 			Choice choice = choices[i];
-			String id = rootKey + choice.id() + ".name";
+			String id = rootKey + choice.value() + ".name";
 			SingleTranslation name = i18n.getSingle(id, i18n.getDefaultLocale());
 			if (name instanceof UnknownTranslation)
 				throw new IllegalStateException("Missing translation for choice " + id);

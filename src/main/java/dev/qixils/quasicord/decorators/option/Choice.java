@@ -17,7 +17,7 @@ import java.lang.annotation.*;
  * While three different types of value methods are available for you to use, only the one matching the
  * {@link Option#type() type} specified in your {@link Option @Option} annotation will be utilized.
  * </p>
- * The name of this choice is taken from the translation file(s) using the {@link #id() provided ID}.
+ * The name of this choice is taken from the translation file(s) using the {@link #value() provided ID}.
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
@@ -35,7 +35,7 @@ public @interface Choice {
 	 *
 	 * @return choice ID
 	 */
-	String id();
+	String value();
 
 	/**
 	 * The value of an {@link net.dv8tion.jda.api.interactions.commands.OptionType#INTEGER INTEGER} choice.
