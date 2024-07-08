@@ -120,5 +120,11 @@ public class DummySelfUser extends DummyUser implements SelfUser {
         public AccountManager setAvatar(@Nullable Icon avatar) {
             return this;
         }
-    }
+
+		@NotNull
+		@Override
+		public AccountManager setBanner(@Nullable Icon icon) {
+			return this;
+		}
+	}
 }

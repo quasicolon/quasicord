@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.ApplicationTeam;
 import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -111,6 +112,24 @@ public class DummyApplicationInfo implements ApplicationInfo {
 	@Override
 	public List<String> getTags() {
 		return Collections.emptyList();
+	}
+
+	@NotNull
+	@Override
+	public @Unmodifiable List<String> getRedirectUris() {
+		return Collections.emptyList();
+	}
+
+	@Nullable
+	@Override
+	public String getInteractionsEndpointUrl() {
+		return null;
+	}
+
+	@Nullable
+	@Override
+	public String getRoleConnectionsVerificationUrl() {
+		return null;
 	}
 
 	@Override

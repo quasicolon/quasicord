@@ -16,7 +16,7 @@ import java.lang.annotation.*;
 /**
  * Annotation for methods that represent context commands.
  * <p>
- * It is generally expected that the command have only one paramter representing the interaction or its subject,
+ * It is generally expected that the command have only one parameter representing the interaction or its subject,
  * i.e. a {@link net.dv8tion.jda.api.entities.User User} object
  * for a {@link net.dv8tion.jda.api.interactions.commands.context.UserContextInteraction UserContextInteraction}.
  * However, this is not a strict limit, and other parameters may be added if applicable, and will be treated similarly

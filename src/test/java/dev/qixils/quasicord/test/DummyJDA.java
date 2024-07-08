@@ -12,6 +12,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
@@ -28,9 +29,11 @@ import net.dv8tion.jda.api.managers.Presence;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.*;
+import net.dv8tion.jda.api.requests.restaction.pagination.EntitlementPaginationAction;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.CacheView;
+import net.dv8tion.jda.api.utils.cache.ChannelCacheView;
 import net.dv8tion.jda.api.utils.cache.SnowflakeCacheView;
 import okhttp3.OkHttpClient;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -362,6 +365,12 @@ public class DummyJDA implements JDA {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
 	}
 
+	@NotNull
+	@Override
+	public ChannelCacheView<Channel> getChannelCache() {
+		return EmptyChannelCacheView.emptyChannelCacheView();
+	}
+
 	@NonNull
 	@Override
 	public SnowflakeCacheView<StageChannel> getStageChannelCache() {
@@ -519,6 +528,30 @@ public class DummyJDA implements JDA {
 	@Override
 	public RestAction<ApplicationInfo> retrieveApplicationInfo() {
 		return new DummyRestAction<>(this, applicationInfo);
+	}
+
+	@NotNull
+	@Override
+	public EntitlementPaginationAction retrieveEntitlements() {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public RestAction<Entitlement> retrieveEntitlementById(long id) {
+		return new DummyRestAction<>(this);
+	}
+
+	@NotNull
+	@Override
+	public TestEntitlementCreateAction createTestEntitlement(long l, long l1, @NotNull TestEntitlementCreateAction.OwnerType ownerType) {
+		return null;
+	}
+
+	@NotNull
+	@Override
+	public RestAction<Void> deleteTestEntitlement(long l) {
+		return new DummyRestAction<>(this);
 	}
 
 	@NonNull
