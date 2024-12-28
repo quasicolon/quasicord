@@ -15,10 +15,12 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.*;
 import net.dv8tion.jda.api.entities.channel.middleman.AudioChannel;
+import net.dv8tion.jda.api.entities.emoji.ApplicationEmoji;
 import net.dv8tion.jda.api.entities.emoji.RichCustomEmoji;
 import net.dv8tion.jda.api.entities.sticker.StickerPack;
 import net.dv8tion.jda.api.entities.sticker.StickerSnowflake;
 import net.dv8tion.jda.api.entities.sticker.StickerUnion;
+import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
 import net.dv8tion.jda.api.hooks.IEventManager;
 import net.dv8tion.jda.api.interactions.commands.Command;
@@ -31,6 +33,7 @@ import net.dv8tion.jda.api.requests.RestAction;
 import net.dv8tion.jda.api.requests.restaction.*;
 import net.dv8tion.jda.api.requests.restaction.pagination.EntitlementPaginationAction;
 import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.api.utils.Once;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import net.dv8tion.jda.api.utils.cache.CacheView;
 import net.dv8tion.jda.api.utils.cache.ChannelCacheView;
@@ -240,6 +243,12 @@ public class DummyJDA implements JDA {
 		return Collections.unmodifiableList(this.eventListeners);
 	}
 
+	@NotNull
+	@Override
+	public <E extends GenericEvent> Once.Builder<E> listenOnce(@NotNull Class<E> aClass) {
+		return new Once.Builder<>(this, aClass);
+	}
+
 	@NonNull
 	@Override
 	public RestAction<List<Command>> retrieveCommands() {
@@ -435,6 +444,24 @@ public class DummyJDA implements JDA {
 	@Override
 	public SnowflakeCacheView<RichCustomEmoji> getEmojiCache() {
 		return EmptySnowflakeCacheView.emptySnowflakeCacheView();
+	}
+
+	@NotNull
+	@Override
+	public RestAction<ApplicationEmoji> createApplicationEmoji(@NotNull String s, @NotNull Icon icon) {
+		return new DummyRestAction<>(this);
+	}
+
+	@NotNull
+	@Override
+	public RestAction<List<ApplicationEmoji>> retrieveApplicationEmojis() {
+		return new DummyRestAction<>(this, Collections.emptyList());
+	}
+
+	@NotNull
+	@Override
+	public RestAction<ApplicationEmoji> retrieveApplicationEmojiById(@NotNull String s) {
+		return new DummyRestAction<>(this);
 	}
 
 	@NonNull
