@@ -94,8 +94,10 @@ public class ZonedDateTimeConverter implements Converter<String, ZonedDateTime> 
 		// get time
 		Matcher timeMatcher = TIME_PATTERN.matcher(input);
 		if (timeMatcher.find()) {
-			hour = Integer.parseInt(timeMatcher.group("hour"));
-			minute = Integer.parseInt(timeMatcher.group("minute"));
+			if (timeMatcher.group("hour") != null)
+				hour = Integer.parseInt(timeMatcher.group("hour"));
+			if (timeMatcher.group("minute") != null)
+				minute = Integer.parseInt(timeMatcher.group("minute"));
 			if (timeMatcher.group("second") != null)
 				second = Integer.parseInt(timeMatcher.group("second"));
 			if (timeMatcher.group("nanos") != null)
