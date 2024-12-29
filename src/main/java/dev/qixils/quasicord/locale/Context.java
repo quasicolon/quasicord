@@ -10,6 +10,8 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.Channel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.interactions.DiscordLocale;
 import net.dv8tion.jda.api.interactions.Interaction;
@@ -120,6 +122,20 @@ public interface Context {
 			context.channel(channel);
 		if (interaction.getGuild() != null)
 			context.guild(interaction.getGuild()).guildLocale(interaction.getGuild());
+		return context.build();
+	}
+
+	/**
+	 * Creates a context from a {@link Channel channel}.
+	 *
+	 * @param channel the channel
+	 * @return a context
+	 */
+	static @NonNull Context fromChannel(@NonNull MessageChannel channel) {
+		Builder context = builder()
+			.channel(channel);
+		if (channel instanceof GuildMessageChannel guildChannel)
+			context.guild(guildChannel.getGuild()).guildLocale(guildChannel.getGuild());
 		return context.build();
 	}
 
