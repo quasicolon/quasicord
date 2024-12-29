@@ -7,10 +7,11 @@
 package dev.qixils.quasicord;
 
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Required;
 
 @ConfigSerializable
 record QuasicordConfig(
-		String token,
+		@Required String token,
 		Environment environment
 ) {
 	public QuasicordConfig {
