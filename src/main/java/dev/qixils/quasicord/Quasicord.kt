@@ -17,7 +17,6 @@ import dev.qixils.quasicord.registry.core.RegistryRegistry
 import net.dv8tion.jda.api.JDA
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.Event
-import net.dv8tion.jda.api.hooks.AnnotatedEventManager
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -164,7 +163,7 @@ open class Quasicord(
     }
 
     protected open fun initJDA(activity: Activity?): JDA {
-        val jda = default(config.token, enableCoroutines = true) {
+        val jda = default(config.token) {
 			disableIntents(
 				GatewayIntent.DIRECT_MESSAGE_TYPING,
 				GatewayIntent.GUILD_MESSAGE_TYPING,  // GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
@@ -182,7 +181,7 @@ open class Quasicord(
 			enableIntents(GatewayIntent.GUILD_MESSAGES)
 			enableIntents(GatewayIntent.MESSAGE_CONTENT)
 			setMemberCachePolicy(MemberCachePolicy.ALL)
-			setEventManager(AnnotatedEventManager())
+			setEventManager(AnnotatedCoroutineEventManager())
 			disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE)
 			if (activity != null) setActivity(activity)
 			MessageRequest.setDefaultMentions(emptySet())
