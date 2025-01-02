@@ -3,15 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.error.permissions
 
-package dev.qixils.quasicord.error.permissions;
+import dev.qixils.quasicord.Key.Companion.library
+import dev.qixils.quasicord.error.UserError
+import dev.qixils.quasicord.text.Text.Companion.single
 
-import dev.qixils.quasicord.Key;
-import dev.qixils.quasicord.error.UserError;
-import dev.qixils.quasicord.text.Text;
-
-public class OwnerOnlyException extends UserError { // TODO: may no longer be applicable
-	public OwnerOnlyException() {
-		super(Text.single(Key.library("exception.owner_only")));
-	}
-}
+// TODO: may no longer be applicable
+class OwnerOnlyException : UserError(single(library("exception.owner_only")))

@@ -3,33 +3,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.text
 
-package dev.qixils.quasicord.text;
+import dev.qixils.quasicord.Key
 
-
-import dev.qixils.quasicord.Key;
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
- * A class that simply forwards all calls to another {@link LocalizableText} instance.
+ * A class that simply forwards all calls to another [LocalizableText] instance.
  */
-public interface ForwardingLocalizedText extends ForwardingText, LocalizableText {
+interface ForwardingLocalizedText : ForwardingText, LocalizableText {
 
-	/**
-	 * Returns the {@link LocalizableText} instance that this class forwards all calls to.
-	 *
-	 * @return delegated {@link LocalizableText} instance
-	 */
-	@Override
-	@NonNull LocalizableText getText();
+    /**
+     * Returns the [LocalizableText] instance that this class forwards all calls to.
+     *
+     * @return delegated [LocalizableText] instance
+     */
+	override val text: LocalizableText
 
-	@Override
-	default @NonNull Key getKey() {
-		return getText().getKey();
-	}
+    override val key: Key
+        get() = text.key
 
-	@Override
-	default Object @NonNull [] getArgs() {
-		return getText().getArgs();
-	}
+    override val args: Array<out Any?>
+        get() = text.args
 }

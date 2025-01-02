@@ -3,21 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.text
 
-package dev.qixils.quasicord.text;
-
-import dev.qixils.quasicord.locale.Localizable;
-import org.checkerframework.checker.nullness.qual.NonNull;
+import dev.qixils.quasicord.locale.Localizable
 
 /**
  * Text that can be localized into various languages.
  */
-public interface LocalizableText extends Localizable, Text {
-
-	/**
-	 * Returns the formatting arguments that will be used to format the text.
-	 *
-	 * @return the formatting arguments
-	 */
-	Object @NonNull [] getArgs();
+interface LocalizableText : Localizable, Text {
+    /**
+     * Returns the formatting arguments that will be used to format the text.
+     *
+     * @return the formatting arguments
+     */
+	val args: Array<out Any?>
 }

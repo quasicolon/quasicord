@@ -3,53 +3,55 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.locale.translation.impl
 
-package dev.qixils.quasicord.locale.translation.impl;
-
-import dev.qixils.quasicord.locale.translation.PluralTranslation;
-import net.xyzsd.plurals.PluralCategory;
-import net.xyzsd.plurals.PluralRule;
-import net.xyzsd.plurals.PluralRuleType;
-import org.checkerframework.checker.nullness.qual.NonNull;
-
-import java.util.EnumMap;
-import java.util.Locale;
-import java.util.Map;
+import dev.qixils.quasicord.locale.translation.PluralTranslation
+import net.xyzsd.plurals.PluralCategory
+import net.xyzsd.plurals.PluralRule
+import net.xyzsd.plurals.PluralRuleType
+import org.slf4j.LoggerFactory
+import java.util.*
 
 /**
- * Implementation of {@link PluralTranslation}.
+ * Implementation of [PluralTranslation].
  */
-public final class PluralTranslationImpl extends AbstractTranslation implements PluralTranslation {
-	private final @NonNull Map<PluralCategory, String> translations;
+class PluralTranslationImpl
+/**
+ * Initializes a new plural translation.
+ *
+ * @param key          the key of the translation
+ * @param locale       the locale of the translation
+ * @param translations the translations for each [PluralCategory]
+ */(
+    key: String,
+    locale: Locale,
+    requestedLocale: Locale,
+    private val translations: MutableMap<PluralCategory, String>
+) : AbstractTranslation(key, locale, requestedLocale), PluralTranslation {
 
-	/**
-	 * Initializes a new plural translation.
-	 *
-	 * @param key          the key of the translation
-	 * @param locale       the locale of the translation
-	 * @param translations the translations for each {@link PluralCategory}
-	 */
-	public PluralTranslationImpl(@NonNull String key,
-								 @NonNull Locale locale,
-								 @NonNull Locale requestedLocale,
-								 @NonNull Map<PluralCategory, String> translations) {
-		super(key, locale, requestedLocale);
-		this.translations = translations;
-	}
-
-	@Override
-	public @NonNull String get(int quantity, @NonNull PluralRuleType ruleType) {
-		return translations.get(PluralRule.createOrDefault(getLocale(), ruleType).select(quantity));
-	}
-
-	public static PluralTranslationImpl fromStringMap(@NonNull String key,
-													  @NonNull Locale locale,
-													  @NonNull Locale requestedLocale,
-													  @NonNull Map<String, String> translations) {
-		Map<PluralCategory, String> pluralTranslations = new EnumMap<>(PluralCategory.class);
-		for (Map.Entry<String, String> entry : translations.entrySet()) {
-			pluralTranslations.put(PluralCategory.valueOf(entry.getKey().toUpperCase(Locale.ROOT)), entry.getValue());
+    override fun get(quantity: Long, ruleType: PluralRuleType): String {
+		val rule = PluralRule.createOrDefault(locale, ruleType)
+		val category = rule.select(quantity.toLong())
+        return translations[category] ?: run {
+			logger.error("Plural translation missing for [locale={},quantity={},rule={},category={}]", locale, quantity, rule, category)
+			key
 		}
-		return new PluralTranslationImpl(key, locale, requestedLocale, pluralTranslations);
-	}
+    }
+
+    companion object {
+		private val logger = LoggerFactory.getLogger("PluralTranslation")
+
+        fun fromStringMap(
+            key: String,
+            locale: Locale,
+            requestedLocale: Locale,
+            translations: MutableMap<String?, String?>
+        ): PluralTranslationImpl {
+            val pluralTranslations: MutableMap<PluralCategory, String> = EnumMap(PluralCategory::class.java)
+            for (entry in translations.entries) {
+                pluralTranslations.put(PluralCategory.valueOf(entry.key!!.uppercase()), entry.value!!)
+            }
+            return PluralTranslationImpl(key, locale, requestedLocale, pluralTranslations)
+        }
+    }
 }

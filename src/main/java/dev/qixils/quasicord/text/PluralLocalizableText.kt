@@ -3,47 +3,52 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.text
 
-package dev.qixils.quasicord.text;
-
-import dev.qixils.quasicord.Key;
-import lombok.Getter;
-import net.xyzsd.plurals.PluralRuleType;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.text.MessageFormat;
-import java.util.Locale;
+import dev.qixils.quasicord.Key
+import lombok.Getter
+import net.xyzsd.plurals.PluralRuleType
+import java.text.MessageFormat
+import java.util.*
+import kotlin.Throws
 
 /**
  * Localizable text that has plural forms.
  */
 @Getter
-public class PluralLocalizableText extends AbstractLocalizableText {
-	private final int quantity;
-	private final @NonNull PluralRuleType ruleType;
+class PluralLocalizableText internal constructor(
+    private val quantity: Long,
+    private val ruleType: PluralRuleType,
+    key: Key,
+    vararg args: Any?
+) : AbstractLocalizableText(key, args) {
+    override fun asString(locale: Locale): String {
+        return MessageFormat(key.getPlural(locale).get(quantity, ruleType), locale).format(
+            Text.localizeArgs(
+                args,
+                locale
+            )
+        )
+    }
 
-	PluralLocalizableText(int quantity, @NonNull PluralRuleType ruleType, @NonNull Key key, Object @Nullable ... args) {
-		super(key, args);
-		this.quantity = quantity;
-		this.ruleType = ruleType;
-	}
+    /**
+     * Builder for [PluralLocalizableText].
+     * @see Text.plural
+     */
+	class Builder internal constructor() : LocalizableTextBuilder<Builder, PluralLocalizableText>() {
+        private var quantity: Long? = null
+        private var ruleType: PluralRuleType? = null
 
-	@Override
-	public @NonNull String asString(@NonNull Locale locale) {
-		return new MessageFormat(key.getPlural(locale).get(quantity, ruleType), locale).format(Text.localizeArgs(args, locale));
-	}
-
-	/**
-	 * Builder for {@link PluralLocalizableText}.
-	 * @see Text#plural() Text.plural() to create a new builder.
-	 */
-	public static final class Builder extends LocalizableTextBuilder<Builder, PluralLocalizableText> {
-		private @Nullable Integer quantity;
-		private @Nullable PluralRuleType ruleType;
-
-		Builder() {
-		}
+        /**
+         * Sets the quantity used to determine the plural form.
+         *
+         * @param quantity integer quantity
+         * @return this builder
+         */
+        fun quantity(quantity: Long): Builder {
+            this.quantity = quantity
+            return this
+        }
 
 		/**
 		 * Sets the quantity used to determine the plural form.
@@ -51,31 +56,28 @@ public class PluralLocalizableText extends AbstractLocalizableText {
 		 * @param quantity integer quantity
 		 * @return this builder
 		 */
-		public @NonNull Builder quantity(int quantity) {
-			this.quantity = quantity;
-			return this;
+		fun quantity(quantity: Int): Builder {
+			this.quantity = quantity.toLong()
+			return this
 		}
 
-		/**
-		 * Sets the rule type used to determine the plural form.
-		 *
-		 * @param ruleType rule type
-		 * @return this builder
-		 */
-		public @NonNull Builder ruleType(@NonNull PluralRuleType ruleType) {
-			this.ruleType = ruleType;
-			return this;
-		}
+        /**
+         * Sets the rule type used to determine the plural form.
+         *
+         * @param ruleType rule type
+         * @return this builder
+         */
+        fun ruleType(ruleType: PluralRuleType): Builder {
+            this.ruleType = ruleType
+            return this
+        }
 
-		@Override
-		public @NonNull PluralLocalizableText build() throws IllegalStateException {
-			if (key == null)
-				throw new IllegalStateException("Translation key is not set");
-			if (quantity == null)
-				throw new IllegalStateException("Quantity is not set");
-			if (ruleType == null)
-				throw new IllegalStateException("Rule type is not set");
-			return new PluralLocalizableText(quantity, ruleType, key, args);
-		}
-	}
+        @Throws(IllegalStateException::class)
+        override fun build(): PluralLocalizableText {
+            checkNotNull(key) { "Translation key is not set" }
+            checkNotNull(quantity) { "Quantity is not set" }
+            checkNotNull(ruleType) { "Rule type is not set" }
+            return PluralLocalizableText(quantity!!, ruleType!!, key!!, *args)
+        }
+    }
 }

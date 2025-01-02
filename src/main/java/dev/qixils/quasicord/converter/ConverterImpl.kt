@@ -3,63 +3,59 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.converter
 
-package dev.qixils.quasicord.converter;
+import net.dv8tion.jda.api.entities.channel.Channel
+import net.dv8tion.jda.api.interactions.Interaction
+import net.dv8tion.jda.internal.utils.ChannelUtil
 
-import net.dv8tion.jda.api.entities.channel.Channel;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.internal.utils.ChannelUtil;
-import org.checkerframework.checker.nullness.qual.NonNull;
+class ConverterImpl<I, O>(
+    inputClass: Class<I>,
+    outputClass: Class<O>,
+    private val converter: ConverterImplStep<I, O>
+) : AbstractConverter<I, O>(inputClass, outputClass) {
 
-import java.util.function.BiFunction;
+    fun interface ConverterImplStep<I, O> {
+        /**
+         * Converts an input to the output type.
+         *
+         * @param interaction the interaction being invoked
+         * @param input       the user input
+         * @param targetClass the class to convert to
+         * @return converted value
+         */
+        fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O
+    }
 
-public class ConverterImpl<I, O> extends AbstractConverter<I, O> {
+    constructor(
+        inputClass: Class<I>,
+        outputClass: Class<O>,
+        converter: (Interaction, I) -> O,
+    ) : this(
+        inputClass,
+        outputClass,
+        ConverterImplStep { ctx, i, t -> converter.invoke(ctx, i) }
+	)
 
-	@FunctionalInterface
-	public interface ConverterImplStep<I, O> {
-		/**
-		 * Converts an input to the output type.
-		 *
-		 * @param interaction the interaction being invoked
-		 * @param input       the user input
-		 * @param targetClass the class to convert to
-		 * @return converted value
-		 */
-		@NonNull
-		O convert(@NonNull Interaction interaction, @NonNull I input, @NonNull Class<? extends O> targetClass);
-	}
+    override fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O {
+        return converter.convert(interaction, input, targetClass)
+    }
 
-	private final @NonNull ConverterImplStep<I, O> converter;
+    companion object {
+        fun <O : Channel?> channel(outputClass: Class<O>): Converter<Channel, O> {
+            return ConverterImpl(
+                Channel::class.java,
+                outputClass
+			) { it, channel ->
+				ChannelUtil.safeChannelCast<O?>(
+					channel,
+					outputClass
+				)
+			}
+		}
 
-	public ConverterImpl(
-		@NonNull Class<I> inputClass,
-		@NonNull Class<O> outputClass,
-		@NonNull ConverterImplStep<I, O> converter
-	) {
-		super(inputClass, outputClass);
-		this.converter = converter;
-	}
-
-	public ConverterImpl(
-			@NonNull Class<I> inputClass,
-			@NonNull Class<O> outputClass,
-			@NonNull BiFunction<Interaction, I, O> converter
-	) {
-		this(inputClass, outputClass, (ctx, i, t) -> converter.apply(ctx, i));
-	}
-
-	@Override
-	public @NonNull O convert(@NonNull Interaction interaction, @NonNull I input, @NonNull Class<? extends O> targetClass) {
-		return converter.convert(interaction, input, targetClass);
-	}
-
-	@NonNull
-	public static <O extends Channel> Converter<Channel, O> channel(@NonNull Class<O> outputClass) {
-		return new ConverterImpl<>(Channel.class, outputClass, (it, channel) -> ChannelUtil.safeChannelCast(channel, outputClass));
-	}
-
-	@NonNull
-	public static <T> Converter<T, T> identity(@NonNull Class<T> clazz) {
-		return new ConverterImpl<>(clazz, clazz, (it, input) -> input);
-	}
+        fun <T> identity(clazz: Class<T>): Converter<T, T> {
+            return ConverterImpl<T, T>(clazz, clazz) { it: Interaction, input -> input }
+		}
+    }
 }

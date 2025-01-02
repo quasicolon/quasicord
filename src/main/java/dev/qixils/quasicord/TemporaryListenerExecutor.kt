@@ -3,59 +3,57 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord
 
-package dev.qixils.quasicord;
-
-import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.hooks.SubscribeEvent;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
+import net.dv8tion.jda.api.events.GenericEvent
+import net.dv8tion.jda.api.hooks.SubscribeEvent
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
+import java.util.function.Consumer
+import java.util.function.Predicate
 
 class TemporaryListenerExecutor {
-	private final @NonNull ConcurrentHashMap<String, TemporaryListener<?>> listeners = new ConcurrentHashMap<>();
-	private final @NonNull ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-	private final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
+    private val listeners = ConcurrentHashMap<String, TemporaryListener<*>>()
+    private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-	/**
-	 * Registers a temporary listener.
-	 *
-	 * @param listener temporary listener to register
-	 */
-	public void register(@NonNull TemporaryListener<?> listener) {
-		Objects.requireNonNull(listener, "listener cannot be null");
+    /**
+     * Registers a temporary listener.
+     *
+     * @param listener temporary listener to register
+     */
+    fun register(listener: TemporaryListener<*>) {
+        Objects.requireNonNull(listener, "listener cannot be null")
 
-		final String ID = listener.getID();
-		listeners.put(ID, listener);
-		executor.schedule(() -> listeners.remove(ID), listener.expiresAfter(), TimeUnit.MILLISECONDS);
-	}
+        val id = listener.id
+        listeners[id] = listener
+        executor.schedule(
+            Runnable { listeners.remove(id) },
+            listener.expiresAfter(),
+            TimeUnit.MILLISECONDS
+        )
+    }
 
-	@SuppressWarnings("unchecked")
-	@SubscribeEvent
-	public void onEvent(@NonNull GenericEvent event) {
-		Iterator<TemporaryListener<?>> iterator = listeners.values().iterator();
-		while (iterator.hasNext()) {
-			TemporaryListener<?> listener = iterator.next();
-			Class<?> eventClass = listener.getEventClass();
-			if (eventClass.isInstance(event)) {
-				try {
-					if (!((Predicate<GenericEvent>) listener.getPredicate()).test(event))
-						continue;
-					((Consumer<GenericEvent>) listener.getCallback()).accept(event);
-				} catch (Throwable throwable) {
-					logger.error("Temporary listener for '" + eventClass.getSimpleName() + "' threw an exception", throwable);
-				}
-				iterator.remove();
-			}
-		}
-	}
+    @SubscribeEvent
+    fun onEvent(event: GenericEvent) {
+        val iterator = listeners.values.iterator()
+        while (iterator.hasNext()) {
+            val listener = iterator.next()
+            val eventClass: Class<*> = listener.eventClass
+            if (eventClass.isInstance(event)) {
+                try {
+                    if (!(listener.predicate as Predicate<GenericEvent?>).test(event)) continue
+                    (listener.callback as Consumer<GenericEvent?>).accept(event)
+                } catch (throwable: Throwable) {
+                    logger.error("Temporary listener for '" + eventClass.simpleName + "' threw an exception", throwable)
+                }
+                iterator.remove()
+            }
+        }
+    }
 }

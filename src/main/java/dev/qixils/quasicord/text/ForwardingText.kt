@@ -3,28 +3,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.text
 
-package dev.qixils.quasicord.text;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
-import java.util.Locale;
+import java.util.*
 
 /**
- * A class that simply forwards all calls to another {@link Text} instance.
+ * A class that simply forwards all calls to another [Text] instance.
  */
-public interface ForwardingText extends Text {
+interface ForwardingText : Text {
 
-	/**
-	 * Returns the {@link Text} instance that this class forwards all calls to.
-	 *
-	 * @return delegated {@link Text} instance
-	 */
-	@SuppressWarnings("EmptyMethod") // this warning is just wrong
-	@NonNull Text getText();
+    /**
+     * Returns the [Text] instance that this class forwards all calls to.
+     *
+     * @return delegated [Text] instance
+     */
+    val text: Text
 
-	@Override
-	default @NonNull String asString(@NonNull Locale locale) {
-		return getText().asString(locale);
-	}
+    override fun asString(locale: Locale): String {
+        return this.text.asString(locale)
+    }
 }

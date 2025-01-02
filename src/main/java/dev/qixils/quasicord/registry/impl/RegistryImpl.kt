@@ -3,41 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.registry.impl
 
-package dev.qixils.quasicord.registry.impl;
+import java.util.*
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jetbrains.annotations.NotNull;
+open class RegistryImpl<T>(id: String) : AbstractRegistryImpl<T>(id) {
+    private val values: MutableSet<T> = mutableSetOf()
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.Spliterator;
+    override fun register(item: T): T {
+        check(!isClosed) { "Registry is closed" }
+        values.add(item)
+        return item
+    }
 
-public class RegistryImpl<T> extends AbstractRegistryImpl<T> {
-	private final Set<T> values = new HashSet<>();
+    override fun iterator(): Iterator<T> {
+        return values.iterator()
+    }
 
-	public RegistryImpl(@NonNull String id) {
-		super(id);
-	}
-
-	@Override
-	@NonNull
-	public T register(@NonNull T item) {
-		if (isClosed())
-			throw new IllegalStateException("Registry is closed");
-		values.add(item);
-		return item;
-	}
-
-	@NotNull
-	@Override
-	public Iterator<T> iterator() {
-		return values.iterator();
-	}
-
-	@Override
-	public Spliterator<T> spliterator() {
-		return values.spliterator();
-	}
+    override fun spliterator(): Spliterator<T> {
+        return values.spliterator()
+    }
 }

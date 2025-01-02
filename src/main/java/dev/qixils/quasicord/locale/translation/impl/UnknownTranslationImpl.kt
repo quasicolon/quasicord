@@ -3,27 +3,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.locale.translation.impl
 
-package dev.qixils.quasicord.locale.translation.impl;
-
-import dev.qixils.quasicord.locale.translation.UnknownTranslation;
-import org.checkerframework.checker.nullness.qual.NonNull;
-
-import java.util.Locale;
+import dev.qixils.quasicord.locale.translation.UnknownTranslation
+import net.xyzsd.plurals.PluralRuleType
+import java.util.*
 
 /**
- * An implementation of {@link UnknownTranslation}.
+ * An implementation of [UnknownTranslation].
  */
-public class UnknownTranslationImpl extends AbstractTranslation implements UnknownTranslation {
+class UnknownTranslationImpl
+/**
+ * Initializes a new unknown translation.
+ *
+ * @param key             the key of the translation
+ * @param requestedLocale the requested locale
+ */
+    (
+    key: String,
+    requestedLocale: Locale
+) : AbstractTranslation(key, Locale.ROOT, requestedLocale), UnknownTranslation {
 
-	/**
-	 * Initializes a new unknown translation.
-	 *
-	 * @param key             the key of the translation
-	 * @param requestedLocale the requested locale
-	 */
-	public UnknownTranslationImpl(@NonNull String key,
-								  @NonNull Locale requestedLocale) {
-		super(key, Locale.ROOT, requestedLocale);
+	override fun get(): String {
+		return key
+	}
+
+	override fun get(quantity: Long, ruleType: PluralRuleType): String {
+		return key
 	}
 }

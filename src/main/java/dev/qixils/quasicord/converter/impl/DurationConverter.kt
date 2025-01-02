@@ -3,147 +3,152 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.converter.impl
 
-package dev.qixils.quasicord.converter.impl;
+import dev.qixils.quasicord.Key.Companion.library
+import dev.qixils.quasicord.Quasicord
+import dev.qixils.quasicord.converter.Converter
+import dev.qixils.quasicord.converter.impl.DurationConverter.RelativeTimeUnit.entries
+import dev.qixils.quasicord.error.UserError
+import net.dv8tion.jda.api.interactions.Interaction
+import java.time.Duration
+import java.util.regex.Pattern
 
-import dev.qixils.quasicord.Key;
-import dev.qixils.quasicord.Quasicord;
-import dev.qixils.quasicord.converter.Converter;
-import dev.qixils.quasicord.error.UserError;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import net.dv8tion.jda.api.interactions.Interaction;
-import org.checkerframework.checker.nullness.qual.NonNull;
+class DurationConverter(private val library: Quasicord) : Converter<String, Duration> {
+	override val inputClass: Class<String> = String::class.java
+	override val outputClass: Class<Duration> = Duration::class.java
 
-import java.time.Duration;
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.regex.Pattern;
+    override fun convert(interaction: Interaction, input: String, targetClass: Class<out Duration?>): Duration {
+        val arguments = input.split(" ")
+			.dropLastWhile { it.isEmpty() }
+			.filter { RELATIVE_TIME_IGNORED_TOKENS.contains(it.lowercase()) }
+			.toMutableList()
+        val strippedInput = arguments.joinToString("")
 
-@Getter
-@RequiredArgsConstructor
-public class DurationConverter implements Converter<String, Duration> {
-	private final @NonNull Class<? extends Interaction> interactionClass = Interaction.class;
-	private final @NonNull Class<String> inputClass = String.class;
-	private final @NonNull Class<Duration> outputClass = Duration.class;
-	private final @NonNull Quasicord library;
+        if (!RELATIVE_TIME_PATTERN.matcher(strippedInput).matches()) {
+            throw UserError(library("exception.duration.regex"))
+        }
 
-	private static final @NonNull Set<String> RELATIVE_TIME_IGNORED_TOKENS = Set.of("in");
-	private static final @NonNull Pattern RELATIVE_TIME_PATTERN = Pattern.compile("^\\d+[A-Za-z]+");
+        var negative = false
+        if (arguments.first().startsWith("-")) {
+            arguments.set(0, arguments.first().substring(1))
+            negative = true
+        }
+        if (arguments.last().equals("ago", ignoreCase = true)) {
+            arguments.removeLast()
+            negative = !negative
+        }
 
-	@Override
-	public @NonNull Duration convert(@NonNull Interaction interaction, @NonNull String input, @NonNull Class<? extends Duration> targetClass) {
-		List<String> arguments = new ArrayList<>(Arrays.asList(input.split(" ")));
-		arguments.removeIf(s -> RELATIVE_TIME_IGNORED_TOKENS.contains(s.toLowerCase(Locale.ENGLISH)));
-		String strippedInput = String.join("", arguments);
+        // vars for parsing the duration
+        var duration = Duration.ZERO
+        var nextToken = StringBuilder()
+        var buildingAmount = true
+        var amountToken: String? = null
+        var unitToken: String?
+        // vars for parsing the terms/tokens used fom the arg list
+        var term = StringBuilder()
+        var termIdx = 0
+        var parsedTermIdx = 0
 
-		if (!RELATIVE_TIME_PATTERN.matcher(strippedInput).matches()) {
-			throw new UserError(Key.library("exception.duration.regex"));
-		}
+        for (chr in strippedInput.toCharArray()) {
+            term.append(chr)
+            if (term.toString() == arguments[termIdx]) {
+                term = StringBuilder()
+                ++termIdx
+            }
+            if (Character.isWhitespace(chr)) {
+                continue
+            }
 
-		boolean negative = false;
-		if (arguments.get(0).startsWith("-")) {
-			arguments.set(0, arguments.get(0).substring(1));
-			negative = true;
-		}
-		if (arguments.get(arguments.size() - 1).equalsIgnoreCase("ago")) {
-			arguments.remove(arguments.size() - 1);
-			negative = !negative;
-		}
+            val isDigit = Character.isDigit(chr)
+            if (isDigit && !buildingAmount) {
+                // finished parsing unit of time (and duration of time)
+                buildingAmount = true
+                unitToken = nextToken.toString()
+                nextToken = StringBuilder()
+                // now attempt to find the corresponding RelativeTimeUnit
+                val unit = RelativeTimeUnit.Companion.of(unitToken)
+                if (unit == null) {
+                    throw UserError(library("exception.duration.unit"), unitToken)
+                }
+                // add relative time to current time object
+                duration = unit.addTimeTo(duration, amountToken!!.toLong()) // theoretically this shouldn't error
+                parsedTermIdx = termIdx
+                // reset variables
+                amountToken = null
+            } else if (!isDigit && buildingAmount) {
+                // finished parsing duration of time, save it & reset the builder
+                buildingAmount = false
+                amountToken = nextToken.toString()
+                nextToken = StringBuilder()
+            }
+            nextToken.append(chr)
+        }
 
-		// vars for parsing the duration
-		Duration duration = Duration.ZERO;
-		StringBuilder nextToken = new StringBuilder();
-		boolean buildingAmount = true;
-		String amountToken = null;
-		String unitToken;
-		// vars for parsing the terms/tokens used fom the arg list
-		StringBuilder term = new StringBuilder();
-		int termIdx = 0;
-		int parsedTermIdx = 0;
+        if (negative) duration = Duration.ZERO.minus(duration)
 
-		for (char chr : strippedInput.toCharArray()) {
-			term.append(chr);
-			if (term.toString().equals(arguments.get(termIdx))) {
-				term = new StringBuilder();
-				++termIdx;
-			}
-			if (Character.isWhitespace(chr)) {
-				continue;
-			}
+        while (parsedTermIdx > 0) {
+            arguments.removeFirst()
+            parsedTermIdx--
+        }
 
-			boolean isDigit = Character.isDigit(chr);
-			if (isDigit && !buildingAmount) {
-				// finished parsing unit of time (and duration of time)
-				buildingAmount = true;
-				unitToken = nextToken.toString();
-				nextToken = new StringBuilder();
-				// now attempt to find the corresponding RelativeTimeUnit
-				RelativeTimeUnit unit = RelativeTimeUnit.of(unitToken);
-				if (unit == null) {
-					throw new UserError(Key.library("exception.duration.unit"), unitToken);
-				}
-				// add relative time to current time object
-				duration = unit.addTimeTo(duration, Long.parseLong(amountToken)); // theoretically this shouldn't error
-				parsedTermIdx = termIdx;
-				// reset variables
-				amountToken = null;
-			} else if (!isDigit && buildingAmount) {
-				// finished parsing duration of time, save it & reset the builder
-				buildingAmount = false;
-				amountToken = nextToken.toString();
-				nextToken = new StringBuilder();
-			}
-			nextToken.append(chr);
-		}
+        return duration
+    }
 
-		if (negative)
-			duration = Duration.ZERO.minus(duration);
+    private enum class RelativeTimeUnit(
+        private val addTimeFunction: (Duration, Long) -> Duration,
+		private vararg val tokens: String
+    ) {
+        SECOND(
+            { obj, secondsToAdd -> obj.plusSeconds(secondsToAdd) },
+            "s",
+            "sec",
+            "secs",
+            "second",
+            "seconds"
+        ),
+        MINUTE(
+            { obj, minutesToAdd -> obj.plusMinutes(minutesToAdd) },
+            "m",
+            "min",
+            "mins",
+            "minute",
+            "minutes"
+        ),
+        HOUR(
+            { obj, hoursToAdd -> obj.plusHours(hoursToAdd) },
+            "h",
+            "hr",
+            "hrs",
+            "hour",
+            "hours"
+        ),
+        DAY({ obj, daysToAdd -> obj.plusDays(daysToAdd) }, "d", "day", "days"),
+        WEEK({ duration, time -> duration.plusDays(time * 7) }, "w", "week", "weeks");
 
-		while (parsedTermIdx > 0) {
-			arguments.remove(0);
-			parsedTermIdx--;
-		}
+		fun matches(input: String): Boolean {
+            for (token in tokens) {
+                if (token.equals(input, ignoreCase = true)) return true
+            }
+            return false
+        }
 
-		return duration;
-	}
+        fun addTimeTo(originalTime: Duration, duration: Long): Duration {
+            return addTimeFunction.invoke(originalTime, duration)
+        }
 
-	private enum RelativeTimeUnit {
-		SECOND(Duration::plusSeconds, "s", "sec", "secs", "second", "seconds"),
-		MINUTE(Duration::plusMinutes, "m", "min", "mins", "minute", "minutes"),
-		HOUR(Duration::plusHours, "h", "hr", "hrs", "hour", "hours"),
-		DAY(Duration::plusDays, "d", "day", "days"),
-		WEEK((duration, time) -> duration.plusDays(time * 7), "w", "week", "weeks");
+        companion object {
+            fun of(token: String): RelativeTimeUnit? {
+                for (unit in entries) {
+                    if (unit.matches(token)) return unit
+                }
+                return null
+            }
+        }
+    }
 
-		private final @NonNull BiFunction<@NonNull Duration, @NonNull Long, @NonNull Duration> addTimeFunction;
-		private final String @NonNull [] tokens; // TODO: i18n plurals ?
-
-		RelativeTimeUnit(
-			@NonNull BiFunction<@NonNull Duration, @NonNull Long, @NonNull Duration> addTimeFunction,
-			String @NonNull ... tokens
-		) {
-			this.addTimeFunction = addTimeFunction;
-			this.tokens = tokens;
-		}
-
-		public boolean matches(@NonNull String input) {
-			for (String token : tokens) {
-				if (token.equalsIgnoreCase(input))
-					return true;
-			}
-			return false;
-		}
-
-		public @NonNull Duration addTimeTo(@NonNull Duration originalTime, long duration) {
-			return addTimeFunction.apply(originalTime, duration);
-		}
-
-		public static RelativeTimeUnit of(@NonNull String token) {
-			for (RelativeTimeUnit unit : values()) {
-				if (unit.matches(token))
-					return unit;
-			}
-			return null;
-		}
-	}
+    companion object {
+        private val RELATIVE_TIME_IGNORED_TOKENS = mutableSetOf<String?>("in")
+        private val RELATIVE_TIME_PATTERN: Pattern = Pattern.compile("^\\d+[A-Za-z]+")
+    }
 }

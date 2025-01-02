@@ -3,15 +3,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.decorators
 
-package dev.qixils.quasicord.decorators;
-
-import java.lang.annotation.*;
+import java.lang.annotation.Inherited
 
 @Inherited
-@Target({ElementType.METHOD, ElementType.TYPE})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Namespace {
-
-	String value();
-}
+@Target(
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER,
+    AnnotationTarget.CLASS
+)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Namespace(val value: String)

@@ -30,7 +30,6 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.time.ZoneId;
-import java.time.format.TextStyle;
 import java.util.Locale;
 
 import static com.mongodb.client.model.Filters.eq;
@@ -86,14 +85,15 @@ public class UserConfigCommand extends ConfigCommand {
 				new ReplaceOptions().upsert(true)
 			);
 		}
-		return Mono.from(result).map($ -> tz == null
-			? Text.single(Key.library("user-config.timezone.output.removed"))
-			: Text.single(Key.library("user-config.timezone.output.updated"), (Text) locale -> tz.getDisplayName(TextStyle.FULL_STANDALONE, locale)))
-			.map(text -> new QuasiMessage(text, request -> {
-				if (request instanceof ReplyCallbackAction action && channel.getType() != ChannelType.PRIVATE) {
-					//noinspection ResultOfMethodCallIgnored
-					action.setEphemeral(true);
-				}
-			}));
+		return Mono.empty(); // TODO
+//		return Mono.from(result).map($ -> tz == null
+//			? Text.single(Key.library("user-config.timezone.output.removed"))
+//			: Text.single(Key.library("user-config.timezone.output.updated"), (Text) locale -> tz.getDisplayName(TextStyle.FULL_STANDALONE, locale)))
+//			.map(text -> new QuasiMessage(text, request -> {
+//				if (request instanceof ReplyCallbackAction action && channel.getType() != ChannelType.PRIVATE) {
+//					//noinspection ResultOfMethodCallIgnored
+//					action.setEphemeral(true);
+//				}
+//			}));
 	}
 }

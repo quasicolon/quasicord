@@ -3,83 +3,53 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.utils
 
-package dev.qixils.quasicord.utils;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
+import java.util.*
 
 /**
  * An empty collection that pretends to be mutable (in that it does not throw exceptions).
  */
-public class FakeCollection<E> implements Collection<E> {
+class FakeCollection<E> : MutableCollection<E?> {
 
-	@Override
-	public int size() {
-		return 0;
+	override val size: Int = 0
+
+    override fun isEmpty(): Boolean {
+        return true
+    }
+
+	override fun contains(element: E?): Boolean {
+		return false
 	}
 
-	@Override
-	public boolean isEmpty() {
-		return true;
+    override fun iterator(): MutableIterator<E?> {
+        return Collections.emptyIterator<E?>()
+    }
+
+    override fun add(e: E?): Boolean {
+        return false
+    }
+
+    override fun remove(element: E?): Boolean {
+        return false
+    }
+
+	override fun containsAll(elements: Collection<E?>): Boolean {
+		return elements.isEmpty()
 	}
 
-	@Override
-	public boolean contains(@Nullable Object o) {
-		return false;
-	}
+    override fun addAll(elements: Collection<E?>): Boolean {
+        return false
+    }
 
-	@NonNull
-	@Override
-	public Iterator<E> iterator() {
-		return Collections.emptyIterator();
-	}
+    override fun removeAll(elements: Collection<E?>): Boolean {
+        return false
+    }
 
-	@Override
-	public Object @NonNull [] toArray() {
-		return new Object[0];
-	}
+    override fun retainAll(elements: Collection<E?>): Boolean {
+        return false
+    }
 
-	@Override
-	public <T> T @NonNull [] toArray(T @NonNull [] a) {
-		return a;
-	}
-
-	@Override
-	public boolean add(@Nullable E e) {
-		return false;
-	}
-
-	@Override
-	public boolean remove(@Nullable Object o) {
-		return false;
-	}
-
-	@Override
-	public boolean containsAll(@NonNull Collection<?> c) {
-		return c.isEmpty();
-	}
-
-	@Override
-	public boolean addAll(@Nullable Collection<? extends E> c) {
-		return false;
-	}
-
-	@Override
-	public boolean removeAll(@Nullable Collection<?> c) {
-		return false;
-	}
-
-	@Override
-	public boolean retainAll(@Nullable Collection<?> c) {
-		return false;
-	}
-
-	@Override
-	public void clear() {
-	}
+    override fun clear() {
+    }
 }

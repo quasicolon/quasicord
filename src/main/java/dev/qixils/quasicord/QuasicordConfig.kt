@@ -3,17 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord
 
-package dev.qixils.quasicord;
-
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable
 
 @ConfigSerializable
-record QuasicordConfig(
-		String token,
-		Environment environment
-) {
-	public QuasicordConfig {
-		if (environment == null) environment = Environment.TEST;
-	}
+class QuasicordConfig(val token: String, environment: Environment?) {
+    val environment: Environment = environment ?: Environment.TEST
 }

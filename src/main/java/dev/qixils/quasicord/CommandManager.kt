@@ -3,152 +3,138 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord
 
-package dev.qixils.quasicord;
+import dev.qixils.quasicord.cogs.Command
+import dev.qixils.quasicord.cogs.SlashCommand
+import dev.qixils.quasicord.decorators.AnnotationParser
+import dev.qixils.quasicord.error.UserError
+import dev.qixils.quasicord.locale.Context
+import dev.qixils.quasicord.text.Text
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
+import net.dv8tion.jda.api.hooks.SubscribeEvent
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import net.dv8tion.jda.api.requests.RestAction
+import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import java.util.function.Consumer
 
-import dev.qixils.quasicord.cogs.Command;
-import dev.qixils.quasicord.cogs.SlashCommand;
-import dev.qixils.quasicord.decorators.AnnotationParser;
-import dev.qixils.quasicord.error.UserError;
-import dev.qixils.quasicord.text.Text;
-import lombok.Getter;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
-import net.dv8tion.jda.api.hooks.SubscribeEvent;
-import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.requests.RestAction;
-import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+class CommandManager(library: Quasicord) {
+    val library: Quasicord
+    private val logger: Logger = LoggerFactory.getLogger(javaClass)
+    protected val commands: MutableMap<String?, MutableMap<String, Command<*>>> = HashMap()
+    private val parser: AnnotationParser
+    private var initialUpsertDone = false
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+    init {
+        commands[null] = HashMap()
+        this.library = library
+        this.parser = AnnotationParser(this)
+    }
 
-import static dev.qixils.quasicord.Key.library;
-import static dev.qixils.quasicord.locale.Context.fromInteraction;
-import static dev.qixils.quasicord.text.Text.single;
+    fun getCommand(discordName: String, guildId: String?): Command<*>? {
+        if (guildId != null && commands.containsKey(guildId)) {
+            val command = commands[guildId]!![discordName]
+            if (command != null) return command
+        }
+        return commands[null]!![discordName]
+    }
 
-public class CommandManager {
-	@Getter
-	private final @NonNull Quasicord library;
-	private final Logger logger = LoggerFactory.getLogger(getClass());
-	protected final @NonNull Map<@Nullable String, Map<String, Command<?>>> commands = new HashMap<>();
-	private final AnnotationParser parser;
-	private boolean initialUpsertDone = false;
+    fun upsertCommands(jda: JDA) {
+        if (initialUpsertDone) return
+        initialUpsertDone = true
+        logger.info("Upserting commands")
+        for ((guildId, guildCommands) in commands) {
+            var updater: CommandListUpdateAction
+            if (guildId == null) {
+                updater = jda.updateCommands()
+            } else {
+                val guild = jda.getGuildById(guildId) ?: continue
+                updater = guild.updateCommands()
+            }
 
-	public CommandManager(@NonNull Quasicord library) {
-		commands.put(null, new HashMap<>());
-		this.library = library;
-		this.parser = new AnnotationParser(this);
-	}
+            val rootSlashCommands: MutableSet<String> = HashSet()
 
-	private static void sendEphemeral(@NonNull IReplyCallback event, @NonNull Text text) {
-		text.asString(fromInteraction(event)).subscribe(string -> event.reply(string).setEphemeral(true).queue());
-	}
+            for (command in guildCommands.values) {
+                var commandData: CommandData?
+                if (command is SlashCommand) {
+                    commandData = command.branch.root
+                    if (rootSlashCommands.contains(commandData.name)) continue
+                    rootSlashCommands.add(commandData.name)
+                } else {
+                    commandData = command.commandData
+                }
 
-	@Nullable
-	public Command<?> getCommand(String discordName, @Nullable String guildId) {
-		if (guildId != null && commands.containsKey(guildId)) {
-			Command<?> command = commands.get(guildId).get(discordName);
-			if (command != null) return command;
+                if (commandData == null) continue  // i don't think this should happen but just in case
+
+                logger.debug("Upserting command {} to guild {}", commandData.name, guildId)
+                updater.addCommands(commandData)
+            }
+
+            updater.queue()
+        }
+    }
+
+    fun registerCommand(command: Command<*>) {
+        val guildId = command.guildId
+        commands.computeIfAbsent(guildId) { HashMap() }[command.discordName] =
+            command
+        if (!initialUpsertDone) return
+
+        val cmd = command.commandData ?: return
+
+        val jda = library.jda
+        val upsert: RestAction<net.dv8tion.jda.api.interactions.commands.Command>
+
+        if (guildId == null) {
+            upsert = jda.upsertCommand(cmd)
+        } else {
+            val guild = jda.getGuildById(guildId) ?: return
+            upsert = guild.upsertCommand(cmd)
+        }
+
+        upsert.queue()
+    }
+
+    fun discoverCommands(`object`: Any) {
+        parser.parse(`object`).forEach(Consumer { command: Command<*> -> this.registerCommand(command) })
+    }
+
+    @SubscribeEvent
+    fun onCommandInteraction(event: GenericCommandInteractionEvent) {
+        val guildId = if (event.guild == null) event.guild!!.id else null
+        val command = getCommand(event.fullCommandName, guildId)
+        if (command == null) {
+            library.logger.error("Could not find an executor for command {}", event.fullCommandName)
+            sendEphemeral(event, Text.single(Key.library("exception.command_error")))
+            return
+        }
+		if (!(command.interactionClass.isAssignableFrom(event.javaClass))) {
+			library.logger.error("Invalid event type {} for command {}", event.javaClass.name, event.fullCommandName)
+			sendEphemeral(event, Text.single(Key.library("exception.command_error")))
+			return
 		}
-		return commands.get(null).get(discordName);
-	}
+        try {
+			@Suppress("UNCHECKED_CAST")
+			(command as Command<Any>).accept(event)
+		} catch (e: UserError) {
+            sendEphemeral(event, e)
+        } catch (e: Exception) {
+            library.logger.error("Failed to execute command " + event.fullCommandName, e)
+            sendEphemeral(event, Text.single(Key.library("exception.command_error")))
+        }
+    }
 
-	public void upsertCommands(JDA jda) {
-		if (initialUpsertDone) return;
-		initialUpsertDone = true;
-		logger.info("Upserting commands");
-		for (Map.Entry<String, Map<String, Command<?>>> entry : commands.entrySet()) {
-			String guildId = entry.getKey();
-			Map<String, Command<?>> guildCommands = entry.getValue();
-
-			CommandListUpdateAction updater;
-			if (guildId == null) {
-				updater = jda.updateCommands();
-			} else {
-				Guild guild = jda.getGuildById(guildId);
-				if (guild == null)
-					continue;
-				updater = guild.updateCommands();
-			}
-
-			Set<String> rootSlashCommands = new HashSet<>();
-
-			for (Command<?> command : guildCommands.values()) {
-				CommandData commandData;
-				if (command instanceof SlashCommand slashCommand) {
-					commandData = slashCommand.getBranch().root();
-					if (rootSlashCommands.contains(commandData.getName()))
-						continue;
-					rootSlashCommands.add(commandData.getName());
-				} else {
-					commandData = command.getCommandData();
-				}
-
-				if (commandData == null)
-					continue; // i don't think this should happen but just in case
-				logger.debug("Upserting command {} to guild {}", commandData.getName(), guildId);
-				//noinspection ResultOfMethodCallIgnored
-				updater.addCommands(commandData);
-			}
-
-			updater.queue();
-		}
-	}
-
-	public void registerCommand(@NonNull Command<?> command) {
-		String guildId = command.getGuildId();
-		commands.computeIfAbsent(guildId, $ -> new HashMap<>()).put(command.getDiscordName(), command);
-		if (!initialUpsertDone)
-			return;
-
-		CommandData cmd = command.getCommandData();
-		if (cmd == null)
-			return;
-
-		JDA jda = library.getJDA();
-		RestAction<net.dv8tion.jda.api.interactions.commands.Command> upsert;
-
-		if (guildId == null) {
-			upsert = jda.upsertCommand(cmd);
-		} else {
-			Guild guild = jda.getGuildById(guildId);
-			if (guild == null)
-				return;
-			upsert = guild.upsertCommand(cmd);
-		}
-
-		upsert.queue();
-	}
-
-	public void discoverCommands(@NonNull Object object) {
-		parser.parse(object).forEach(this::registerCommand);
-	}
-
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	@SubscribeEvent
-	public void onCommandInteraction(@NonNull GenericCommandInteractionEvent event) {
-		String guildId = event.getGuild() == null ? event.getGuild().getId() : null;
-		Command command = getCommand(event.getFullCommandName(), guildId);
-		if (command == null) {
-			library.getLogger().error("Could not find an executor for command " + event.getFullCommandName());
-			sendEphemeral(event, single(library("exception.command_error")));
-			return;
-		}
-		try {
-			command.accept(event);
-		} catch (UserError e) {
-			sendEphemeral(event, e);
-		} catch (Exception e) {
-			library.getLogger().error("Failed to execute command " + event.getFullCommandName(), e);
-			sendEphemeral(event, single(library("exception.command_error")));
-		}
-	}
+    companion object {
+        private fun sendEphemeral(event: IReplyCallback, text: Text) {
+            text.asString(Context.fromInteraction(event)).subscribe { string: String? ->
+                event.reply(
+                    string!!
+                ).setEphemeral(true).queue()
+            }
+        }
+    }
 }

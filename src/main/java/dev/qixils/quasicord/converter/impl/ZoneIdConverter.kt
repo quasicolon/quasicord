@@ -3,17 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.converter.impl
 
-package dev.qixils.quasicord.converter.impl;
-
-import dev.qixils.quasicord.Key;
-import dev.qixils.quasicord.converter.Converter;
-import dev.qixils.quasicord.error.UserError;
-import lombok.Getter;
-import lombok.NonNull;
-import net.dv8tion.jda.api.interactions.Interaction;
-
-import java.time.ZoneId;
+import dev.qixils.quasicord.Key.Companion.library
+import dev.qixils.quasicord.converter.Converter
+import dev.qixils.quasicord.error.UserError
+import net.dv8tion.jda.api.interactions.Interaction
+import java.time.ZoneId
 
 /**
  * Attempts to find the timezone matching a user's input.
@@ -21,18 +17,15 @@ import java.time.ZoneId;
  * names of timezones in the user's detected language,
  * and names of timezones in English.
  */
-@Getter
-public class ZoneIdConverter implements Converter<String, ZoneId> {
+class ZoneIdConverter : Converter<String, ZoneId> {
+    override val inputClass: Class<String> = String::class.java
+	override val outputClass: Class<ZoneId> = ZoneId::class.java
 
-	private final @NonNull Class<String> inputClass = String.class;
-	private final @NonNull Class<ZoneId> outputClass = ZoneId.class;
-
-	@Override
-	public @NonNull ZoneId convert(@NonNull Interaction it, @NonNull String input, @org.checkerframework.checker.nullness.qual.NonNull Class<? extends ZoneId> targetClass) {
-		try {
-			return ZoneId.of(input);
-		} catch (Exception ignored) {
-			throw new UserError(Key.library("exception.invalid_timezone"), input);
-		}
-	}
+    override fun convert(it: Interaction, input: String, targetClass: Class<out ZoneId>): ZoneId {
+        try {
+            return ZoneId.of(input)
+        } catch (_: Exception) {
+            throw UserError(library("exception.invalid_timezone"), input)
+        }
+    }
 }

@@ -3,29 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.decorators.option
 
-package dev.qixils.quasicord.decorators.option;
-
-import dev.qixils.quasicord.autocomplete.AutoCompleter;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import dev.qixils.quasicord.autocomplete.AutoCompleter
+import kotlin.reflect.KClass
 
 /**
- * Denotes the class that should be used to generate tab completions for a {@link Option}.
- * This is only to be used by options whose {@link Option#type() type}
- * {@link net.dv8tion.jda.api.interactions.commands.OptionType#canSupportChoices() supports choices}.
+ * Denotes the class that should be used to generate tab completions for a [Option].
+ * This is only to be used by options whose [type][Option.type]
+ * [supports choices][net.dv8tion.jda.api.interactions.commands.OptionType.canSupportChoices].
  */
-@Target(ElementType.PARAMETER)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface AutoCompleteWith {
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class AutoCompleteWith(
 
-	/**
-	 * The class to use for generating auto-complete suggestions.
-	 *
-	 * @return auto-completer class
-	 */
-	Class<? extends AutoCompleter> value();
-}
+    /**
+     * The class to use for generating auto-complete suggestions.
+     *
+     * @return auto-completer class
+     */
+    val value: KClass<out AutoCompleter>
+)

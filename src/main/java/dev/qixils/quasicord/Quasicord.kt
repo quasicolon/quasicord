@@ -3,374 +3,339 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord
 
-package dev.qixils.quasicord;
-
-import dev.qixils.quasicord.commands.GuildConfigCommand;
-import dev.qixils.quasicord.commands.UserConfigCommand;
-import dev.qixils.quasicord.db.DatabaseManager;
-import dev.qixils.quasicord.events.EventDispatcher;
-import dev.qixils.quasicord.locale.LocaleProvider;
-import dev.qixils.quasicord.locale.TranslationProvider;
-import dev.qixils.quasicord.registry.core.RegistryRegistry;
-import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.hooks.AnnotatedEventManager;
-import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.dv8tion.jda.api.utils.MemberCachePolicy;
-import net.dv8tion.jda.api.utils.cache.CacheFlag;
-import net.dv8tion.jda.api.utils.messages.MessageRequest;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
-
-import javax.security.auth.login.LoginException;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import dev.qixils.quasicord.commands.GuildConfigCommand
+import dev.qixils.quasicord.commands.UserConfigCommand
+import dev.qixils.quasicord.db.DatabaseManager
+import dev.qixils.quasicord.events.EventDispatcher
+import dev.qixils.quasicord.locale.LocaleProvider
+import dev.qixils.quasicord.locale.TranslationProvider
+import dev.qixils.quasicord.registry.core.RegistryRegistry
+import net.dv8tion.jda.api.JDA
+import net.dv8tion.jda.api.JDABuilder
+import net.dv8tion.jda.api.entities.Activity
+import net.dv8tion.jda.api.events.Event
+import net.dv8tion.jda.api.hooks.AnnotatedEventManager
+import net.dv8tion.jda.api.hooks.SubscribeEvent
+import net.dv8tion.jda.api.requests.GatewayIntent
+import net.dv8tion.jda.api.utils.MemberCachePolicy
+import net.dv8tion.jda.api.utils.cache.CacheFlag
+import net.dv8tion.jda.api.utils.messages.MessageRequest
+import org.jetbrains.annotations.Contract
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader
+import java.io.IOException
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import javax.security.auth.login.LoginException
+import kotlin.Throws
 
 /**
- * Managing class for a <a href="https://discord.com/">Discord</a> bot which utilizes a
- * <a href="https://mongodb.com/">MongoDB</a> {@link #getDatabaseManager() database}.
- * <p>
- * See {@link Builder} for instructions on how to create a new instance.
+ * Managing class for a [Discord](https://discord.com/) bot which utilizes a
+ * [MongoDB](https://mongodb.com/) [database][.getDatabaseManager].
+ *
+ *
+ * See [Builder] for instructions on how to create a new instance.
  */
-public class Quasicord {
-	protected final @NonNull JDA jda;
-	protected final @NotNull QuasicordConfig config;
-	protected final @NonNull Logger logger = LoggerFactory.getLogger(getClass());
-	protected final @NonNull DatabaseManager database;
-	protected final @NonNull RegistryRegistry rootRegistry;
-	protected final @NonNull EventDispatcher eventDispatcher = new EventDispatcher();
-	protected final @NonNull TemporaryListenerExecutor tempListenerExecutor = new TemporaryListenerExecutor();
-	protected final @NonNull String namespace;
-	protected final long ownerId;
-	protected final long botId;
-	protected final @NonNull TranslationProvider translationProvider;
-	protected final @NonNull LocaleProvider localeProvider;
-	protected final @NonNull CommandManager commandManager;
+open class Quasicord(
+    /**
+     * Gets the bot's namespace which is used for fetching translation strings.
+     *
+     * @return bot's namespace
+     */
+    val namespace: String, defaultLocale: Locale, configRoot: Path, activity: Activity?, eventHandler: Any?
+) {
+    /**
+     * Returns the [JDA] API for interacting with Discord.
+     *
+     * @return the JDA API
+     */
+    val jda: JDA
 
-	/**
-	 *
-	 * @param namespace
-	 * @param defaultLocale The default locale
-	 * @param configRoot
-	 * @param activity
-	 * @param eventHandler
-	 * @throws LoginException
-	 * @throws InterruptedException
-	 * @throws IOException
-	 */
-	public Quasicord(@NonNull String namespace, @NonNull Locale defaultLocale, @NonNull Path configRoot, @Nullable Activity activity, @Nullable Object eventHandler) throws LoginException, InterruptedException, IOException {
+    /**
+     * Returns the root [QuasicordConfig] representing the options set in `config.yml`.
+     *
+     * @return root configuration node
+     */
+    val config: QuasicordConfig
 
-		// misc initialization
-		this.namespace = namespace;
-		// register default event handler
-		if (eventHandler != null)
-			eventDispatcher.registerListeners(eventHandler);
+    /**
+     * Returns the [Logger] for this bot.
+     *
+     * @return bot's logger
+     */
+    val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-		// register translation providers
-		translationProvider = new TranslationProvider(namespace, defaultLocale);
-		TranslationProvider.registerInstance(translationProvider);
-		TranslationProvider.registerInstance(new TranslationProvider(Key.LIBRARY_NAMESPACE, Locale.ENGLISH));
+    /**
+     * Returns the [DatabaseManager] which facilitates communication with the MongoDB database owned by this bot.
+     *
+     * @return database manager
+     */
+    val databaseManager: DatabaseManager
 
-		// load configuration
-		YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
-				.path(configRoot.resolve("config.yml"))
-				// TODO: default config options
-				.build();
-		var rootConfigNode = loader.load();
-		config = Objects.requireNonNull(rootConfigNode.get(QuasicordConfig.class), "config.yml is missing or invalid");
+    /**
+     * Gets the [registry of registries][RegistryRegistry].
+     *
+     * @return root registry
+     */
+    val rootRegistry: RegistryRegistry
 
-		// load database and locale provider
-		database = new DatabaseManager(namespace, config.environment());
-		localeProvider = new LocaleProvider(defaultLocale, database);
-		LocaleProvider.setInstance(localeProvider);
+    /**
+     * Returns the [EventDispatcher] which is used to dispatch events to listeners.
+     *
+     * @return event dispatcher
+     */
+	@JvmField
+	val eventDispatcher: EventDispatcher = EventDispatcher()
+    protected val tempListenerExecutor: TemporaryListenerExecutor = TemporaryListenerExecutor()
+    protected val ownerId: Long
+    protected val botId: Long
 
-		// initialize JDA and relevant data
-		jda = initJDA(activity); // should be executed last-ish
-		botId = jda.getSelfUser().getIdLong();
-		ownerId = jda.retrieveApplicationInfo().complete().getOwner().getIdLong();
+    /**
+     * Returns the [TranslationProvider] which is used to obtain translated strings.
+     *
+     * @return locale manager
+     */
+    val translationProvider: TranslationProvider
 
-		// late initialize (depends on JDA)
-		rootRegistry = new RegistryRegistry(this);
-		this.commandManager = new CommandManager(this);
-		jda.addEventListener(commandManager);
-		registerCommands();
-		commandManager.upsertCommands(jda);
-	}
+    /**
+     * Returns the [LocaleProvider] which is used to obtain an object's locale.
+     *
+     * @return locale provider
+     */
+	@JvmField
+	val localeProvider: LocaleProvider
 
-	@NonNull
-	protected JDA initJDA(@Nullable Activity activity) {
-		JDABuilder builder = JDABuilder.createDefault(config.token())
-				.disableIntents(GatewayIntent.DIRECT_MESSAGE_TYPING,
-						GatewayIntent.GUILD_MESSAGE_TYPING,
-						// GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
-						GatewayIntent.GUILD_WEBHOOKS,
-						GatewayIntent.GUILD_INVITES,
-						GatewayIntent.GUILD_VOICE_STATES)
-				.enableIntents(GatewayIntent.GUILD_MEMBERS)
-				// TODO:
-				//	1. register cogs before initJDA() is called
-				//  2. implement getRequiredIntents() in Cog
-				//  3. use that result here to compute minimum required intents
-				//  4. late-loaded cogs, if any/ever, can decline when their required intents weren't met at startup
-				//  5. except wait, cogs need jda to be constructed (and probably should), that's a problem
-				.enableIntents(GatewayIntent.GUILD_MESSAGES)
-				.enableIntents(GatewayIntent.MESSAGE_CONTENT)
-				.setMemberCachePolicy(MemberCachePolicy.ALL)
-				.setEventManager(new AnnotatedEventManager())
-				.disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE);
-		if (activity != null)
-			builder.setActivity(activity);
-		MessageRequest.setDefaultMentions(Collections.emptySet());
-		JDA jda = builder.build();
-		jda.setRequiredScopes("applications.commands");
-		jda.addEventListener(tempListenerExecutor);
-		jda.addEventListener(new Object() {
-			@net.dv8tion.jda.api.hooks.SubscribeEvent
-			public void on(net.dv8tion.jda.api.events.Event event) {
-				eventDispatcher.dispatch(event);
-			}
-		});
-		try {
-			jda.awaitReady();
-		} catch (InterruptedException ignored) {
-		}
-		return jda;
-	}
+    /**
+     * Gets the command manager.
+     *
+     * @return command manager
+     */
+    val commandManager: CommandManager
 
-	/**
-	 * Registers a temporary listener.
-	 *
-	 * @param listener temporary listener to register
-	 */
-	// we don't expose the raw executor in a getter because objects could abuse the #onEvent method
-	public void register(@NonNull TemporaryListener<?> listener) {
-		tempListenerExecutor.register(Objects.requireNonNull(listener, "listener cannot be null"));
-	}
+    /**
+     *
+     * @param namespace
+     * @param defaultLocale The default locale
+     * @param configRoot
+     * @param activity
+     * @param eventHandler
+     * @throws LoginException
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    init {
+        // misc initialization
 
-	/**
-	 * Registers commands just before the initial upsert.
-	 */
-	protected void registerCommands() {
-		commandManager.discoverCommands(new UserConfigCommand(this));
-		commandManager.discoverCommands(new GuildConfigCommand(this));
-	}
+        // register default event handler
+        if (eventHandler != null) eventDispatcher.registerListeners(eventHandler)
 
-	/**
-	 * Shuts down the bot as soon as pending tasks have finished execution.
-	 */
-	public void shutdown() {
-		jda.shutdown();
-	}
+        // register translation providers
+        translationProvider = TranslationProvider(namespace, defaultLocale)
+        TranslationProvider.registerInstance(translationProvider)
+        TranslationProvider.registerInstance(TranslationProvider(Key.LIBRARY_NAMESPACE, Locale.ENGLISH))
 
-	/**
-	 * Shuts down the bot immediately.
-	 */
-	public void shutdownNow() {
-		jda.shutdownNow();
-	}
+        // load configuration
+        val loader = YamlConfigurationLoader.builder()
+            .path(configRoot.resolve("config.yml")) // TODO: default config options
+            .build()
+        val rootConfigNode = loader.load()
+        config = rootConfigNode.get(QuasicordConfig::class.java) ?: throw IllegalStateException("config.yml is missing or invalid")
 
-	/**
-	 * Returns the {@link JDA} API for interacting with Discord.
-	 *
-	 * @return the JDA API
-	 */
-	public @NonNull JDA getJDA() {
-		return jda;
-	}
+        // load database and locale provider
+        databaseManager = DatabaseManager(namespace, config.environment)
+        localeProvider = LocaleProvider(defaultLocale, databaseManager)
+        LocaleProvider.instance = localeProvider
 
-	// boilerplate
+        // initialize JDA and relevant data
+        jda = initJDA(activity) // should be executed last-ish
+        botId = jda.selfUser.idLong
+        ownerId = jda.retrieveApplicationInfo().complete().owner.idLong
 
-	/**
-	 * Returns the root {@link QuasicordConfig} representing the options set in {@code config.yml}.
-	 *
-	 * @return root configuration node
-	 */
-	public @NonNull QuasicordConfig getConfig() {
-		return config;
-	}
+        // late initialize (depends on JDA)
+        rootRegistry = RegistryRegistry(this)
+        this.commandManager = CommandManager(this)
+        jda.addEventListener(commandManager)
+        registerCommands()
+        commandManager.upsertCommands(jda)
+    }
 
-	/**
-	 * Returns the {@link Logger} for this bot.
-	 *
-	 * @return bot's logger
-	 */
-	public @NonNull Logger getLogger() {
-		return logger;
-	}
+    protected open fun initJDA(activity: Activity?): JDA {
+        val builder = JDABuilder.createDefault(config.token)
+            .disableIntents(
+                GatewayIntent.DIRECT_MESSAGE_TYPING,
+                GatewayIntent.GUILD_MESSAGE_TYPING,  // GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
+                GatewayIntent.GUILD_WEBHOOKS,
+                GatewayIntent.GUILD_INVITES,
+                GatewayIntent.GUILD_VOICE_STATES
+            )
+            .enableIntents(GatewayIntent.GUILD_MEMBERS) // TODO:
+            //	1. register cogs before initJDA() is called
+            //  2. implement getRequiredIntents() in Cog
+            //  3. use that result here to compute minimum required intents
+            //  4. late-loaded cogs, if any/ever, can decline when their required intents weren't met at startup
+            //  5. except wait, cogs need jda to be constructed (and probably should), that's a problem
+            .enableIntents(GatewayIntent.GUILD_MESSAGES)
+            .enableIntents(GatewayIntent.MESSAGE_CONTENT)
+            .setMemberCachePolicy(MemberCachePolicy.ALL)
+            .setEventManager(AnnotatedEventManager())
+            .disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE)
+        if (activity != null) builder.setActivity(activity)
+        MessageRequest.setDefaultMentions(emptySet())
+        val jda = builder.build()
+        jda.setRequiredScopes("applications.commands")
+        jda.addEventListener(tempListenerExecutor)
+        jda.addEventListener(object : Any() {
+            @SubscribeEvent
+            fun on(event: Event?) {
+                eventDispatcher.dispatch(event!!)
+            }
+        })
+        try {
+            jda.awaitReady()
+        } catch (ignored: InterruptedException) {
+        }
+        return jda
+    }
 
-	/**
-	 * Returns the {@link Environment} that the bot is currently running in.
-	 *
-	 * @return execution environment
-	 */
-	public @NonNull Environment getEnvironment() {
-		return config.environment();
-	}
+    /**
+     * Registers a temporary listener.
+     *
+     * @param listener temporary listener to register
+     */
+    // we don't expose the raw executor in a getter because objects could abuse the #onEvent method
+    fun register(listener: TemporaryListener<*>) {
+        tempListenerExecutor.register(Objects.requireNonNull(listener, "listener cannot be null"))
+    }
 
-	/**
-	 * Returns the {@link DatabaseManager} which facilitates communication with the MongoDB database owned by this bot.
-	 *
-	 * @return database manager
-	 */
-	public @NonNull DatabaseManager getDatabaseManager() {
-		return database;
-	}
+    /**
+     * Registers commands just before the initial upsert.
+     */
+    protected fun registerCommands() {
+        commandManager.discoverCommands(UserConfigCommand(this))
+        commandManager.discoverCommands(GuildConfigCommand(this))
+    }
 
-	/**
-	 * Returns the {@link TranslationProvider} which is used to obtain translated strings.
-	 *
-	 * @return locale manager
-	 */
-	public @NonNull TranslationProvider getTranslationProvider() {
-		return translationProvider;
-	}
+    /**
+     * Shuts down the bot as soon as pending tasks have finished execution.
+     */
+    fun shutdown() {
+        jda.shutdown()
+    }
 
-	/**
-	 * Returns the {@link LocaleProvider} which is used to obtain an object's locale.
-	 *
-	 * @return locale provider
-	 */
-	public @NonNull LocaleProvider getLocaleProvider() {
-		return localeProvider;
-	}
+    /**
+     * Shuts down the bot immediately.
+     */
+    fun shutdownNow() {
+        jda.shutdownNow()
+    }
 
-	/**
-	 * Returns the {@link EventDispatcher} which is used to dispatch events to listeners.
-	 *
-	 * @return event dispatcher
-	 */
-	public @NonNull EventDispatcher getEventDispatcher() {
-		return eventDispatcher;
-	}
+    // boilerplate
 
-	/**
-	 * Gets the command manager.
-	 *
-	 * @return command manager
-	 */
-	public @NonNull CommandManager getCommandManager() {
-		return commandManager;
-	}
+    val environment: Environment
+        /**
+         * Returns the [Environment] that the bot is currently running in.
+         *
+         * @return execution environment
+         */
+        get() = config.environment
 
-	/**
-	 * Gets the {@link RegistryRegistry registry of registries}.
-	 *
-	 * @return root registry
-	 */
-	public @NonNull RegistryRegistry getRootRegistry() {
-		return rootRegistry;
-	}
+    /**
+     * A builder for [Quasicord] instances.
+     */
+    class Builder
+    /**
+     * Creates a new builder.
+     */
+    {
+        protected var namespace: String? = null
+        protected var locale: Locale = Locale.ENGLISH
+        protected var configRoot: Path = Paths.get(".").toAbsolutePath()
+        protected var activity: Activity? = null
+        protected var eventHandler: Any? = null
 
-	/**
-	 * Gets the bot's namespace which is used for fetching translation strings.
-	 *
-	 * @return bot's namespace
-	 */
-	public @NonNull String getNamespace() {
-		return namespace;
-	}
+        /**
+         * Sets the namespace used for fetching translation strings.
+         *
+         * @param namespace your software's namespace
+         * @return this builder
+         */
+        @Contract("_ -> this")
+        fun namespace(namespace: String): Builder {
+            this.namespace = namespace
+            return this
+        }
 
-	/**
-	 * A builder for {@link Quasicord} instances.
-	 */
-	public static class Builder {
-		protected @Nullable String namespace;
-		protected @NonNull Locale locale = Locale.ENGLISH;
-		protected @NonNull Path configRoot = Paths.get(".").toAbsolutePath();
-		protected @Nullable Activity activity;
-		protected @Nullable Object eventHandler;
+        /**
+         * Sets the default locale for the bot.
+         *
+         * @param locale the default locale
+         * @return this builder
+         */
+        @Contract("_ -> this")
+        fun defaultLocale(locale: Locale): Builder {
+            this.locale = locale
+            return this
+        }
 
-		/**
-		 * Creates a new builder.
-		 */
-		public Builder() {
+        /**
+         * Sets the root directory for the configuration files.
+         *
+         * @param configRoot the root directory
+         * @return this builder
+         */
+        @Contract("_ -> this")
+        fun configRoot(configRoot: Path): Builder {
+            this.configRoot = configRoot
+            return this
+        }
 
-		}
+        /**
+         * Sets the activity to be used for the bot.
+         *
+         * @param activity the activity
+         * @return this builder
+         */
+        @Contract("_ -> this")
+        fun activity(activity: Activity?): Builder {
+            this.activity = activity
+            return this
+        }
 
-		/**
-		 * Sets the namespace used for fetching translation strings.
-		 *
-		 * @param namespace your software's namespace
-		 * @return this builder
-		 */
-		@Contract("_ -> this")
-		public Builder namespace(@NonNull String namespace) {
-			this.namespace = namespace;
-			return this;
-		}
+        /**
+         * Sets the default event handler to be used for the bot.
+         * Other event handlers can be added later.
+         *
+         * @param eventHandler the event handler
+         * @return this builder
+         */
+        @Contract("_ -> this")
+        fun eventHandler(eventHandler: Any?): Builder {
+            this.eventHandler = eventHandler
+            return this
+        }
 
-		/**
-		 * Sets the default locale for the bot.
-		 *
-		 * @param locale the default locale
-		 * @return this builder
-		 */
-		@Contract("_ -> this")
-		public Builder defaultLocale(@NonNull Locale locale) {
-			this.locale = locale;
-			return this;
-		}
-
-		/**
-		 * Sets the root directory for the configuration files.
-		 *
-		 * @param configRoot the root directory
-		 * @return this builder
-		 */
-		@Contract("_ -> this")
-		public Builder configRoot(@NonNull Path configRoot) {
-			this.configRoot = configRoot;
-			return this;
-		}
-
-		/**
-		 * Sets the activity to be used for the bot.
-		 *
-		 * @param activity the activity
-		 * @return this builder
-		 */
-		@Contract("_ -> this")
-		public Builder activity(@Nullable Activity activity) {
-			this.activity = activity;
-			return this;
-		}
-
-		/**
-		 * Sets the default event handler to be used for the bot.
-		 * Other event handlers can be added later.
-		 *
-		 * @param eventHandler the event handler
-		 * @return this builder
-		 */
-		@Contract("_ -> this")
-		public Builder eventHandler(@Nullable Object eventHandler) {
-			this.eventHandler = eventHandler;
-			return this;
-		}
-
-		/**
-		 * Builds a new {@link Quasicord} instance.
-		 *
-		 * @return the new instance
-		 * @throws IllegalStateException if the namespace is not set
-		 * @throws LoginException        if the JDA login fails
-		 * @throws InterruptedException  if the JDA login is interrupted
-		 * @throws ConfigurateException  if the configuration fails
-		 */
-		public @NonNull Quasicord build() throws IllegalStateException, LoginException, InterruptedException, IOException {
-			if (namespace == null)
-				throw new IllegalStateException("namespace must be set");
-			return new Quasicord(namespace, locale, configRoot, activity, eventHandler);
-		}
-	}
+        /**
+         * Builds a new [Quasicord] instance.
+         *
+         * @return the new instance
+         * @throws IllegalStateException if the namespace is not set
+         * @throws LoginException        if the JDA login fails
+         * @throws InterruptedException  if the JDA login is interrupted
+         * @throws ConfigurateException  if the configuration fails
+         */
+        @Throws(
+            IllegalStateException::class,
+            LoginException::class,
+            InterruptedException::class,
+            IOException::class
+        )
+        fun build(): Quasicord {
+            checkNotNull(namespace) { "namespace must be set" }
+            return Quasicord(namespace!!, locale, configRoot, activity, eventHandler)
+        }
+    }
 }

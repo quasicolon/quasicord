@@ -8,13 +8,15 @@ plugins {
     `java-library`
     `maven-publish`
 	id("io.freefair.lombok") version "8.11"
+	kotlin("jvm")
 }
 
 repositories {
-    mavenLocal()
+	mavenCentral()
     maven {
         url = uri("https://repo.maven.apache.org/maven2/")
     }
+	mavenLocal()
 }
 
 dependencies {
@@ -32,13 +34,12 @@ dependencies {
     testImplementation(libs.org.junit.jupiter.junit.jupiter)
     testImplementation(libs.ch.qos.logback.logback.classic)
     compileOnly(libs.org.jetbrains.annotations)
+	implementation(kotlin("stdlib-jdk8"))
 }
 
 group = "dev.qixils.quasicolon"
 version = "1.0.0-SNAPSHOT"
 description = "quasicord"
-java.sourceCompatibility = JavaVersion.VERSION_21
-java.targetCompatibility = JavaVersion.VERSION_21
 
 java {
     withSourcesJar()
@@ -56,4 +57,8 @@ tasks.withType<JavaCompile>() {
 
 tasks.withType<Javadoc>() {
     options.encoding = "UTF8"
+}
+
+kotlin {
+	jvmToolchain(21)
 }

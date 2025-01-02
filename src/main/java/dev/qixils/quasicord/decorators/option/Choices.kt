@@ -3,25 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-
-package dev.qixils.quasicord.decorators.option;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package dev.qixils.quasicord.decorators.option
 
 /**
- * The holder for {@link Choice} annotations.
+ * The holder for [Choice] annotations.
  */
-@Target(ElementType.PARAMETER)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface Choices {
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.RUNTIME)
+annotation class Choices(
 
-	/**
-	 * The {@link Choice}s.
-	 *
-	 * @return choices
-	 */
-	Choice[] value();
-}
+    /**
+     * The [Choice]s.
+     *
+     * @return choices
+     */
+    vararg val value: Choice
+)

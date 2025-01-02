@@ -3,95 +3,94 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+package dev.qixils.quasicord.decorators
 
-package dev.qixils.quasicord.decorators;
+import dev.qixils.quasicord.converter.Converter
+import dev.qixils.quasicord.converter.VoidConverterImpl
+import dev.qixils.quasicord.decorators.option.ConvertWith
+import net.dv8tion.jda.api.events.interaction.command.GenericContextInteractionEvent
+import net.dv8tion.jda.api.interactions.Interaction
+import net.dv8tion.jda.api.interactions.commands.build.CommandData
+import java.lang.reflect.Method
 
-import dev.qixils.quasicord.CommandManager;
-import dev.qixils.quasicord.converter.Converter;
-import dev.qixils.quasicord.converter.VoidConverterImpl;
-import dev.qixils.quasicord.decorators.option.ConvertWith;
-import net.dv8tion.jda.api.interactions.Interaction;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.commands.context.ContextInteraction;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+internal class ParserContextCommand(
+    private val id: String,
+    parser: AnnotationParser,
+    command: CommandData,
+    `object`: Any,
+    method: Method,
+    guildId: String?
+) : ParserCommand<GenericContextInteractionEvent<*>>(
+    parser,
+    command,
+    GenericContextInteractionEvent::class.java,
+    guildId
+) {
+    private val converters: Array<Converter<*, *>?>
+    private val `object`: Any
+    private val method: Method
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.function.Function;
+    init {
+        val commandManager = parser.commandManager
+        this.`object` = `object`
+        this.method = method
 
-class ParserContextCommand extends ParserCommand<ContextInteraction> {
+        // parameters
+        converters = arrayOfNulls<Converter<*, *>>(method.parameterCount)
+        for (i in 0..<method.parameterCount) {
+            // set converter
+            val parameter = method.parameters[i]
+            val convertWith = parameter.getAnnotation<ConvertWith?>(ConvertWith::class.java)
 
-	private final String id;
-	private final Converter<?, ?>[] converters;
-	private final Object object;
-	private final Method method;
+            // converter data
+            val converter: Converter<*, *>?
 
-	public ParserContextCommand(@NonNull String id, @NonNull AnnotationParser parser, @NonNull CommandData command, @NonNull Object object, @NonNull Method method, @Nullable String guildId) {
-		super(parser, command, ContextInteraction.class, guildId);
-		this.id = id;
-		CommandManager commandManager = parser.getCommandManager();
-		this.object = object;
-		this.method = method;
+            if (convertWith != null) {
+                converter = createConverter(convertWith.value.java)
+            } else {
+                if (Interaction::class.java.isAssignableFrom(parameter.getType())) converter =
+                    VoidConverterImpl(Interaction::class.java) { it }
+                else {
+                    converter = commandManager.library.rootRegistry.converterRegistry.findConverter(
+                        Void::class.java,
+                        parameter.getType()
+                    )
+                    requireNotNull(converter) {
+                        "No converter found for parameter " + parameter.name + " of type " + parameter.getType()
+                            .getName()
+                    }
+                }
+            }
 
-		// parameters
-		converters = new Converter<?, ?>[method.getParameterCount()];
-		for (int i = 0; i < method.getParameterCount(); i++) {
-			// set converter
-			Parameter parameter = method.getParameters()[i];
-			ConvertWith convertWith = parameter.getAnnotation(ConvertWith.class);
+            converters[i] = converter
+        }
+    }
 
-			// converter data
-			Converter<?, ?> converter;
+	override val commandData: CommandData
+		get() = super.commandData!!
 
-			if (convertWith != null) {
-				converter = createConverter(convertWith.value());
-			} else {
-				if (Interaction.class.isAssignableFrom(parameter.getType()))
-					converter = new VoidConverterImpl<>(Interaction.class, Function.identity());
-				else {
-					converter = commandManager.getLibrary().getRootRegistry().CONVERTER_REGISTRY.findConverter(Void.class, parameter.getType());
-					if (converter == null)
-						throw new IllegalArgumentException("No converter found for parameter " + parameter.getName() + " of type " + parameter.getType().getName());
-				}
-			}
+	override val name: String
+		get() = id
 
-			converters[i] = converter;
-		}
-	}
+	override val discordName: String
+		get() = commandData.name
 
-	@SuppressWarnings("DataFlowIssue")
-	@Override
-	public @NonNull CommandData getCommandData() {
-		return super.getCommandData();
-	}
+    override fun accept(interaction: GenericContextInteractionEvent<*>) {
+        // note: this has no try/catch because that is being handled at an even higher level than this
 
-	@Override
-	public @NonNull String getName() {
-		return id;
-	}
+        // fetch args
 
-	@Override
-	public @NonNull String getDiscordName() {
-		return getCommandData().getName();
-	}
+        val args = arrayOfNulls<Any>(converters.size)
+        for (i in args.indices) {
+			val converter = converters[i]!! as Converter<Any?, Any?>
+            args[i] = converter.convert(interaction, null)
+        }
 
-	@Override
-	public void accept(@NonNull ContextInteraction interaction) {
-		// note: this has no try/catch because that is being handled at an even higher level than this
-
-		// fetch args
-		Object[] args = new Object[converters.length];
-		for (int i = 0; i < args.length; i++) {
-			//noinspection DataFlowIssue
-			args[i] = converters[i].convert(interaction, null);
-		}
-
-		// invoke and handle
-		try {
-			consumeCommandResult(interaction, method.invoke(object, args));
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+        // invoke and handle
+        try {
+            consumeCommandResult(interaction, method.invoke(`object`, *args))
+        } catch (e: Exception) {
+            throw RuntimeException(e)
+        }
+    }
 }
