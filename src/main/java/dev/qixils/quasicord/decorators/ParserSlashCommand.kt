@@ -212,7 +212,6 @@ internal class ParserSlashCommand(
 
         // invoke and handle
         try {
-			method.call()
             consumeCommandResult(interaction, method.callSuspend(obj, *args))
         } catch (e: Exception) {
             throw RuntimeException(e)
