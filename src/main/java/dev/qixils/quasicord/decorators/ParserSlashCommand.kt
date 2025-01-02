@@ -14,6 +14,8 @@ import dev.qixils.quasicord.converter.VoidConverterImpl
 import dev.qixils.quasicord.decorators.option.*
 import dev.qixils.quasicord.locale.TranslationProvider
 import dev.qixils.quasicord.locale.translation.UnknownTranslation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import net.dv8tion.jda.api.entities.IMentionable
 import net.dv8tion.jda.api.entities.Member
 import net.dv8tion.jda.api.entities.Message.Attachment
@@ -174,12 +176,12 @@ internal class ParserSlashCommand(
         // fetch args
 
         val args = arrayOfNulls<Any>(converters.size)
-        for (i in args.indices) {
+		coroutineScope { for (i in args.indices) { launch {
             val converterData = converters[i]
             val converter = converterData.converter
             if (converter is VoidConverter<*>) {
                 args[i] = converter.convert(interaction)
-                continue
+                return@launch
             }
 			converter as Converter<Any, Any> // smart cast to generics to allow unchecked input
             val optName = Objects.requireNonNull<String?>(
@@ -189,7 +191,7 @@ internal class ParserSlashCommand(
             val option = interaction.getOption(optName)
             if (option == null) {
                 args[i] = null
-                continue
+				return@launch
             }
 
             val inputClass: Class<*> = converter.inputClass
@@ -208,7 +210,7 @@ internal class ParserSlashCommand(
 			else if (inputClass == Member::class.java) option.asMember ?: error("Member was not found in this guild for ${option.name}")
 			else error("Could not accept interaction option of type ${option.type} for a converter from ${inputClass.name}") // extract the appropriate type from the interaction option for the converter:
 			args[i] = converter.convert(interaction, input, converterData.targetClass)
-        }
+        } } }
 
         // invoke and handle
         try {
