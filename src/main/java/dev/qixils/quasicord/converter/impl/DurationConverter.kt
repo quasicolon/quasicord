@@ -18,7 +18,7 @@ class DurationConverter(private val library: Quasicord) : Converter<String, Dura
 	override val inputClass: Class<String> = String::class.java
 	override val outputClass: Class<Duration> = Duration::class.java
 
-    override fun convert(interaction: Interaction, input: String, targetClass: Class<out Duration?>): Duration {
+    override suspend fun convert(interaction: Interaction, input: String, targetClass: Class<out Duration?>): Duration {
         val arguments = input.split(" ")
 			.dropLastWhile { it.isEmpty() }
 			.filter { RELATIVE_TIME_IGNORED_TOKENS.contains(it.lowercase()) }
@@ -31,7 +31,7 @@ class DurationConverter(private val library: Quasicord) : Converter<String, Dura
 
         var negative = false
         if (arguments.first().startsWith("-")) {
-            arguments.set(0, arguments.first().substring(1))
+			arguments[0] = arguments.first().substring(1)
             negative = true
         }
         if (arguments.last().equals("ago", ignoreCase = true)) {

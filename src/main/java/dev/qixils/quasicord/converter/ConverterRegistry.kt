@@ -5,9 +5,9 @@
  */
 package dev.qixils.quasicord.converter
 
+import dev.minn.jda.ktx.coroutines.await
 import dev.qixils.quasicord.Quasicord
 import dev.qixils.quasicord.converter.ConverterImpl.Companion.identity
-import dev.qixils.quasicord.converter.ConverterImpl.ConverterImplStep
 import dev.qixils.quasicord.converter.impl.DurationConverter
 import dev.qixils.quasicord.converter.impl.LocaleConverter
 import dev.qixils.quasicord.converter.impl.ZoneIdConverter
@@ -34,30 +34,26 @@ class ConverterRegistry(library: Quasicord) : RegistryImpl<Converter<*, *>>("con
         register(VoidConverterImpl(Member::class.java) { it.member!! })
         register(VoidConverterImpl(User::class.java) { it.user })
         register(VoidConverterImpl(Guild::class.java) { it.guild!! })
-        register(VoidConverterImpl(Channel::class.java) { it.getChannel()!! })
+        register(VoidConverterImpl(Channel::class.java) { it.channel!! })
         register(VoidConverterImpl(ChannelType::class.java) { it.getChannelType() })
         register(VoidConverterImpl(Context::class.java) { Context.fromInteraction(it) })
-        register(VoidConverterImpl(DiscordLocale::class.java) { obj: Interaction? -> obj!!.getUserLocale() })
+        register(VoidConverterImpl(DiscordLocale::class.java) { it.userLocale })
         register(
             ConverterImpl(
                 Context::class.java,
                 Locale::class.java
-            ) { it: Interaction?, ctx: Context? -> ctx!!.locale(library.localeProvider).block() }) // TODO: async
+            ) { it, ctx -> ctx.locale(library.localeProvider) })
         register(LocaleConverter(library))
         register(
             ConverterImpl(
                 Locale::class.java,
                 DiscordLocale::class.java
-            ) { it: Interaction?, locale: Locale? ->
-                DiscordLocale.from(
-                    locale!!
-                )
-            })
+            ) { it, locale -> DiscordLocale.from(locale) })
         register(
             ConverterImpl(
                 DiscordLocale::class.java,
                 Locale::class.java
-            ) { it: Interaction?, locale: DiscordLocale? -> locale!!.toLocale() })
+            ) { it, locale -> locale.toLocale() })
         register(ZoneIdConverter())
         // channels
         register(ConverterImpl.Companion.channel(TextChannel::class.java))
@@ -75,75 +71,71 @@ class ConverterRegistry(library: Quasicord) : RegistryImpl<Converter<*, *>>("con
             ConverterImpl(
                 ZonedDateTime::class.java,
                 Instant::class.java
-            ) { it: Interaction?, zdt: ZonedDateTime? -> zdt!!.toInstant() })
+            ) { it, zdt -> zdt.toInstant() })
         register(
             ConverterImpl(
                 ZonedDateTime::class.java,
                 LocalDateTime::class.java
-            ) { it: Interaction?, zdt: ZonedDateTime? -> zdt!!.toLocalDateTime() })
+            ) { it, zdt -> zdt.toLocalDateTime() })
         register(
             ConverterImpl(
                 LocalDateTime::class.java,
                 LocalDate::class.java
-            ) { it: Interaction?, ldt: LocalDateTime? -> ldt!!.toLocalDate() })
+            ) { it, ldt -> ldt.toLocalDate() })
         register(
             ConverterImpl(
                 LocalDateTime::class.java,
                 LocalTime::class.java
-            ) { it: Interaction?, ldt: LocalDateTime? -> ldt!!.toLocalTime() })
+            ) { it, ldt -> ldt.toLocalTime() })
         // numbers
         register(
             ConverterImpl(
                 Number::class.java,
                 Int::class.java
-            ) { it: Interaction?, l: Number? -> l!!.toInt() })
+            ) { it, l -> l.toInt() })
         register(
             ConverterImpl(
                 Number::class.java,
                 Long::class.java
-            ) { it: Interaction?, d: Number? -> d!!.toLong() })
+            ) { it, d -> d.toLong() })
         register(
             ConverterImpl(
                 Number::class.java,
                 Float::class.java
-            ) { it: Interaction?, f: Number? -> f!!.toFloat() })
+            ) { it, f -> f.toFloat() })
         register(
             ConverterImpl(
                 Number::class.java,
                 Double::class.java
-            ) { it: Interaction?, d: Number? -> d!!.toDouble() })
+            ) { it, d -> d.toDouble() })
         register(
             ConverterImpl(
                 Number::class.java,
                 Short::class.java
-            ) { it: Interaction?, s: Number? -> s!!.toShort() })
+            ) { it, s -> s.toShort() })
         register(
             ConverterImpl(
                 Number::class.java,
                 Byte::class.java
-            ) { it: Interaction?, b: Number? -> b!!.toByte() })
+            ) { it, b -> b.toByte() })
         // misc
-        register(ConverterImpl(User::class.java, Member::class.java) { it: Interaction?, u: User? ->
-            Objects.requireNonNull<Member?>(
-                Objects.requireNonNull<Guild?>(it!!.guild).getMember(u!!)
-            )
+        register(ConverterImpl(User::class.java, Member::class.java) { it, u ->
+			it.guild?.retrieveMember(u)?.await()!! // TODO: should we allow null returns?
         })
         register(
             ConverterImpl(
                 Int::class.java,
-                Enum::class.java,
-                ConverterImplStep { ctx: Interaction?, i: Int?, tc: Class<out Enum<*>?>? -> tc!!.getEnumConstants()[i!!] })
-        )
+                Enum::class.java
+			) { ctx, i, tc -> tc.getEnumConstants()[i] }
+		)
         register(
             ConverterImpl(
                 String::class.java,
-                Enum::class.java,
-                ConverterImplStep { ctx: Interaction?, i: String?, tc: Class<out Enum<*>?>? ->
-                    Arrays.stream(
-                        tc!!.getEnumConstants()
-                    ).filter { e: Enum<*>? -> e!!.name == i }.findFirst().orElseThrow()
-                })
-        )
+                Enum::class.java
+			) { ctx, i, tc ->
+				tc.getEnumConstants().first { e: Enum<*>? -> e!!.name == i }
+			}
+		)
     }
 
     fun <C : Converter<*, *>?> typedRegister(converter: C): C {
@@ -152,6 +144,7 @@ class ConverterRegistry(library: Quasicord) : RegistryImpl<Converter<*, *>>("con
     }
 
     fun <I, O> getConverter(inputClass: Class<I>, outputClass: Class<O>): Converter<I, O>? {
+		// TODO: cleanup
         if (inputClass == outputClass)
             return identity<O>(outputClass) as Converter<I, O>
 
@@ -240,7 +233,7 @@ class ConverterRegistry(library: Quasicord) : RegistryImpl<Converter<*, *>>("con
             }
         }
 
-        override fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O {
+        override suspend fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O {
             var result: Any? = input
             for (converter in converters) result = (converter as Converter<Any?, Any?>).convert(
                 interaction,

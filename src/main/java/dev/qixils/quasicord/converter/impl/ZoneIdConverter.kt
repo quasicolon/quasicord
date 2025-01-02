@@ -21,7 +21,7 @@ class ZoneIdConverter : Converter<String, ZoneId> {
     override val inputClass: Class<String> = String::class.java
 	override val outputClass: Class<ZoneId> = ZoneId::class.java
 
-    override fun convert(it: Interaction, input: String, targetClass: Class<out ZoneId>): ZoneId {
+    override suspend fun convert(it: Interaction, input: String, targetClass: Class<out ZoneId>): ZoneId {
         try {
             return ZoneId.of(input)
         } catch (_: Exception) {

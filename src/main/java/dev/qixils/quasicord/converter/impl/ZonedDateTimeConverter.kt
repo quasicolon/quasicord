@@ -21,15 +21,16 @@ class ZonedDateTimeConverter(private val library: Quasicord) : Converter<String,
     override val outputClass: Class<ZonedDateTime> = ZonedDateTime::class.java
     private val durationConverter: DurationConverter = DurationConverter(library)
 
-	override fun convert(
+	override suspend fun convert(
         interaction: Interaction,
         input: String,
         targetClass: Class<out ZonedDateTime?>
     ): ZonedDateTime {
         val config = library.databaseManager.getById(
+			"snowflake",
             interaction.user.idLong,
             TimeZoneConfig::class.java
-        ).block()
+        )
         val zone = config?.timeZone ?: ZoneOffset.UTC
         val now = ZonedDateTime.now(zone)
 

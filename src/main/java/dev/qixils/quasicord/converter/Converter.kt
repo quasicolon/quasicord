@@ -35,7 +35,7 @@ interface Converter<I, O> {
      * @param targetClass the class to convert to
      * @return converted value
      */
-    fun convert(interaction: Interaction, input: I, targetClass: Class<out O>): O
+    suspend fun convert(interaction: Interaction, input: I, targetClass: Class<out O>): O
 
     /**
      * Converts an input to the output type.
@@ -45,7 +45,7 @@ interface Converter<I, O> {
      * @return converted value
      */
     @NonExtendable
-    fun convert(interaction: Interaction, input: I): O {
+	suspend fun convert(interaction: Interaction, input: I): O {
         return convert(interaction, input, this.outputClass)
     }
 

@@ -6,7 +6,6 @@
 package dev.qixils.quasicord.db.collection
 
 import dev.qixils.quasicord.db.CollectionName
-import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.codecs.pojo.annotations.BsonProperty
 import org.jetbrains.annotations.ApiStatus
 import java.time.ZoneId
@@ -29,7 +28,7 @@ data class TimeZoneConfig
      *
      * @return snowflake/ID
      */
-    @BsonId val id: Long,
+    val snowflake: Long,
     /**
      * Gets the timezone of this config.
      *

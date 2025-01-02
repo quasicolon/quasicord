@@ -24,20 +24,20 @@ class ConverterImpl<I, O>(
          * @param targetClass the class to convert to
          * @return converted value
          */
-        fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O
+        suspend fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O
     }
 
     constructor(
         inputClass: Class<I>,
         outputClass: Class<O>,
-        converter: (Interaction, I) -> O,
+        converter: suspend (Interaction, I) -> O,
     ) : this(
         inputClass,
         outputClass,
         ConverterImplStep { ctx, i, t -> converter.invoke(ctx, i) }
 	)
 
-    override fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O {
+    override suspend fun convert(interaction: Interaction, input: I, targetClass: Class<out O?>): O {
         return converter.convert(interaction, input, targetClass)
     }
 

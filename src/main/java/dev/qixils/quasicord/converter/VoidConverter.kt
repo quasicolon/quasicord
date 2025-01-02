@@ -11,7 +11,7 @@ import net.dv8tion.jda.api.interactions.Interaction
  * An interface for converting an interaction to a different type.
  */
 interface VoidConverter<O> : Converter<Void?, O> {
-    override fun convert(interaction: Interaction, input: Void?, targetClass: Class<out O?>): O {
+    override suspend fun convert(interaction: Interaction, input: Void?, targetClass: Class<out O?>): O {
         return convert(interaction)
     }
 
@@ -21,5 +21,5 @@ interface VoidConverter<O> : Converter<Void?, O> {
      * @param interaction the interaction being invoked
      * @return converted value
      */
-    fun convert(interaction: Interaction): O
+    suspend fun convert(interaction: Interaction): O
 }

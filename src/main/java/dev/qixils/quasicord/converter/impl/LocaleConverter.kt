@@ -22,18 +22,16 @@ class LocaleConverter(private val library: Quasicord) : Converter<String, Locale
     override val inputClass: Class<String> = String::class.java
 	override val outputClass: Class<Locale> = Locale::class.java
 
-    override fun convert(it: Interaction, input: String, targetClass: Class<out Locale>): Locale {
+    override suspend fun convert(it: Interaction, input: String, targetClass: Class<out Locale>): Locale {
         try {
             return Locale.Builder().setLanguageTag(input).build()
         } catch (_: IllformedLocaleException) {
-            val userLocale = library.localeProvider.forInteraction(it).block() // TODO: async?? :(
-            if (userLocale != null) {
-                val localLowVal = input.lowercase(userLocale)
-                val localMatch = Locale.availableLocales()
-                    .filter { l: Locale? -> l!!.getDisplayName(userLocale).lowercase(userLocale) == localLowVal }
-                    .findFirst()
-                if (localMatch.isPresent) return localMatch.get()
-            }
+            val userLocale = library.localeProvider.forInteraction(it)
+			val localLowVal = input.lowercase(userLocale)
+			val localMatch = Locale.availableLocales()
+				.filter { l -> l.getDisplayName(userLocale).lowercase(userLocale) == localLowVal }
+				.findAny()
+			if (localMatch.isPresent) return localMatch.get()
 
             val engLowVal = input.lowercase()
             val engMatch = Locale.availableLocales()
