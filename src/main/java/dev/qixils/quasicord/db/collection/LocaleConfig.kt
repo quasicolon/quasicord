@@ -7,6 +7,7 @@ package dev.qixils.quasicord.db.collection
 
 import dev.qixils.quasicord.db.CollectionName
 import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.codecs.pojo.annotations.BsonProperty
 import org.bson.types.ObjectId
 import org.jetbrains.annotations.ApiStatus
 import java.util.*
@@ -41,17 +42,9 @@ data class LocaleConfig @ApiStatus.Internal constructor(
 	 *
 	 * @return language code
 	 */
-	val languageCode: String, // TODO: codec
+	@BsonProperty("languageCode")
+	val language: Locale,
 ) {
-
-    /**
-     * Constructs a new LocaleConfig entry.
-     *
-     * @param snowflake    the object's snowflake ID
-     * @param entryType    the type of entry
-     * @param languageCode the object's configured language code
-     */
-    constructor(snowflake: Long, entryType: EntryType, languageCode: String) : this(ObjectId.get(), snowflake, entryType, languageCode)
 
     /**
      * Constructs a new LocaleConfig entry.
@@ -60,7 +53,7 @@ data class LocaleConfig @ApiStatus.Internal constructor(
      * @param entryType the type of entry
      * @param language  the object's configured language
      */
-    constructor(snowflake: Long, entryType: EntryType, language: Locale) : this(snowflake, entryType, language.toLanguageTag())
+    constructor(snowflake: Long, entryType: EntryType, language: Locale) : this(ObjectId.get(), snowflake, entryType, language)
 
     /**
      * A type of entry used to distinguish between snowflake IDs of users, channels, and guilds.

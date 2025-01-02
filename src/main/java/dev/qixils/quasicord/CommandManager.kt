@@ -5,6 +5,8 @@
  */
 package dev.qixils.quasicord
 
+import dev.minn.jda.ktx.coroutines.await
+import dev.minn.jda.ktx.messages.reply_
 import dev.qixils.quasicord.cogs.Command
 import dev.qixils.quasicord.cogs.SlashCommand
 import dev.qixils.quasicord.decorators.AnnotationParser
@@ -104,7 +106,7 @@ class CommandManager(library: Quasicord) {
     }
 
     @SubscribeEvent
-    fun onCommandInteraction(event: GenericCommandInteractionEvent) {
+    suspend fun onCommandInteraction(event: GenericCommandInteractionEvent) {
         val guildId = if (event.guild == null) event.guild!!.id else null
         val command = getCommand(event.fullCommandName, guildId)
         if (command == null) {
@@ -129,12 +131,11 @@ class CommandManager(library: Quasicord) {
     }
 
     companion object {
-        private fun sendEphemeral(event: IReplyCallback, text: Text) {
-            text.asString(Context.fromInteraction(event)).subscribe { string: String? ->
-                event.reply(
-                    string!!
-                ).setEphemeral(true).queue()
-            }
+        private suspend fun sendEphemeral(event: IReplyCallback, text: Text) {
+			event.reply_(
+				text.asString(Context.fromInteraction(event)),
+				ephemeral = true,
+			).await()
         }
     }
 }

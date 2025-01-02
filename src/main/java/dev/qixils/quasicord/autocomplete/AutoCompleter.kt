@@ -7,7 +7,6 @@ package dev.qixils.quasicord.autocomplete
 
 import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback
 import net.dv8tion.jda.api.interactions.commands.Command
-import reactor.core.publisher.Flux
 
 /**
  * An object which supplies auto-complete suggestions for [IAutoCompleteCallback]s.
@@ -20,5 +19,5 @@ interface AutoCompleter {
      * @param event event to get suggestions for
      * @return list of suggestions
      */
-    fun getSuggestions(event: IAutoCompleteCallback): Flux<Command.Choice>
+    suspend fun getSuggestions(event: IAutoCompleteCallback): List<Command.Choice>
 }

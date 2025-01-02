@@ -5,18 +5,22 @@
  */
 package dev.qixils.quasicord.locale
 
+import dev.minn.jda.ktx.util.SLF4J
+import dev.minn.jda.ktx.util.SLF4J.getValue
 import dev.qixils.quasicord.db.DatabaseManager
 import dev.qixils.quasicord.db.collection.LocaleConfig
+import dev.qixils.quasicord.extensions.distinct
 import dev.qixils.quasicord.locale.Context.Companion.fromInteraction
 import dev.qixils.quasicord.locale.LocaleProvider.Companion.instance
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
 import net.dv8tion.jda.api.entities.Guild
 import net.dv8tion.jda.api.entities.ISnowflake
 import net.dv8tion.jda.api.entities.User
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
-import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.Interaction
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.util.*
@@ -31,14 +35,14 @@ open class LocaleProvider
  * @param defaultLocale the default locale to use for [.forContext]
  * if no applicable locale is found
  * @param db            the database to search for locale configurations in
- */(
+ */private constructor(
 	/**
 	 * Returns the bot's default [Locale].
 	 *
 	 * @return the bot's default [Locale]
 	 */
 	val defaultLocale: Locale,
-	private val db: DatabaseManager,
+	private val db: DatabaseManager?,
 ) {
 	// generic
 	/**
@@ -49,15 +53,17 @@ open class LocaleProvider
 	 * @param type the type of the object to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	open fun forObject(id: Long, type: LocaleConfig.EntryType): Mono<Locale> {
-		return Mono.from(
-			db.getAllByEquals(
-				mapOf(
-					"id" to id,
-					"entryType" to type,
-				), LocaleConfig::class.java
-			)
-		).map { config -> Locale.forLanguageTag(config.languageCode) }
+	open suspend fun forObject(id: Long, type: LocaleConfig.EntryType): Locale? {
+		if (db == null) return defaultLocale
+		// TODO: short ~1min cache to avoid spamming DB calls when invoking a command or whatever.
+		//   where should it go, in the database layer?
+		//   i think we could make a new class like DatabaseCollection,
+		//   migrate all the getAllBy and whatnot into there (cleaning up a ton of overloads in the process),
+		//   and then make like a CachedDatabaseCollection which wraps a DatabaseCollection with a cache for some queries
+		//   of specified duration
+		//   i suppose in practice this means migrating everything to call the getAllBy(Bson) function,
+		//   then overriding that function to first check a cache
+		return db.getAllByEquals<LocaleConfig>(mapOf("snowflake" to id, "entryType" to type)).singleOrNull()?.language
 	}
 
 	/**
@@ -68,7 +74,7 @@ open class LocaleProvider
 	 * @param type the type of the object to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forObject(id: String, type: LocaleConfig.EntryType): Mono<Locale> {
+	suspend fun forObject(id: String, type: LocaleConfig.EntryType): Locale? {
 		return forObject(id.toLong(), type)
 	}
 
@@ -80,7 +86,7 @@ open class LocaleProvider
 	 * @param type   the type of the object to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forObject(`object`: ISnowflake, type: LocaleConfig.EntryType): Mono<Locale> {
+	suspend fun forObject(`object`: ISnowflake, type: LocaleConfig.EntryType): Locale? {
 		return forObject(`object`.idLong, type)
 	}
 
@@ -92,7 +98,7 @@ open class LocaleProvider
 	 * @param userId the id of the user to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forUser(userId: Long): Mono<Locale> {
+	suspend fun forUser(userId: Long): Locale? {
 		return forObject(userId, LocaleConfig.EntryType.USER)
 	}
 
@@ -103,7 +109,7 @@ open class LocaleProvider
 	 * @param userId the id of the user to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forUser(userId: String): Mono<Locale> {
+	suspend fun forUser(userId: String): Locale? {
 		return forUser(userId.toLong())
 	}
 
@@ -114,7 +120,7 @@ open class LocaleProvider
 	 * @param user the user to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forUser(user: User): Mono<Locale> {
+	suspend fun forUser(user: User): Locale? {
 		return forUser(user.idLong)
 	}
 
@@ -125,8 +131,8 @@ open class LocaleProvider
 	 * @param context the context to get the user from
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forUser(context: Context): Mono<Locale> {
-		return if (context.user == 0L) Mono.empty<Locale>() else forUser(context.user)
+	suspend fun forUser(context: Context): Locale? {
+		return if (context.user == 0L) null else forUser(context.user)
 	}
 
 	// channel
@@ -137,7 +143,7 @@ open class LocaleProvider
 	 * @param channelId the id of the channel to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forChannel(channelId: Long): Mono<Locale> {
+	suspend fun forChannel(channelId: Long): Locale? {
 		return forObject(channelId, LocaleConfig.EntryType.CHANNEL)
 	}
 
@@ -148,7 +154,7 @@ open class LocaleProvider
 	 * @param channelId the id of the channel to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forChannel(channelId: String): Mono<Locale> {
+	suspend fun forChannel(channelId: String): Locale? {
 		return forChannel(channelId.toLong())
 	}
 
@@ -159,7 +165,7 @@ open class LocaleProvider
 	 * @param channel the channel to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forChannel(channel: MessageChannel): Mono<Locale> {
+	suspend fun forChannel(channel: MessageChannel): Locale? {
 		return forChannel(channel.idLong)
 	}
 
@@ -170,8 +176,8 @@ open class LocaleProvider
 	 * @param context the context to get the channel from
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forChannel(context: Context): Mono<Locale> {
-		return if (context.channel == 0L) Mono.empty<Locale>() else forChannel(context.channel)
+	suspend fun forChannel(context: Context): Locale? {
+		return if (context.channel == 0L) null else forChannel(context.channel)
 	}
 
 	// guild
@@ -182,7 +188,7 @@ open class LocaleProvider
 	 * @param guildId the id of the guild to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forGuild(guildId: Long): Mono<Locale> {
+	suspend fun forGuild(guildId: Long): Locale? {
 		return forObject(guildId, LocaleConfig.EntryType.GUILD)
 	}
 
@@ -193,7 +199,7 @@ open class LocaleProvider
 	 * @param guildId the id of the guild to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forGuild(guildId: String): Mono<Locale> {
+	suspend fun forGuild(guildId: String): Locale? {
 		return forGuild(guildId.toLong())
 	}
 
@@ -204,7 +210,7 @@ open class LocaleProvider
 	 * @param guild the guild to get the locale for
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forGuild(guild: Guild): Mono<Locale> {
+	suspend fun forGuild(guild: Guild): Locale? {
 		return forGuild(guild.idLong)
 	}
 
@@ -215,8 +221,8 @@ open class LocaleProvider
 	 * @param context the context to get the guild from
 	 * @return a [Mono] that may emit a [Locale]
 	 */
-	fun forGuild(context: Context): Mono<Locale> {
-		return if (context.guild == 0L) Mono.empty() else forGuild(context.guild)
+	suspend fun forGuild(context: Context): Locale? {
+		return if (context.guild == 0L) null else forGuild(context.guild)
 	}
 
 	// misc
@@ -235,21 +241,13 @@ open class LocaleProvider
 	 * @param context the [Context] to get the [Locale] for
 	 * @return a [Mono] that will emit the [Locale] corresponding to the given [Context]
 	 */
-	fun forContext(context: Context): Mono<Locale> {
-		val user = forUser(context)
-		val userLocale = Mono.justOrEmpty<DiscordLocale>(context.userLocale)
-			.map { locale -> Locale.forLanguageTag(locale.locale) }
-		val channel = forChannel(context)
-		val guild = forGuild(context)
-		val guildLocale = Mono.justOrEmpty<DiscordLocale>(context.guildLocale)
-			.map { locale: DiscordLocale -> Locale.forLanguageTag(locale.locale) }
-		val defaultLocale = Mono.just(defaultLocale)
-		return user
-			.switchIfEmpty(userLocale)
-			.switchIfEmpty(channel)
-			.switchIfEmpty(guild)
-			.switchIfEmpty(guildLocale)
-			.switchIfEmpty(defaultLocale)
+	suspend fun forContext(context: Context): Locale {
+		return forUser(context)
+			?: context.userLocale?.toLocale()
+			?: forChannel(context)
+			?: forGuild(context)
+			?: context.guildLocale?.toLocale()
+			?: defaultLocale
 	}
 
 	/**
@@ -267,7 +265,7 @@ open class LocaleProvider
 	 * @param interaction the [Interaction] to get the [Locale] for
 	 * @return a [Mono] that will emit the [Locale] corresponding to the given [Interaction]
 	 */
-	fun forInteraction(interaction: Interaction): Mono<Locale> {
+	suspend fun forInteraction(interaction: Interaction): Locale {
 		return forContext(fromInteraction(interaction))
 	}
 
@@ -277,28 +275,25 @@ open class LocaleProvider
 	 * @param context the [Context] to get the [Locale]s for
 	 * @return a [Flux] that will emit all [Locale]s that are configured for the given [Context]
 	 */
-	fun allForContext(context: Context): Flux<Locale> {
-		val user = forUser(context)
-		val userLocale = Mono.justOrEmpty<DiscordLocale>(context.userLocale)
-			.map { locale -> Locale.forLanguageTag(locale.locale) }
-		val channel = forChannel(context)
-		val guild = forGuild(context)
-		val guildLocale = Mono.justOrEmpty<DiscordLocale>(context.guildLocale)
-			.map { locale -> Locale.forLanguageTag(locale.locale) }
-		val defaultLocale = Mono.just(defaultLocale)
-		return Flux.concat(user, userLocale, channel, guild, guildLocale, defaultLocale).distinct()
-	}
-
-	private class DummyLocaleProvider(defaultLocale: Locale) : LocaleProvider(defaultLocale, null as DatabaseManager) {
-		override fun forObject(id: Long, type: LocaleConfig.EntryType): Mono<Locale> {
-			return Mono.just(defaultLocale)
+	fun allForContext(context: Context): Flow<Locale> {
+		return flow {
+			coroutineScope {
+				val user = async { forUser(context) }
+				val userLocale = async { context.userLocale?.toLocale() }
+				val channel = async { forChannel(context) }
+				val guild = async { forGuild(context) }
+				val guildLocale = async { context.guildLocale?.toLocale() }
+				flowOf(user, userLocale, channel, guild, guildLocale)
+					.mapNotNull { it.await() }
+					.distinct()
+					.collect { emit(it) }
+			}
 		}
 	}
 
 	companion object {
-		// TODO: cache in RAM (can be forever while the bot is still small and then we can add a timeout later)
-		private val logger: Logger = LoggerFactory.getLogger(LocaleProvider::class.java)
-		private val DUMMY_INSTANCE: LocaleProvider = DummyLocaleProvider(Locale.ROOT)
+		private val logger: Logger by SLF4J
+		private val DUMMY_INSTANCE: LocaleProvider = LocaleProvider(Locale.ROOT, null)
 		private var INSTANCE: LocaleProvider = DUMMY_INSTANCE
 
 		// instance management
@@ -322,5 +317,14 @@ open class LocaleProvider
 			set(instance) {
 				INSTANCE = instance
 			}
+
+		/**
+		 * Initializes the locale provider with the provided locale and database.
+		 *
+		 * @param defaultLocale the default locale to use for [LocaleProvider.forContext]
+		 * if no applicable locale is found
+		 * @param db            the database to search for locale configurations in
+		 */
+		fun create(defaultLocale: Locale, db: DatabaseManager): LocaleProvider = LocaleProvider(defaultLocale, db)
 	}
 }

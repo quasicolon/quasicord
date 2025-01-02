@@ -5,7 +5,6 @@
  */
 package dev.qixils.quasicord.decorators
 
-import dev.qixils.quasicord.autocomplete.AutoCompleter
 import dev.qixils.quasicord.autocomplete.AutoCompleterFrom
 import dev.qixils.quasicord.cogs.SlashCommand
 import dev.qixils.quasicord.cogs.SlashCommandDataBranch
@@ -26,16 +25,19 @@ import net.dv8tion.jda.api.interactions.Interaction
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.OptionType
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import java.lang.reflect.Method
 import java.util.*
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.findAnnotations
 
 internal class ParserSlashCommand(
 	override val name: String,
 	parser: AnnotationParser,
-	i18n: TranslationProvider,
-	branch: SlashCommandDataBranch,
-	`object`: Any?,
-	method: Method,
+	private val i18n: TranslationProvider,
+	override val branch: SlashCommandDataBranch,
+	private val obj: Any?,
+	private val method: KFunction<*>,
 	guildId: String?
 ) : ParserCommand<SlashCommandInteractionEvent>(
     parser,
@@ -43,29 +45,21 @@ internal class ParserSlashCommand(
     SlashCommandInteractionEvent::class.java,
     guildId
 ), SlashCommand {
-    private val i18n: TranslationProvider
-    override val branch: SlashCommandDataBranch
     private val converters: Array<ConverterData>
-    private val obj: Any?
-    private val method: Method
 
     init {
         val commandManager = parser.commandManager
-        this.i18n = i18n
         val namespace = i18n.namespace
-        this.branch = branch
-        this.obj = `object`
-        this.method = method
 
         // parameters
-        val tempConverters = arrayOfNulls<ConverterData>(method.parameterCount)
-        for (i in 0 ..< method.parameterCount) {
+        val tempConverters = arrayOfNulls<ConverterData>(method.parameters.size)
+        for (i in 0 ..< method.parameters.size) {
             // set converter
             val parameter = method.parameters[i]
-            val contextual = parameter.getAnnotation(Contextual::class.java)
-            val option = parameter.getAnnotation(Option::class.java)
+            val contextual = parameter.findAnnotation<Contextual>()
+            val option = parameter.findAnnotation<Option>()
             require(!(contextual != null && option != null)) { "Cannot have both @Contextual and @Option on the same parameter" }
-            val convertWith = parameter.getAnnotation(ConvertWith::class.java)
+            val convertWith = parameter.findAnnotation<ConvertWith>()
 
             // converter data
             val converter: Converter<*, *>?
@@ -74,23 +68,23 @@ internal class ParserSlashCommand(
             if (convertWith != null) {
                 converter = createConverter(convertWith.value.java)
             } else if (contextual != null) {
-                if (Interaction::class.java.isAssignableFrom(parameter.getType()))
+                if (Interaction::class.java.isAssignableFrom(parameter.javaClass))
 					converter = VoidConverterImpl(Interaction::class.java) { it }
 				else {
                     converter = commandManager.library.rootRegistry.converterRegistry.findConverter(
                         Void::class.java,
-                        parameter.getType()
+                        parameter.javaClass
                     )
                     requireNotNull(converter) {
-                        "No converter found for parameter " + parameter.name + " of type " + parameter.getType().getName()
+                        "No converter found for parameter " + parameter.name + " of type " + parameter.javaClass.getName()
                     }
                 }
             } else if (option != null) {
-                val inputClass = parseInputClass(parameter.getType(), option.type)
+                val inputClass = parseInputClass(parameter.javaClass, option.type)
                 converter =
-                    commandManager.library.rootRegistry.converterRegistry.findConverter(inputClass, parameter.getType())
+                    commandManager.library.rootRegistry.converterRegistry.findConverter(inputClass, parameter.javaClass)
                 requireNotNull(converter) {
-                    "No converter found for parameter " + parameter.name + " of type " + parameter.getType().getName()
+                    "No converter found for parameter " + parameter.name + " of type " + parameter.javaClass.getName()
                 }
             } else {
                 throw IllegalArgumentException("Parameters must be annotated with @Contextual or @Option")
@@ -100,11 +94,11 @@ internal class ParserSlashCommand(
                 // register option
                 val optId: String? = option.value
                 val fullOptId = "$name.options.$optId"
-                val acWith = parameter.getAnnotation(AutoCompleteWith::class.java)
-                val acFrom = parameter.getAnnotation(AutoCompleteFrom::class.java)
-                val range = parameter.getAnnotation(Range::class.java)
-                val channelTypes = parameter.getAnnotation(ChannelTypes::class.java)
-                val choices = parameter.getAnnotationsByType(Choice::class.java)
+                val acWith = parameter.findAnnotation<AutoCompleteWith>()
+                val acFrom = parameter.findAnnotation<AutoCompleteFrom>()
+                val range = parameter.findAnnotation<Range>()
+                val channelTypes = parameter.findAnnotation<ChannelTypes>()
+                val choices = parameter.findAnnotations<Choice>()
 
                 // name
                 val optName = i18n.getSingle("$name.options.$optId.name", i18n.defaultLocale)
@@ -142,9 +136,9 @@ internal class ParserSlashCommand(
                 if (channelTypes != null) opt.setChannelTypes(*channelTypes.value)
 
                 // choices
-                if (choices.size > 0) {
+                if (choices.isNotEmpty()) {
                     require(opt.type.canSupportChoices()) { "Cannot use @Choice on option of type " + option.type }
-                    opt.addChoices(*createChoices(choices, option.type, "$name.options.$optId.choices."))
+                    opt.addChoices(createChoices(choices, option.type, "$name.options.$optId.choices."))
                 }
 
                 // auto complete
@@ -156,8 +150,8 @@ internal class ParserSlashCommand(
                     val autoCompleter = parser.registerAutoCompleter(acWith.value.java)
                     parser.putAutoCompleter(fullOptId, autoCompleter)
                 } else if (acFrom != null) {
-                    val autocompletes = createChoices(acFrom.value, option.type, "$fullOptId.choices.")
-                    val autoCompleter: AutoCompleter = AutoCompleterFrom(*autocompletes)
+                    val autocompletes = createChoices(acFrom.value.asList(), option.type, "$fullOptId.choices.")
+                    val autoCompleter = AutoCompleterFrom(autocompletes)
                     parser.putAutoCompleter(fullOptId, autoCompleter)
                 }
 
@@ -166,7 +160,7 @@ internal class ParserSlashCommand(
                 else branch.root.addOptions(opt)
             }
 
-			tempConverters[i] = ConverterData(converter, optNameStr, parameter.getType())
+			tempConverters[i] = ConverterData(converter, optNameStr, parameter.javaClass)
         }
 		converters = tempConverters.filterNotNull().toTypedArray()
     }
@@ -174,7 +168,7 @@ internal class ParserSlashCommand(
     override val discordName: String
         get() = branch.name
 
-    override fun accept(interaction: SlashCommandInteractionEvent) {
+    override suspend fun accept(interaction: SlashCommandInteractionEvent) {
         // note: this has no try/catch because that is being handled at an even higher level than this
 
         // fetch args
@@ -218,7 +212,8 @@ internal class ParserSlashCommand(
 
         // invoke and handle
         try {
-            consumeCommandResult(interaction, method.invoke(obj, *args))
+			method.call()
+            consumeCommandResult(interaction, method.callSuspend(obj, *args))
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
@@ -256,10 +251,10 @@ internal class ParserSlashCommand(
     }
 
     private fun createChoices(
-        choices: Array<out Choice>,
-        optionType: OptionType?,
-        rootKey: String?
-    ): Array<Command.Choice?> {
+		choices: List<Choice>,
+		optionType: OptionType?,
+		rootKey: String?
+    ): List<Command.Choice> {
         require(choices.size <= OptionData.MAX_CHOICES) { "Cannot have more than " + OptionData.MAX_CHOICES + " choices" }
         val jdaChoices = arrayOfNulls<Command.Choice>(choices.size)
         for (i in choices.indices) {
@@ -272,6 +267,6 @@ internal class ParserSlashCommand(
             else if (optionType == OptionType.NUMBER) jdaChoices[i] = Command.Choice(name.get(), choice.numberValue)
             else error("Cannot use @Choice on option of type $optionType")
         }
-        return jdaChoices
+        return jdaChoices.filterNotNull()
     }
 }

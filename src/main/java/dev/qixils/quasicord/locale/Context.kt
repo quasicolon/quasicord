@@ -10,7 +10,6 @@ import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
 import net.dv8tion.jda.api.interactions.DiscordLocale
 import net.dv8tion.jda.api.interactions.Interaction
-import reactor.core.publisher.Mono
 import java.util.*
 
 /**
@@ -25,7 +24,7 @@ interface Context {
      * @param localeProvider the locale provider
      * @return the locale to use for localizing a response message
      */
-    fun locale(localeProvider: LocaleProvider): Mono<out Locale> {
+    suspend fun locale(localeProvider: LocaleProvider = LocaleProvider.instance): Locale {
         return localeProvider.forContext(this)
     }
 

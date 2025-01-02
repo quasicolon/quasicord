@@ -5,6 +5,9 @@
  */
 package dev.qixils.quasicord.decorators
 
+import dev.minn.jda.ktx.coroutines.await
+import dev.minn.jda.ktx.util.SLF4J
+import dev.minn.jda.ktx.util.SLF4J.getValue
 import dev.qixils.quasicord.CommandManager
 import dev.qixils.quasicord.autocomplete.AutoCompleter
 import dev.qixils.quasicord.cogs.Command
@@ -20,11 +23,11 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.hooks.SubscribeEvent
 import net.dv8tion.jda.api.interactions.commands.DefaultMemberPermissions
 import net.dv8tion.jda.api.interactions.commands.build.*
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.lang.reflect.AnnotatedElement
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
+import kotlin.reflect.KAnnotatedElement
+import kotlin.reflect.KFunction
+import kotlin.reflect.KVisibility
+import kotlin.reflect.full.declaredMemberFunctions
+import kotlin.reflect.full.findAnnotation
 
 class AnnotationParser(val commandManager: CommandManager) {
     private val autoCompleters: MutableMap<Class<out AutoCompleter?>?, AutoCompleter> =
@@ -37,8 +40,8 @@ class AnnotationParser(val commandManager: CommandManager) {
 
     private fun createContextCommandData(
         annotation: ContextCommand,
-        owner: AnnotatedElement,
-        parent: AnnotatedElement?
+        owner: KAnnotatedElement,
+        parent: KAnnotatedElement?
     ): CommandData {
         val id = annotation.value
         val namespace = getNamespace(owner, parent)
@@ -50,22 +53,21 @@ class AnnotationParser(val commandManager: CommandManager) {
         command.setNameLocalizations(i18n.getDiscordTranslations("$id.name"))
 
         // default permissions
-        val perms = owner.getAnnotation<DefaultPermissions?>(DefaultPermissions::class.java)
-        if (perms != null) {
-            val value = perms.value
+		owner.findAnnotation<DefaultPermissions>()?.let {
+			val value = it.value
 			command.defaultPermissions = if (value.isEmpty())
 				DefaultMemberPermissions.DISABLED
 			else
 				DefaultMemberPermissions.enabledFor(*value)
-        }
+		}
 
         return command
     }
 
     private fun createSlashCommandData(
         annotation: SlashCommand,
-        owner: AnnotatedElement,
-        parent: AnnotatedElement?
+        owner: KAnnotatedElement,
+        parent: KAnnotatedElement?
     ): SlashCommandData {
         val id: String? = annotation.value
         val namespace = getNamespace(owner, parent)
@@ -79,14 +81,13 @@ class AnnotationParser(val commandManager: CommandManager) {
         command.setDescriptionLocalizations(i18n.getDiscordTranslations("$id.description"))
 
         // default permissions
-        val perms = owner.getAnnotation<DefaultPermissions?>(DefaultPermissions::class.java)
-        if (perms != null) {
-            val value = perms.value
+		owner.findAnnotation<DefaultPermissions>()?.let {
+			val value = it.value
 			command.defaultPermissions = if (value.isEmpty())
 				DefaultMemberPermissions.DISABLED
 			else
 				DefaultMemberPermissions.enabledFor(*value)
-        }
+		}
 
         return command
     }
@@ -94,8 +95,8 @@ class AnnotationParser(val commandManager: CommandManager) {
     private fun createSlashSubCommandData(
         command: SlashCommandData,
         id: String,
-        owner: AnnotatedElement,
-        parent: AnnotatedElement?
+        owner: KAnnotatedElement,
+        parent: KAnnotatedElement?
     ): SlashCommandDataBranch {
         val parts = id.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         require(!(parts.size < 2 || parts.size > 3)) { "Subcommand ID " + id + " should be 2-3 parts long, not " + parts.size }
@@ -132,26 +133,23 @@ class AnnotationParser(val commandManager: CommandManager) {
         commandManager.library.jda.addEventListener(`object`)
         commandManager.library.eventDispatcher.registerListeners(`object`)
 
-        val parentClass: Class<*> = `object`.javaClass
-        val parentCommandData: SlashCommand? = parentClass.getAnnotation(SlashCommand::class.java)
-        val parentCommand =
-			if (parentCommandData == null) null
-        	else createSlashCommandData(parentCommandData, parentClass, null)
-        val parentGuild: Guild? = parentClass.getAnnotation(Guild::class.java)
+        val parentClass = `object`::class
+        val parentCommandData = parentClass.findAnnotation<SlashCommand>()
+        val parentCommand = parentCommandData?.let { createSlashCommandData(parentCommandData, parentClass, null) }
+        val parentGuild = parentClass.findAnnotation<Guild>()
 
         val commands: MutableList<Command<*>?> = ArrayList<Command<*>?>()
-        for (method in `object`.javaClass.getDeclaredMethods()) {
-            val contextAnnotation: ContextCommand? = method.getAnnotation(ContextCommand::class.java)
-            val slashAnnotation: SlashCommand? = method.getAnnotation(SlashCommand::class.java)
-            val slashSubAnnotation: SlashSubCommand? = method.getAnnotation(SlashSubCommand::class.java)
-            val guildId = (method.getAnnotation(Guild::class.java) ?: parentGuild)?.value
+        for (method in `object`::class.declaredMemberFunctions) {
+            val contextAnnotation = method.findAnnotation<ContextCommand>()
+            val slashAnnotation = method.findAnnotation<SlashCommand>()
+            val slashSubAnnotation = method.findAnnotation<SlashSubCommand>()
+            val guildId = (method.findAnnotation<Guild>() ?: parentGuild)?.value
 
             val nonnull = listOfNotNull(contextAnnotation, slashAnnotation, slashSubAnnotation).count()
             if (nonnull == 0) continue
             require(nonnull <= 1) { "Cannot have multiple of @ContextCommand, @SlashCommand, and @SlashSubCommand on the same method" }
 
-            require(Modifier.isPublic(method.modifiers)) { "Command method must be public" }
-            require(!Modifier.isStatic(method.modifiers)) { "Decorator methods must not be static" }
+			require(method.visibility == KVisibility.PUBLIC) { "Command method must be public" }
 
             try {
                 if (contextAnnotation != null) commands.add(
@@ -189,47 +187,45 @@ class AnnotationParser(val commandManager: CommandManager) {
         return commands
     }
 
-    private fun getNamespace(vararg objects: AnnotatedElement?): String {
+    private fun getNamespace(vararg objects: KAnnotatedElement?): String {
 		for (obj in objects) {
-			if (obj != null && obj.isAnnotationPresent(Namespace::class.java)) {
-				return obj.getAnnotation<Namespace?>(Namespace::class.java).value
-			}
+			obj?.findAnnotation<Namespace>()?.let { return@getNamespace it.value }
 		}
         return commandManager.library.namespace
     }
 
     private fun parseContextCommand(
         `object`: Any,
-        method: Method,
+        method: KFunction<*>,
         annotation: ContextCommand,
         guildId: String?
     ): Command<GenericContextInteractionEvent<*>> {
-        val command = createContextCommandData(annotation, method, `object`.javaClass)
+        val command = createContextCommandData(annotation, method, `object`::class)
         return ParserContextCommand(annotation.value, this, command, `object`, method, guildId)
     }
 
     private fun parseSlashCommand(
         `object`: Any,
-        method: Method,
+        method: KFunction<*>,
         annotation: SlashCommand,
         guildId: String?
     ): Command<SlashCommandInteractionEvent> {
-        val i18n = getInstance(getNamespace(method, `object`.javaClass))
-        val command = createSlashCommandData(annotation, method, `object`.javaClass)
+        val i18n = getInstance(getNamespace(method, `object`::class))
+        val command = createSlashCommandData(annotation, method, `object`::class)
         val branch: SlashCommandDataBranch = SlashCommandDataBranchImpl(command, null, null)
         return ParserSlashCommand(annotation.value, this, i18n, branch, `object`, method, guildId)
     }
 
     private fun parseSlashSubCommand(
         `object`: Any,
-        method: Method,
+        method: KFunction<*>,
         command: SlashCommandData,
         parent: SlashCommand,
         annotation: SlashSubCommand
     ): Command<SlashCommandInteractionEvent> {
-        val i18n = getInstance(getNamespace(method, `object`.javaClass))
+        val i18n = getInstance(getNamespace(method, `object`::class))
         val id = parent.value + '.' + annotation.value
-        val branch = createSlashSubCommandData(command, id, method, `object`.javaClass)
+        val branch = createSlashSubCommandData(command, id, method, `object`::class)
         return ParserSlashCommand(id, this, i18n, branch, `object`, method, null)
     }
 
@@ -244,11 +240,10 @@ class AnnotationParser(val commandManager: CommandManager) {
                 }
             } else if (constructor.parameterCount == 1) {
                 val argClass = constructor.parameterTypes[0]
-                // get arg to construct with
-                val arg: Any?
-                if (argClass.isAssignableFrom(commandManager.library.javaClass)) arg = commandManager.library
-                else if (argClass.isAssignableFrom(commandManager.javaClass)) arg = commandManager
-                else throw IllegalArgumentException("Auto-completer constructor must take Quasicord as an argument")
+				// get arg to construct with
+				val arg = if (argClass.isAssignableFrom(commandManager.library.javaClass)) commandManager.library
+				else if (argClass.isAssignableFrom(commandManager.javaClass)) commandManager
+				else throw IllegalArgumentException("Auto-completer constructor must take Quasicord as an argument")
                 // construct
                 try {
                     return constructor.newInstance(arg) as AutoCompleter
@@ -262,8 +257,8 @@ class AnnotationParser(val commandManager: CommandManager) {
         throw IllegalArgumentException("Auto-completer must have a no-arg or Quasicord constructor")
     }
 
-    fun registerAutoCompleter(autoCompleter: Class<out AutoCompleter?>?): AutoCompleter {
-        return autoCompleters.computeIfAbsent(autoCompleter) { completerClass: Class<out AutoCompleter?>? ->
+    fun registerAutoCompleter(autoCompleter: Class<out AutoCompleter>): AutoCompleter {
+        return autoCompleters.computeIfAbsent(autoCompleter) { completerClass ->
             this.createAutoCompleter(
                 completerClass!!
             )
@@ -275,7 +270,7 @@ class AnnotationParser(val commandManager: CommandManager) {
     }
 
     @SubscribeEvent
-    fun onAutoComplete(event: CommandAutoCompleteInteractionEvent) {
+    suspend fun onAutoComplete(event: CommandAutoCompleteInteractionEvent) {
         // TODO: move to Command class maybe>?? also just like cleanup i think
         val guildId = if (event.guild != null) event.guild!!.id else null
         val command = commandManager.getCommand(event.fullCommandName, guildId)
@@ -293,15 +288,15 @@ class AnnotationParser(val commandManager: CommandManager) {
             return
         }
 
-        completer.getSuggestions(event).collectList().subscribe(
-            { suggestions: List<net.dv8tion.jda.api.interactions.commands.Command.Choice> ->
-                event.replyChoices(suggestions).queue()
-            },
-            { e: Throwable -> logger.error("Autocompleter threw exception handling {}", event, e) }
-        )
+		try {
+			val suggestions = completer.getSuggestions(event)
+			event.replyChoices(suggestions).await()
+		} catch (e: Exception) {
+			logger.error("Autocompleter threw exception handling {}", event, e)
+		}
     }
 
     companion object {
-        private val logger: Logger = LoggerFactory.getLogger(AnnotationParser::class.java)
+        private val logger by SLF4J
     }
 }

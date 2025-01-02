@@ -8,13 +8,10 @@ package dev.qixils.quasicord.text
 import dev.qixils.quasicord.Key
 import dev.qixils.quasicord.locale.Context
 import dev.qixils.quasicord.locale.LocaleProvider
-import net.dv8tion.jda.api.entities.Message
-import net.dv8tion.jda.api.requests.restaction.MessageCreateAction
 import net.xyzsd.plurals.PluralRuleType
 import org.jetbrains.annotations.Contract
 import reactor.core.publisher.Mono
 import java.util.*
-import java.util.function.Function
 import java.util.function.Supplier
 
 /**
@@ -49,8 +46,8 @@ fun interface Text {
      * @return a [Mono] that will emit the localized string for this text
      * @see .asString
      */
-    fun asString(context: Context, localeProvider: LocaleProvider = LocaleProvider.instance): Mono<String?> {
-        return context.locale(localeProvider).map<String?>(Function { locale: Locale? -> this.asString(locale!!) })
+    suspend fun asString(context: Context, localeProvider: LocaleProvider = LocaleProvider.instance): String {
+        return asString(context.locale(localeProvider))
     }
 
     /**
@@ -60,33 +57,6 @@ fun interface Text {
      * @return localized string for this text
      */
     fun asString(locale: Locale): String
-
-    /**
-     * Fetches the localized string for this text according to the author information obtained from
-     * the provided [Message] and sends it as a reply to the provided message.
-     *
-     *
-     * When `directReply` is `false`, this will return a [MessageCreateAction]
-     * analogous to `message.getChannel().sendMessage(...)`. Otherwise, this will return a
-     * [MessageCreateAction] analogous to `message.reply(...)`.
-     *
-     * **Note:** Due to the usage of an asynchronous database operation, the returned
-     * [MessageCreateAction] may behave abnormally compared to what is generally expected from JDA.
-     * Namely, methods which set or append to the content of the [MessageCreateAction] may throw an
-     * [UnsupportedOperationException].
-     *
-     * @param message the [Message] to reply to
-     * @param directReply whether the message being sent should use Discord's reply feature
-     * @return a [MessageCreateAction] that will send the localized string for this text
-     */
-    fun sendAsReplyTo(message: Message, directReply: Boolean = true): MessageCreateAction {
-        val action: MessageCreateAction = TextMessageAction(
-            message.channel,
-            asString(Context.fromMessage(message))
-        )
-        if (directReply) action.setMessageReference(message)
-        return action
-    }
 
     companion object {
         // static constructors and builders

@@ -7,23 +7,22 @@ package dev.qixils.quasicord.autocomplete
 
 import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback
 import net.dv8tion.jda.api.interactions.commands.Command
-import reactor.core.publisher.Flux
 
 /**
  * An object which supplies pre-defined auto-complete suggestions for [IAutoCompleteCallback]s.
  */
 class AutoCompleterFrom : AutoCompleter {
-    private val choices: Flux<Command.Choice>
+    private val choices: List<Command.Choice>
 
-    constructor(choices: MutableList<Command.Choice?>) {
-        this.choices = Flux.fromIterable<Command.Choice?>(choices)
+    constructor(choices: List<Command.Choice>) {
+        this.choices = choices.toList()
     }
 
-    constructor(vararg choices: Command.Choice?) {
-        this.choices = Flux.fromArray<Command.Choice?>(choices)
+    constructor(vararg choices: Command.Choice) {
+        this.choices = choices.toList()
     }
 
-    override fun getSuggestions(event: IAutoCompleteCallback): Flux<Command.Choice> {
+    override suspend fun getSuggestions(event: IAutoCompleteCallback): List<Command.Choice> {
         return choices
     }
 }

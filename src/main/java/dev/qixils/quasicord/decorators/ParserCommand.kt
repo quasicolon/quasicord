@@ -10,12 +10,14 @@ import dev.qixils.quasicord.converter.Converter
 import dev.qixils.quasicord.locale.Context
 import dev.qixils.quasicord.text.Text
 import dev.qixils.quasicord.utils.QuasiMessage
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent
 import net.dv8tion.jda.api.interactions.commands.CommandInteraction
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
 import reactor.core.publisher.Mono
 import java.util.concurrent.CompletableFuture
-import java.util.function.Consumer
+import dev.minn.jda.ktx.coroutines.await as awaitAction
+import kotlinx.coroutines.future.await as awaitFuture
 
 internal abstract class ParserCommand<I : GenericCommandInteractionEvent> protected constructor(
     protected val parser: AnnotationParser,
@@ -53,24 +55,21 @@ internal abstract class ParserCommand<I : GenericCommandInteractionEvent> protec
 
     companion object {
         @JvmStatic
-		fun consumeCommandResult(interaction: CommandInteraction, result: Any?) {
+		suspend fun consumeCommandResult(interaction: CommandInteraction, result: Any?) {
             when (result) {
-				is Mono<*> -> result.subscribe { res: Any? -> consumeCommandResult(interaction, res!!) }
-                is CompletableFuture<*> -> result.thenAccept { res: Any? -> consumeCommandResult(interaction, res!!) }
-                is Boolean -> interaction.deferReply(result).queue()
-                is QuasiMessage -> result.text.asString(Context.fromInteraction(interaction)).subscribe(Consumer { string: String? ->
-                    val action = interaction.reply(string!!)
+				is Mono<*> -> consumeCommandResult(interaction, result.awaitFirstOrNull())
+                is CompletableFuture<*> -> consumeCommandResult(interaction, result.awaitFuture())
+				is Text -> consumeCommandResult(interaction, result.asString(Context.fromInteraction(interaction)))
+                is Boolean -> interaction.deferReply(result).awaitAction()
+                is QuasiMessage -> {
+					val string = result.text.asString(Context.fromInteraction(interaction))
+					val action = interaction.reply(string)
 					result.modifier.accept(action)
-                    action.queue()
-                })
-                is Text -> result.asString(Context.fromInteraction(interaction)).subscribe(Consumer { msg: String? ->
-                    interaction.reply(
-                        msg!!
-                    ).queue()
-                })
-                is String -> interaction.reply(result).queue()
-				null -> {}
-                else -> throw IllegalArgumentException("Unsupported response type: " + result.javaClass.name)
+					action.awaitAction()
+				}
+                is String -> interaction.reply(result).awaitAction()
+				is Unit, null -> {}
+                else -> error("Unsupported response type: ${result.javaClass.name}")
             }
         }
     }

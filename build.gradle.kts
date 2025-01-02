@@ -19,21 +19,25 @@ repositories {
 }
 
 dependencies {
-    api(libs.net.dv8tion.jda) {
+    api(libs.jda) {
 		exclude(module="opus-java")
 	}
-    api(libs.org.spongepowered.configurate.yaml)
-    api(libs.org.mongodb.mongodb.driver.reactivestreams)
-    api(libs.io.projectreactor.reactor.core)
-    api(libs.de.huxhorn.sulky.de.huxhorn.sulky.ulid)
-    api(libs.net.xyzsd.plurals.cldr.plural.rules)
-    api(libs.org.yaml.snakeyaml)
-    api(libs.org.reflections.reflections)
-    api(libs.org.slf4j.slf4j.api)
-    testImplementation(libs.org.junit.jupiter.junit.jupiter)
-    testImplementation(libs.ch.qos.logback.logback.classic)
-    compileOnly(libs.org.jetbrains.annotations)
+	api(libs.jda.ktx)
+    api(libs.configurate.yaml)
+    api(libs.mongodb.coroutines)
+	api(libs.mongodb.kotlinx)
+    api(libs.reactor.core)
+    api(libs.ulid)
+    api(libs.cldr.plural.rules)
+    api(libs.snakeyaml)
+    api(libs.slf4j)
+	api(libs.kotlinx.coroutines.core)
+	api(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.logback)
+    api(libs.jetbrains.annotations)
 	implementation(kotlin("stdlib-jdk8"))
+	implementation(kotlin("reflect"))
 }
 
 group = "dev.qixils.quasicolon"

@@ -8,77 +8,100 @@ package dev.qixils.quasicord.db
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.Filters
-import com.mongodb.reactivestreams.client.MongoClient
-import com.mongodb.reactivestreams.client.MongoClients
-import com.mongodb.reactivestreams.client.MongoCollection
-import com.mongodb.reactivestreams.client.MongoDatabase
+import com.mongodb.kotlin.client.coroutine.FindFlow
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoCollection
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import dev.qixils.quasicord.Environment
+import dev.qixils.quasicord.db.codecs.LocaleCodec
 import dev.qixils.quasicord.db.codecs.ZoneIdCodec
+import kotlinx.coroutines.flow.singleOrNull
 import org.bson.codecs.configuration.CodecRegistries
 import org.bson.codecs.configuration.CodecRegistry
 import org.bson.codecs.pojo.PojoCodecProvider
 import org.bson.conversions.Bson
-import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import java.io.Closeable
-import java.util.*
 
 /**
  * Manages the [Bot][Quasicord]'s database.
  */
 class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
     private val pojoRegistry: CodecRegistry = CodecRegistries.fromRegistries(
-		CodecRegistries.fromCodecs(ZoneIdCodec),
+		CodecRegistries.fromCodecs(ZoneIdCodec, LocaleCodec),
         MongoClientSettings.getDefaultCodecRegistry(),
         CodecRegistries.fromProviders(PojoCodecProvider.builder().automatic(true).build())
     )
     private val mongoClientSettings: MongoClientSettings = MongoClientSettings.builder()
-        .applyConnectionString(ConnectionString("mongodb://localhost:27017"))
+        .applyConnectionString(ConnectionString("mongodb://localhost:27017")) // TODO: env
         .codecRegistry(pojoRegistry)
         .build()
-    private val mongoClient: MongoClient = MongoClients.create(mongoClientSettings)
-    protected val database: MongoDatabase
+    private val mongoClient: MongoClient = MongoClient.create(mongoClientSettings)
+    protected val database: MongoDatabase = mongoClient.getDatabase("$dbPrefix-$dbSuffix")
 
-    constructor(dbPrefix: String, environment: Environment) : this(
+	constructor(dbPrefix: String, environment: Environment) : this(
         dbPrefix,
         environment.name.lowercase(),
     )
 
-    init {
-        Objects.requireNonNull<String>(dbPrefix, "dbPrefix cannot be null")
-        Objects.requireNonNull<String>(dbSuffix, "dbSuffix cannot be null")
-        this.database = mongoClient.getDatabase("$dbPrefix-$dbSuffix")
-    }
-
-    // collection
-    fun <T> collection(tClass: Class<T>): MongoCollection<T> {
+	// collection
+    fun <T : Any> collection(tClass: Class<T>): MongoCollection<T> {
         return collection(Companion.collectionNameOf(tClass), tClass)
     }
 
-    fun <T> collection(collectionName: String, tClass: Class<T>): MongoCollection<T> {
+	inline fun <reified T : Any> collection(): MongoCollection<T> {
+		return collection(T::class.java)
+	}
+
+    fun <T : Any> collection(collectionName: String, tClass: Class<T>): MongoCollection<T> {
         return database.getCollection(collectionName, tClass)
     }
 
+	inline fun <reified T : Any> collection(collectionName: String): MongoCollection<T> {
+		return collection(collectionName, T::class.java)
+	}
+
     // getAll
-    fun <T> getAll(tClass: Class<T>): Flux<T> {
-        return Flux.from(collection(tClass).find())
+    fun <T : Any> getAll(tClass: Class<T>): FindFlow<T> {
+        return collection(tClass).find()
     }
+
+	inline fun <reified T : Any> getAll(): FindFlow<T> {
+		return getAll(T::class.java)
+	}
 
     // getAllBy
-    fun <T> getAllBy(filters: Bson, tClass: Class<T>): Flux<T> {
-        return Flux.from(collection(tClass).find(filters))
+    fun <T : Any> getAllBy(filters: Bson, tClass: Class<T>): FindFlow<T> {
+        return collection(tClass).find(filters)
     }
 
-    fun <T> getAllByEquals(keyValueMap: Map<String, *>, tClass: Class<T>): Flux<T> {
-        var filter = Filters.empty()
-        for (entry in keyValueMap.entries) filter = Filters.and(filter, Filters.eq(entry.key, entry.value))
-        return getAllBy(filter, tClass)
+	inline fun <reified T : Any> getAllBy(filters: Bson): FindFlow<T> {
+		return getAllBy(filters, T::class.java)
+	}
+
+    fun <T : Any> getAllByEquals(keyValueMap: Map<String, *>, tClass: Class<T>): FindFlow<T> {
+		return getAllBy(Filters.and(keyValueMap.entries.map { Filters.eq(it.key, it.value) }), tClass)
     }
+
+	inline fun <reified T : Any> getAllByEquals(keyValueMap: Map<String, *>): FindFlow<T> {
+		return getAllByEquals(keyValueMap, T::class.java)
+	}
 
     // getById
-    fun <T> getById(id: Any?, tClass: Class<T>): Mono<T> {
-        return Mono.from(collection(tClass).find(Filters.eq("_id", id)))
+	suspend fun <T : Any> getById(field: String, id: Any?, tClass: Class<T>): T? {
+		return collection(tClass).find(Filters.eq(field, id)).singleOrNull()
+	}
+
+	suspend inline fun <reified T : Any> getById(field: String, id: Any?): T? {
+		return getById(field, id, T::class.java)
+	}
+
+    suspend fun <T : Any> getById(id: Any?, tClass: Class<T>): T? {
+        return getById("_id", id, tClass)
     }
+
+	suspend inline fun <reified T : Any> getById(id: Any?): T? {
+		return getById(id, T::class.java)
+	}
 
     // misc
     override fun close() {

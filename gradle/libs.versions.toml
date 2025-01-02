@@ -2,29 +2,34 @@
 # https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
 
 [versions]
-ch-qos-logback-logback-classic = "1.5.6"
-de-huxhorn-sulky-de-huxhorn-sulky-ulid = "8.3.0"
-io-projectreactor-reactor-core = "3.6.7"
-net-dv8tion-jda = "5.2.2"
-net-xyzsd-plurals-cldr-plural-rules = "41"
-org-jetbrains-annotations = "24.1.0"
-org-junit-jupiter-junit-jupiter = "5.11.0-M2"
-org-mongodb-mongodb-driver-reactivestreams = "5.1.1"
-org-reflections-reflections = "0.10.2"
-org-slf4j-slf4j-api = "2.0.13"
-org-spongepowered-configurate-yaml = "4.1.2"
-org-yaml-snakeyaml = "2.2"
+logback = "1.5.13"
+ulid = "8.3.0"
+reactor-core = "3.6.7"
+jda = "5.2.2"
+jda-ktx = "0.12.0"
+cldr-plural-rules = "41"
+jetbrains-annotations = "24.1.0"
+junit-jupiter = "5.11.0-M2"
+mongodb-coroutines = "5.2.1"
+slf4j = "2.0.13"
+configurate-yaml = "4.1.2"
+snakeyaml = "2.2"
+kotlinx-coroutines = "1.10.1"
+kotlinx-coroutines-reactor = "1.10.1"
 
 [libraries]
-ch-qos-logback-logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "ch-qos-logback-logback-classic" }
-de-huxhorn-sulky-de-huxhorn-sulky-ulid = { module = "de.huxhorn.sulky:de.huxhorn.sulky.ulid", version.ref = "de-huxhorn-sulky-de-huxhorn-sulky-ulid" }
-io-projectreactor-reactor-core = { module = "io.projectreactor:reactor-core", version.ref = "io-projectreactor-reactor-core" }
-net-dv8tion-jda = { module = "net.dv8tion:JDA", version.ref = "net-dv8tion-jda" }
-net-xyzsd-plurals-cldr-plural-rules = { module = "net.xyzsd.plurals:cldr-plural-rules", version.ref = "net-xyzsd-plurals-cldr-plural-rules" }
-org-jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "org-jetbrains-annotations" }
-org-junit-jupiter-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "org-junit-jupiter-junit-jupiter" }
-org-mongodb-mongodb-driver-reactivestreams = { module = "org.mongodb:mongodb-driver-reactivestreams", version.ref = "org-mongodb-mongodb-driver-reactivestreams" }
-org-reflections-reflections = { module = "org.reflections:reflections", version.ref = "org-reflections-reflections" }
-org-slf4j-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "org-slf4j-slf4j-api" }
-org-spongepowered-configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "org-spongepowered-configurate-yaml" }
-org-yaml-snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "org-yaml-snakeyaml" }
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+ulid = { module = "de.huxhorn.sulky:de.huxhorn.sulky.ulid", version.ref = "ulid" }
+reactor-core = { module = "io.projectreactor:reactor-core", version.ref = "reactor-core" }
+jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
+jda-ktx = { module = "club.minnced:jda-ktx", version.ref = "jda-ktx" }
+cldr-plural-rules = { module = "net.xyzsd.plurals:cldr-plural-rules", version.ref = "cldr-plural-rules" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+mongodb-coroutines = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongodb-coroutines" }
+mongodb-kotlinx = { module = "org.mongodb:bson-kotlinx", version.ref = "mongodb-coroutines" }
+slf4j = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+configurate-yaml = { module = "org.spongepowered:configurate-yaml", version.ref = "configurate-yaml" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "kotlinx-coroutines" }

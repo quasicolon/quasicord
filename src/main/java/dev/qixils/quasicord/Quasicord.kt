@@ -5,6 +5,8 @@
  */
 package dev.qixils.quasicord
 
+import dev.minn.jda.ktx.events.listener
+import dev.minn.jda.ktx.jdabuilder.default
 import dev.qixils.quasicord.commands.GuildConfigCommand
 import dev.qixils.quasicord.commands.UserConfigCommand
 import dev.qixils.quasicord.db.DatabaseManager
@@ -13,11 +15,9 @@ import dev.qixils.quasicord.locale.LocaleProvider
 import dev.qixils.quasicord.locale.TranslationProvider
 import dev.qixils.quasicord.registry.core.RegistryRegistry
 import net.dv8tion.jda.api.JDA
-import net.dv8tion.jda.api.JDABuilder
 import net.dv8tion.jda.api.entities.Activity
 import net.dv8tion.jda.api.events.Event
 import net.dv8tion.jda.api.hooks.AnnotatedEventManager
-import net.dv8tion.jda.api.hooks.SubscribeEvent
 import net.dv8tion.jda.api.requests.GatewayIntent
 import net.dv8tion.jda.api.utils.MemberCachePolicy
 import net.dv8tion.jda.api.utils.cache.CacheFlag
@@ -147,7 +147,7 @@ open class Quasicord(
 
         // load database and locale provider
         databaseManager = DatabaseManager(namespace, config.environment)
-        localeProvider = LocaleProvider(defaultLocale, databaseManager)
+        localeProvider = LocaleProvider.create(defaultLocale, databaseManager)
         LocaleProvider.instance = localeProvider
 
         // initialize JDA and relevant data
@@ -164,39 +164,35 @@ open class Quasicord(
     }
 
     protected open fun initJDA(activity: Activity?): JDA {
-        val builder = JDABuilder.createDefault(config.token)
-            .disableIntents(
-                GatewayIntent.DIRECT_MESSAGE_TYPING,
-                GatewayIntent.GUILD_MESSAGE_TYPING,  // GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
-                GatewayIntent.GUILD_WEBHOOKS,
-                GatewayIntent.GUILD_INVITES,
-                GatewayIntent.GUILD_VOICE_STATES
-            )
-            .enableIntents(GatewayIntent.GUILD_MEMBERS) // TODO:
-            //	1. register cogs before initJDA() is called
-            //  2. implement getRequiredIntents() in Cog
-            //  3. use that result here to compute minimum required intents
-            //  4. late-loaded cogs, if any/ever, can decline when their required intents weren't met at startup
-            //  5. except wait, cogs need jda to be constructed (and probably should), that's a problem
-            .enableIntents(GatewayIntent.GUILD_MESSAGES)
-            .enableIntents(GatewayIntent.MESSAGE_CONTENT)
-            .setMemberCachePolicy(MemberCachePolicy.ALL)
-            .setEventManager(AnnotatedEventManager())
-            .disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE)
-        if (activity != null) builder.setActivity(activity)
-        MessageRequest.setDefaultMentions(emptySet())
-        val jda = builder.build()
+        val jda = default(config.token, enableCoroutines = true) {
+			disableIntents(
+				GatewayIntent.DIRECT_MESSAGE_TYPING,
+				GatewayIntent.GUILD_MESSAGE_TYPING,  // GatewayIntent.GUILD_INTEGRATIONS, // unused, apparently
+				GatewayIntent.GUILD_WEBHOOKS,
+				GatewayIntent.GUILD_INVITES,
+				GatewayIntent.GUILD_VOICE_STATES
+			)
+			// TODO:
+			//	 1. register cogs before initJDA() is called
+			//   2. implement getRequiredIntents() in Cog
+			//   3. use that result here to compute minimum required intents
+			//   4. late-loaded cogs, if any/ever, can decline when their required intents weren't met at startup
+			//   5. except wait, cogs need jda to be constructed (and probably should), that's a problem
+			enableIntents(GatewayIntent.GUILD_MEMBERS)
+			enableIntents(GatewayIntent.GUILD_MESSAGES)
+			enableIntents(GatewayIntent.MESSAGE_CONTENT)
+			setMemberCachePolicy(MemberCachePolicy.ALL)
+			setEventManager(AnnotatedEventManager())
+			disableCache(CacheFlag.ACTIVITY, CacheFlag.VOICE_STATE)
+			if (activity != null) setActivity(activity)
+			MessageRequest.setDefaultMentions(emptySet())
+		}
         jda.setRequiredScopes("applications.commands")
         jda.addEventListener(tempListenerExecutor)
-        jda.addEventListener(object : Any() {
-            @SubscribeEvent
-            fun on(event: Event?) {
-                eventDispatcher.dispatch(event!!)
-            }
-        })
+		jda.listener<Event> { eventDispatcher.dispatch(it) }
         try {
             jda.awaitReady()
-        } catch (ignored: InterruptedException) {
+        } catch (_: InterruptedException) {
         }
         return jda
     }
@@ -208,7 +204,7 @@ open class Quasicord(
      */
     // we don't expose the raw executor in a getter because objects could abuse the #onEvent method
     fun register(listener: TemporaryListener<*>) {
-        tempListenerExecutor.register(Objects.requireNonNull(listener, "listener cannot be null"))
+        tempListenerExecutor.register(listener)
     }
 
     /**

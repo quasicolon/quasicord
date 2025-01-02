@@ -61,6 +61,7 @@ class EventDispatcher {
             if (method.isAnnotationPresent(EventListener::class.java)) {
                 listeners.put(method.parameterTypes[0]) { event ->
 					try {
+						// TODO: kotlin reflect
 						method.invoke(eventListeners, event)
 					} catch (e: Exception) {
 						throw RuntimeException("Failed to invoke event handler", e)

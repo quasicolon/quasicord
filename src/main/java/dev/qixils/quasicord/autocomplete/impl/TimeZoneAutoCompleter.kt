@@ -14,7 +14,6 @@ import net.dv8tion.jda.api.interactions.callbacks.IAutoCompleteCallback
 import net.dv8tion.jda.api.interactions.commands.Command
 import net.dv8tion.jda.api.interactions.commands.CommandAutoCompleteInteraction
 import net.dv8tion.jda.api.interactions.commands.build.OptionData
-import reactor.core.publisher.Flux
 import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.*
@@ -23,33 +22,21 @@ import java.util.*
  * Auto-completes a regional timezone.
  */
 class TimeZoneAutoCompleter(protected val commandManager: CommandManager) : AutoCompleter {
-    override fun getSuggestions(event: IAutoCompleteCallback): Flux<Command.Choice> {
-        if (event !is CommandAutoCompleteInteraction) return Flux.empty()
-        return commandManager.library
-            .localeProvider
-            .forContext(Context.fromInteraction(event))
-            .flatMapMany { locale ->
-                val input = event.focusedOption.value.lowercase(locale)
-                Flux.fromIterable(ZoneId.getAvailableZoneIds())
-                    .map { zoneId -> ZoneId.of(zoneId) }
-                    .filter { id ->
-                        val compare = format(id, locale).lowercase(locale)
-                        compare.contains(input) || compare.replace("[/_]".toRegex(), " ").contains(input)
-                    }
-                    .sort(Comparator.comparing { id ->
-						format(
-							id!!,
-							locale
-						)
-                    })
-                    .take(OptionData.MAX_CHOICES.toLong())
-                    .map { id ->
-                        Command.Choice(
-							format(id, locale),
-                            id.id
-                        )
-                    }
-            }
+    override suspend fun getSuggestions(event: IAutoCompleteCallback): List<Command.Choice> {
+        if (event !is CommandAutoCompleteInteraction) return emptyList()
+		val locale = commandManager.library
+			.localeProvider
+			.forContext(Context.fromInteraction(event))
+		val input = event.focusedOption.value.lowercase(locale)
+		return ZoneId.getAvailableZoneIds()
+			.map { zoneId -> ZoneId.of(zoneId) }
+			.filter {
+				val compare = format(it, locale).lowercase(locale)
+				compare.contains(input) || compare.replace("[/_]".toRegex(), " ").contains(input)
+			}
+			.sortedBy { format(it, locale) }
+			.take(OptionData.MAX_CHOICES)
+			.map { Command.Choice(format(it, locale), it.id) }
     }
 
     companion object {
@@ -57,7 +44,7 @@ class TimeZoneAutoCompleter(protected val commandManager: CommandManager) : Auto
             return single(
                 library("timezone_display"),
                 zone.getDisplayName(TextStyle.FULL_STANDALONE, locale),
-                zone.getId()
+                zone.id
             ).asString(locale)
         }
     }

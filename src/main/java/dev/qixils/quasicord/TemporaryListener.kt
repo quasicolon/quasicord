@@ -12,8 +12,6 @@ import org.checkerframework.common.value.qual.IntRange
 import org.jetbrains.annotations.Contract
 import java.time.Duration
 import java.util.*
-import java.util.function.Consumer
-import java.util.function.Predicate
 import kotlin.Throws
 
 /**
@@ -22,81 +20,58 @@ import kotlin.Throws
  *
  * @param <T> event type that will be listened for
 </T> */
-class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
-    eventClass: Class<T>,
-    predicate: Predicate<T>?,
-    callback: Consumer<T>,
-    onTimeout: Runnable?,
-    private val length: Long
+class TemporaryListener<T : GenericEvent?> @CheckReturnValue
+/**
+ * Constructs a temporary listener which listens for the first event specified by the `eventClass`, checks it
+ * against the optional `predicate`, then calls the `callback` if the predicate passes.
+ *
+ * @param eventClass class of event that this object is listening for
+ * @param callback   method that will be called with the event
+ * @param length     how long the temporary listener will exist until it is discarded, in milliseconds
+ * @param predicate  optional predicate which the event must pass
+ */constructor(
+	/**
+	 * Gets the event class being listening for.
+	 *
+	 * @return event class
+	 */
+	val eventClass: Class<T>,
+	/**
+	 * Gets the milliseconds until the listener expires.
+	 *
+	 * @return expiry time
+	 */
+	val expiresAfter: Long,
+	/**
+	 * Gets the callback which will be executed once upon a matching event being found.
+	 *
+	 * @return event consumer callback
+	 */
+	val callback: suspend (T) -> Unit,
+	predicate: (suspend (T) -> Boolean)? = null,
+	onTimeout: (suspend () -> Unit)? = null
 ) {
-    /**
-     * Gets the event class being listening for.
-     *
-     * @return event class
-     */
-    @JvmField
-	@get:CheckReturnValue
-    val eventClass: Class<T>
 
-    /**
+	/**
      * Gets the predicate which must return `true` for an event to be considered matching.
      *
      * @return predicate
      */
-    @JvmField
-	@get:CheckReturnValue
-    val predicate: Predicate<T>
+    val predicate: suspend (T) -> Boolean = predicate ?: { true }
 
-    /**
-     * Gets the callback which will be executed once upon a matching event being found.
-     *
-     * @return event consumer callback
-     */
-    @JvmField
-	@get:CheckReturnValue
-    val callback: Consumer<T>
-
-    /**
+	/**
      * Gets the function which will be executed if the listener times out.
      *
      * @return timeout callback
      */
-    @get:CheckReturnValue
-    val timeoutCallback: Runnable
+    val timeoutCallback: suspend () -> Unit = onTimeout ?: { }
 
     /**
      * Gets the unique identifier for this temporary listener.
      *
      * @return unique identifier
      */
-    @get:CheckReturnValue
     val id: String = ULID.nextULID()
-
-    /**
-     * Constructs a temporary listener which listens for the first event specified by the `eventClass`, checks it
-     * against the optional `predicate`, then calls the `callback` if the predicate passes.
-     *
-     * @param eventClass class of event that this object is listening for
-     * @param callback   method that will be called with the event
-     * @param length     how long the temporary listener will exist until it is discarded, in milliseconds
-     * @param predicate  optional predicate which the event must pass
-     */
-    init {
-        this.eventClass = Objects.requireNonNull(eventClass, "eventClass cannot be null")
-        this.callback = Objects.requireNonNull(callback, "callback cannot be null")
-        this.predicate = predicate ?: Predicate { true }
-        this.timeoutCallback = onTimeout ?: Runnable {}
-    }
-
-    /**
-     * Gets the milliseconds until the listener expires.
-     *
-     * @return expiry time
-     */
-    @CheckReturnValue
-    fun expiresAfter(): Long {
-        return length
-    }
 
     /**
      * Creates a new builder representing this temporary listener.
@@ -105,9 +80,12 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
      */
     @CheckReturnValue
     fun toBuilder(): Builder<T> {
-        return Builder<T>().eventClass(eventClass).predicate(predicate).callback(callback).onTimeout(
-            timeoutCallback
-        ).length(length)
+        return Builder<T>()
+			.eventClass(eventClass)
+			.predicate(predicate)
+			.callback(callback)
+			.onTimeout(timeoutCallback)
+			.length(expiresAfter)
     }
 
     /**
@@ -116,7 +94,7 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
      * @param bot bot to register for
      */
     fun register(bot: Quasicord) {
-        Objects.requireNonNull(bot, "bot cannot be null").register(this)
+		bot.register(this)
     }
 
     /**
@@ -126,9 +104,9 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
     </T> */
     class Builder<T : GenericEvent?> {
         private var eventClass: Class<T>? = null
-        private var predicate: Predicate<T>? = null
-        private var callback: Consumer<T>? = null
-        private var onTimeout: Runnable? = null
+		private var predicate: (suspend (T) -> Boolean)? = null
+		private var callback: (suspend (T) -> Unit)? = null
+		private var onTimeout: (suspend () -> Unit)? = null
         private var length: Long = 0
 
         constructor()
@@ -157,7 +135,7 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
          * @return this builder
          */
         @Contract(value = "_ -> this", mutates = "this")
-        fun predicate(predicate: Predicate<T>): Builder<T> {
+        fun predicate(predicate: suspend (T) -> Boolean): Builder<T> {
             this.predicate = predicate
             return this
         }
@@ -171,7 +149,7 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
          * @return this builder
          */
         @Contract(value = "_ -> this", mutates = "this")
-        fun callback(callback: Consumer<T>): Builder<T> {
+        fun callback(callback: suspend (T) -> Unit): Builder<T> {
             this.callback = callback
             return this
         }
@@ -183,7 +161,7 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
          * @return this builder
          */
         @Contract(value = "_ -> this", mutates = "this")
-        fun onTimeout(onTimeout: Runnable): Builder<T> {
+        fun onTimeout(onTimeout: suspend () -> Unit): Builder<T> {
             this.onTimeout = onTimeout
             return this
         }
@@ -220,10 +198,10 @@ class TemporaryListener<T : GenericEvent?> @CheckReturnValue constructor(
         @CheckReturnValue
         @Throws(IllegalStateException::class)
         fun build(): TemporaryListener<T> {
-            checkNotNull(eventClass) { "eventClass must be set" }
+			checkNotNull(eventClass) { "eventClass must be set" }
             checkNotNull(callback) { "callback must be set" }
             check(length > 0) { "length must be positive" }
-            return TemporaryListener(eventClass!!, predicate, callback!!, onTimeout, length)
+            return TemporaryListener(eventClass!!, length, callback!!, predicate, onTimeout)
         }
     }
 

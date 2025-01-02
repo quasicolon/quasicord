@@ -54,5 +54,5 @@ interface Command<I : GenericCommandInteractionEvent> {
      *
      * @param interaction the interaction object which triggered the command execution
      */
-    fun accept(interaction: I)
+    suspend fun accept(interaction: I)
 }

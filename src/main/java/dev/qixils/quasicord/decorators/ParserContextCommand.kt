@@ -11,14 +11,16 @@ import dev.qixils.quasicord.decorators.option.ConvertWith
 import net.dv8tion.jda.api.events.interaction.command.GenericContextInteractionEvent
 import net.dv8tion.jda.api.interactions.Interaction
 import net.dv8tion.jda.api.interactions.commands.build.CommandData
-import java.lang.reflect.Method
+import kotlin.reflect.KFunction
+import kotlin.reflect.full.callSuspend
+import kotlin.reflect.full.findAnnotation
 
 internal class ParserContextCommand(
     private val id: String,
     parser: AnnotationParser,
     command: CommandData,
-    `object`: Any,
-    method: Method,
+	private val `object`: Any,
+    private val method: KFunction<*>,
     guildId: String?
 ) : ParserCommand<GenericContextInteractionEvent<*>>(
     parser,
@@ -27,20 +29,16 @@ internal class ParserContextCommand(
     guildId
 ) {
     private val converters: Array<Converter<*, *>?>
-    private val `object`: Any
-    private val method: Method
 
     init {
         val commandManager = parser.commandManager
-        this.`object` = `object`
-        this.method = method
 
         // parameters
-        converters = arrayOfNulls<Converter<*, *>>(method.parameterCount)
-        for (i in 0..<method.parameterCount) {
+        converters = arrayOfNulls<Converter<*, *>>(method.parameters.size)
+        for (i in 0..<method.parameters.size) {
             // set converter
             val parameter = method.parameters[i]
-            val convertWith = parameter.getAnnotation<ConvertWith?>(ConvertWith::class.java)
+            val convertWith = parameter.findAnnotation<ConvertWith>()
 
             // converter data
             val converter: Converter<*, *>?
@@ -48,17 +46,14 @@ internal class ParserContextCommand(
             if (convertWith != null) {
                 converter = createConverter(convertWith.value.java)
             } else {
-                if (Interaction::class.java.isAssignableFrom(parameter.getType())) converter =
+                if (Interaction::class.java.isAssignableFrom(parameter.javaClass)) converter =
                     VoidConverterImpl(Interaction::class.java) { it }
                 else {
                     converter = commandManager.library.rootRegistry.converterRegistry.findConverter(
                         Void::class.java,
-                        parameter.getType()
+                        parameter.javaClass
                     )
-                    requireNotNull(converter) {
-                        "No converter found for parameter " + parameter.name + " of type " + parameter.getType()
-                            .getName()
-                    }
+                    requireNotNull(converter) { "No converter found for parameter ${parameter.name} of type ${parameter.javaClass.getName()}" }
                 }
             }
 
@@ -75,7 +70,7 @@ internal class ParserContextCommand(
 	override val discordName: String
 		get() = commandData.name
 
-    override fun accept(interaction: GenericContextInteractionEvent<*>) {
+    override suspend fun accept(interaction: GenericContextInteractionEvent<*>) {
         // note: this has no try/catch because that is being handled at an even higher level than this
 
         // fetch args
@@ -88,7 +83,7 @@ internal class ParserContextCommand(
 
         // invoke and handle
         try {
-            consumeCommandResult(interaction, method.invoke(`object`, *args))
+            consumeCommandResult(interaction, method.callSuspend(`object`, *args))
         } catch (e: Exception) {
             throw RuntimeException(e)
         }
