@@ -6,7 +6,6 @@
 package dev.qixils.quasicord.text
 
 import dev.qixils.quasicord.Key
-import lombok.Getter
 import net.xyzsd.plurals.PluralRuleType
 import java.text.MessageFormat
 import java.util.*
@@ -15,7 +14,6 @@ import kotlin.Throws
 /**
  * Localizable text that has plural forms.
  */
-@Getter
 class PluralLocalizableText internal constructor(
     private val quantity: Long,
     private val ruleType: PluralRuleType,

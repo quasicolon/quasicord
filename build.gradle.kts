@@ -7,7 +7,6 @@
 plugins {
     `java-library`
     `maven-publish`
-	id("io.freefair.lombok") version "8.11"
 	kotlin("jvm")
 }
 

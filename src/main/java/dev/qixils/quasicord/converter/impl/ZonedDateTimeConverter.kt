@@ -10,14 +10,12 @@ import dev.qixils.quasicord.Quasicord
 import dev.qixils.quasicord.converter.Converter
 import dev.qixils.quasicord.db.collection.TimeZoneConfig
 import dev.qixils.quasicord.error.UserError
-import lombok.Getter
 import net.dv8tion.jda.api.interactions.Interaction
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-@Getter
 class ZonedDateTimeConverter(private val library: Quasicord) : Converter<String, ZonedDateTime> {
 	override val inputClass: Class<String> = String::class.java
     override val outputClass: Class<ZonedDateTime> = ZonedDateTime::class.java
