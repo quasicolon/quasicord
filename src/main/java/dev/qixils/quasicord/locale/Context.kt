@@ -5,6 +5,8 @@
  */
 package dev.qixils.quasicord.locale
 
+import dev.qixils.quasicord.Key
+import dev.qixils.quasicord.text.Text
 import net.dv8tion.jda.api.entities.Message
 import net.dv8tion.jda.api.entities.channel.middleman.GuildMessageChannel
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel
@@ -63,6 +65,13 @@ interface Context {
      * @return locale or null if unspecified
      */
     val guildLocale: DiscordLocale?
+
+	/**
+	 * Utility function for quickly translating a text string.
+	 *
+	 * @return translated text
+	 */
+	suspend fun text(value: Key, vararg args: Any?): String = Text.single(value, *args).asString(this)
 
 	companion object {
         /**
