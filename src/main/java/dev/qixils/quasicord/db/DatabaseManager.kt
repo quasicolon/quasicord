@@ -7,12 +7,15 @@ package dev.qixils.quasicord.db
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
+import com.mongodb.client.model.IndexModel
+import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import dev.qixils.quasicord.Environment
 import dev.qixils.quasicord.db.codecs.LocaleCodec
 import dev.qixils.quasicord.db.codecs.ZoneIdCodec
+import kotlinx.coroutines.flow.collect
 import org.bson.codecs.configuration.CodecRegistries
 import org.bson.codecs.configuration.CodecRegistry
 import org.bson.codecs.pojo.PojoCodecProvider
@@ -34,6 +37,7 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
     private val mongoClient: MongoClient = MongoClient.create(mongoClientSettings)
     protected val database: MongoDatabase = mongoClient.getDatabase("$dbPrefix-$dbSuffix")
 	private val caches = mutableMapOf<Class<*>, CachedQueries<*>>()
+	private val indexed = mutableSetOf<String>()
 
 	constructor(dbPrefix: String, environment: Environment) : this(
         dbPrefix,
@@ -41,28 +45,39 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
     )
 
 	// collection
-    fun <T : Any> collection(tClass: Class<T>): MongoCollection<T> {
+	suspend fun <T : Any> collection(tClass: Class<T>): MongoCollection<T> {
         return collection(collectionNameOf(tClass), tClass)
     }
 
-	inline fun <reified T : Any> collection(): MongoCollection<T> {
+	suspend inline fun <reified T : Any> collection(): MongoCollection<T> {
 		return collection(T::class.java)
 	}
 
-    fun <T : Any> collection(collectionName: String, tClass: Class<T>): MongoCollection<T> {
-		// TODO: indices
-        return database.getCollection(collectionName, tClass)
+    suspend fun <T : Any> collection(collectionName: String, tClass: Class<T>): MongoCollection<T> {
+        val collection = database.getCollection(collectionName, tClass)
+		if (!indexed.add(collectionName)) return collection
+		// TODO: IndexOptionDefaults
+		val indices = tClass.getAnnotationsByType(Index::class.java)
+			.filter { it.value.isNotEmpty() }
+			.map { index -> IndexModel(Indexes.compoundIndex(index.value.map { key ->
+				if (key.order == IndexKeyOrder.DESCENDING) Indexes.descending(key.value)
+				else Indexes.ascending(key.value)
+			})) }
+		if (indices.isEmpty()) return collection
+		collection.createIndexes(indices).collect() // TODO: run this in an off thread ?
+		// TODO: drop old indexes?
+		return collection
     }
 
-	inline fun <reified T : Any> collection(collectionName: String): MongoCollection<T> {
+	suspend inline fun <reified T : Any> collection(collectionName: String): MongoCollection<T> {
 		return collection(collectionName, T::class.java)
 	}
 
-	fun <T : Any> cache(tClass: Class<T>): CachedQueries<T> {
-		return caches.computeIfAbsent(tClass) { CachedQueries(collection(tClass)) } as CachedQueries<T>
+	suspend fun <T : Any> cache(tClass: Class<T>): CachedQueries<T> {
+		return caches[tClass] as CachedQueries<T>? ?: CachedQueries(collection(tClass)).also { caches[tClass] = it }
     }
 
-	inline fun <reified T : Any> cache(): CachedQueries<T> {
+	suspend inline fun <reified T : Any> cache(): CachedQueries<T> {
 		return cache(T::class.java)
 	}
 

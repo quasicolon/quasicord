@@ -6,6 +6,8 @@
 package dev.qixils.quasicord.db.collection
 
 import dev.qixils.quasicord.db.CollectionName
+import dev.qixils.quasicord.db.Index
+import dev.qixils.quasicord.db.IndexKey
 import org.bson.codecs.pojo.annotations.BsonProperty
 import org.jetbrains.annotations.ApiStatus
 import java.time.ZoneId
@@ -15,7 +17,7 @@ import java.time.ZoneId
  * This stores the selected timezone for a user.
  */
 @CollectionName("timezone")
-
+@Index(IndexKey("snowflake"))
 data class TimeZoneConfig
 /**
  * Constructs a new TimeZoneConfig entry.

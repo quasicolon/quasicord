@@ -6,6 +6,8 @@
 package dev.qixils.quasicord.db.collection
 
 import dev.qixils.quasicord.db.CollectionName
+import dev.qixils.quasicord.db.Index
+import dev.qixils.quasicord.db.IndexKey
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.codecs.pojo.annotations.BsonProperty
 import org.bson.types.ObjectId
@@ -17,6 +19,7 @@ import java.util.*
  * This stores the selected locale for a user, channel, or guild.
  */
 @CollectionName("locale")
+@Index(IndexKey("snowflake"), IndexKey("entryType"))
 data class LocaleConfig @ApiStatus.Internal constructor(
 	/**
 	 * Returns the database ID of this object.
