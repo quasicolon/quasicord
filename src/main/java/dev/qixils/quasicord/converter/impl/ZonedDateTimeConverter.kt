@@ -26,10 +26,9 @@ class ZonedDateTimeConverter(private val library: Quasicord) : Converter<String,
         input: String,
         targetClass: Class<out ZonedDateTime?>
     ): ZonedDateTime {
-        val config = library.databaseManager.getById(
+        val config = library.databaseManager.cache<TimeZoneConfig>().getById(
 			"snowflake",
             interaction.user.idLong,
-            TimeZoneConfig::class.java
         )
         val zone = config?.timeZone ?: ZoneOffset.UTC
         val now = ZonedDateTime.now(zone)

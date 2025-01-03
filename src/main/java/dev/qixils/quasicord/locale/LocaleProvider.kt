@@ -55,15 +55,7 @@ open class LocaleProvider
 	 */
 	open suspend fun forObject(id: Long, type: LocaleConfig.EntryType): Locale? {
 		if (db == null) return defaultLocale
-		// TODO: short ~1min cache to avoid spamming DB calls when invoking a command or whatever.
-		//   where should it go, in the database layer?
-		//   i think we could make a new class like DatabaseCollection,
-		//   migrate all the getAllBy and whatnot into there (cleaning up a ton of overloads in the process),
-		//   and then make like a CachedDatabaseCollection which wraps a DatabaseCollection with a cache for some queries
-		//   of specified duration
-		//   i suppose in practice this means migrating everything to call the getAllBy(Bson) function,
-		//   then overriding that function to first check a cache
-		return db.getAllByEquals<LocaleConfig>(mapOf("snowflake" to id, "entryType" to type)).singleOrNull()?.language
+		return db.cache<LocaleConfig>().getAllByEquals(mapOf("snowflake" to id, "entryType" to type)).singleOrNull()?.language
 	}
 
 	/**

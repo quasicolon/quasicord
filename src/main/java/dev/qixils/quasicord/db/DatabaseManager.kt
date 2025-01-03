@@ -7,19 +7,15 @@ package dev.qixils.quasicord.db
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
-import com.mongodb.client.model.Filters
-import com.mongodb.kotlin.client.coroutine.FindFlow
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import dev.qixils.quasicord.Environment
 import dev.qixils.quasicord.db.codecs.LocaleCodec
 import dev.qixils.quasicord.db.codecs.ZoneIdCodec
-import kotlinx.coroutines.flow.singleOrNull
 import org.bson.codecs.configuration.CodecRegistries
 import org.bson.codecs.configuration.CodecRegistry
 import org.bson.codecs.pojo.PojoCodecProvider
-import org.bson.conversions.Bson
 import java.io.Closeable
 
 /**
@@ -37,6 +33,7 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
         .build()
     private val mongoClient: MongoClient = MongoClient.create(mongoClientSettings)
     protected val database: MongoDatabase = mongoClient.getDatabase("$dbPrefix-$dbSuffix")
+	private val caches = mutableMapOf<Class<*>, CachedQueries<*>>()
 
 	constructor(dbPrefix: String, environment: Environment) : this(
         dbPrefix,
@@ -45,7 +42,7 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
 
 	// collection
     fun <T : Any> collection(tClass: Class<T>): MongoCollection<T> {
-        return collection(Companion.collectionNameOf(tClass), tClass)
+        return collection(collectionNameOf(tClass), tClass)
     }
 
 	inline fun <reified T : Any> collection(): MongoCollection<T> {
@@ -53,6 +50,7 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
 	}
 
     fun <T : Any> collection(collectionName: String, tClass: Class<T>): MongoCollection<T> {
+		// TODO: indices
         return database.getCollection(collectionName, tClass)
     }
 
@@ -60,47 +58,12 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
 		return collection(collectionName, T::class.java)
 	}
 
-    // getAll
-    fun <T : Any> getAll(tClass: Class<T>): FindFlow<T> {
-        return collection(tClass).find()
+	fun <T : Any> cache(tClass: Class<T>): CachedQueries<T> {
+		return caches.computeIfAbsent(tClass) { CachedQueries(collection(tClass)) } as CachedQueries<T>
     }
 
-	inline fun <reified T : Any> getAll(): FindFlow<T> {
-		return getAll(T::class.java)
-	}
-
-    // getAllBy
-    fun <T : Any> getAllBy(filters: Bson, tClass: Class<T>): FindFlow<T> {
-        return collection(tClass).find(filters)
-    }
-
-	inline fun <reified T : Any> getAllBy(filters: Bson): FindFlow<T> {
-		return getAllBy(filters, T::class.java)
-	}
-
-    fun <T : Any> getAllByEquals(keyValueMap: Map<String, *>, tClass: Class<T>): FindFlow<T> {
-		return getAllBy(Filters.and(keyValueMap.entries.map { Filters.eq(it.key, it.value) }), tClass)
-    }
-
-	inline fun <reified T : Any> getAllByEquals(keyValueMap: Map<String, *>): FindFlow<T> {
-		return getAllByEquals(keyValueMap, T::class.java)
-	}
-
-    // getById
-	suspend fun <T : Any> getById(field: String, id: Any?, tClass: Class<T>): T? {
-		return collection(tClass).find(Filters.eq(field, id)).singleOrNull()
-	}
-
-	suspend inline fun <reified T : Any> getById(field: String, id: Any?): T? {
-		return getById(field, id, T::class.java)
-	}
-
-    suspend fun <T : Any> getById(id: Any?, tClass: Class<T>): T? {
-        return getById("_id", id, tClass)
-    }
-
-	suspend inline fun <reified T : Any> getById(id: Any?): T? {
-		return getById(id, T::class.java)
+	inline fun <reified T : Any> cache(): CachedQueries<T> {
+		return cache(T::class.java)
 	}
 
     // misc
@@ -111,7 +74,7 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
     companion object {
         // collectionNameOf
         private fun collectionNameOf(obj: Any): String {
-            return Companion.collectionNameOf(obj.javaClass)
+            return collectionNameOf(obj.javaClass)
         }
 
         private fun collectionNameOf(clazz: Class<*>): String {
