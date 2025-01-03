@@ -8,6 +8,7 @@ package dev.qixils.quasicord.db
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.IndexModel
+import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoCollection
@@ -62,7 +63,7 @@ class DatabaseManager(dbPrefix: String, dbSuffix: String) : Closeable {
 			.map { index -> IndexModel(Indexes.compoundIndex(index.value.map { key ->
 				if (key.order == IndexKeyOrder.DESCENDING) Indexes.descending(key.value)
 				else Indexes.ascending(key.value)
-			})) }
+			}), IndexOptions().background(true).unique(index.unique)) }
 		if (indices.isEmpty()) return collection
 		collection.createIndexes(indices).collect() // TODO: run this in an off thread ?
 		// TODO: drop old indexes?

@@ -19,7 +19,7 @@ import java.util.*
  * This stores the selected locale for a user, channel, or guild.
  */
 @CollectionName("locale")
-@Index(IndexKey("snowflake"), IndexKey("entryType"))
+@Index(true, IndexKey("snowflake"), IndexKey("entryType"))
 data class LocaleConfig @ApiStatus.Internal constructor(
 	/**
 	 * Returns the database ID of this object.

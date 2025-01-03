@@ -17,7 +17,7 @@ import java.time.ZoneId
  * This stores the selected timezone for a user.
  */
 @CollectionName("timezone")
-@Index(IndexKey("snowflake"))
+@Index(true, IndexKey("snowflake"))
 data class TimeZoneConfig
 /**
  * Constructs a new TimeZoneConfig entry.
